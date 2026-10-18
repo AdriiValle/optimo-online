@@ -1,0 +1,2114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Óptimo — Ricardo Visus</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      --bg: #F5F5F7;
+      --surface: #FFFFFF;
+      --text: #1D1D1F;
+      --secondary: #86868B;
+      --line: #D2D2D7;
+      --fill-secondary: #E8E8ED;
+      --accent: #0071E3;
+      --accent-hover: #0077ED;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.08);
+      --radius: 12px;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", sans-serif;
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.47;
+      letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 16px 16px 40px;
+    }
+
+    header.doc-header {
+      margin-bottom: 1.25rem;
+      padding: 14px 16px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem 0.5rem;
+      font-size: clamp(0.8125rem, 3.2vw, 0.9375rem);
+      line-height: 1.2;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sep {
+      color: var(--line);
+      font-weight: 400;
+      user-select: none;
+    }
+
+    .brand-player {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .brand-meta {
+      color: var(--secondary);
+      font-weight: 500;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 12px;
+    }
+
+    .cal-nav h2 {
+      font-size: 1.0625rem;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: var(--fill-secondary);
+      font-size: 1.125rem;
+      line-height: 1;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .icon-btn:hover { background: #DCDCE0; }
+    .icon-btn:active { transform: scale(0.96); }
+
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      font-size: 0.8125rem;
+      text-align: center;
+    }
+
+    .cal-dow {
+      color: var(--secondary);
+      font-weight: 600;
+      padding: 4px 0 8px;
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .cal-day {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 6px 2px 8px;
+      min-height: 60px;
+      background: transparent;
+      transition: background 0.15s ease;
+    }
+
+    .cal-day.empty { visibility: hidden; }
+
+    .cal-day.today .day-num {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .cal-day.today:not(.cal-highlight)::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 1.5px var(--text);
+      pointer-events: none;
+    }
+
+    .cal-day.match,
+    .cal-day.has-list {
+      cursor: pointer;
+    }
+
+    .cal-day.has-list:hover:not(.empty) {
+      background: var(--fill-secondary);
+    }
+
+    .cal-day.match {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    /* Carga — solo grid mensual (.cal-day), desde 2026-10-19 */
+    .cal-day.load-md-plus2 { background: rgba(52, 199, 89, 0.08); }
+    .cal-day.load-md-minus2 { background: rgba(52, 199, 89, 0.17); }
+    .cal-day.load-md-plus1 { background: rgba(168, 187, 72, 0.21); }
+    .cal-day.load-md-minus3 { background: rgba(255, 149, 0, 0.21); }
+    .cal-day.load-md-minus5 { background: rgba(255, 69, 58, 0.23); }
+    .cal-day.load-md-minus4 { background: rgba(255, 59, 48, 0.28); }
+
+    .cal-day.match.load-md-minus3,
+    .cal-day.match.load-md-minus4,
+    .cal-day.match.load-md-minus5,
+    .cal-day.match.load-md-plus1,
+    .cal-day.match.load-md-minus2,
+    .cal-day.match.load-md-plus2 {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .cal-day.cal-highlight {
+      background: var(--fill-secondary);
+      box-shadow: inset 0 0 0 1.5px var(--text);
+    }
+
+    .venue-icon {
+      position: absolute;
+      width: 13px;
+      height: 13px;
+      color: var(--secondary);
+      pointer-events: none;
+      line-height: 0;
+      opacity: 0.85;
+    }
+
+    .venue-icon svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .venue-icon.corner-tr { top: 3px; right: 4px; }
+
+    .tape-day .venue-icon {
+      width: 11px;
+      height: 11px;
+    }
+
+    .tape-day.active .venue-icon {
+      width: 13px;
+      height: 13px;
+    }
+
+    .md-tag {
+      font-size: 9px;
+      line-height: 1;
+      font-weight: 600;
+      color: var(--secondary);
+      letter-spacing: -0.02em;
+    }
+
+    .cal-day .md-tag {
+      position: absolute;
+      top: 5px;
+      left: 6px;
+    }
+
+    @media (min-width: 380px) {
+      .cal-day .md-tag { font-size: 10px; }
+    }
+
+    .tape-day.active .md-tag {
+      color: var(--text);
+    }
+
+    .cal-day .day-num {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-top: 12px;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cal-day .crest-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      margin-top: 2px;
+      width: 100%;
+    }
+
+    .cal-day .crest {
+      max-width: 30px;
+      max-height: 30px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .cal-day .rival-short {
+      font-size: 0.5625rem;
+      line-height: 1.1;
+      color: var(--secondary);
+      font-weight: 600;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 2px;
+    }
+
+    .week-tape-section {
+      margin-top: 0;
+    }
+
+    .week-tape {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .tape-nav {
+      flex-shrink: 0;
+    }
+
+    .tape-segmented {
+      flex: 1;
+      min-width: 0;
+      background: var(--fill-secondary);
+      border-radius: var(--radius);
+      padding: 4px;
+    }
+
+    .tape-strip {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .tape-day {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 6px 2px 8px;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      cursor: pointer;
+      font-family: var(--font);
+      color: var(--text);
+      min-height: 76px;
+      position: relative;
+      transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .tape-day.side {
+      opacity: 0.55;
+      transform: scale(0.94);
+      transform-origin: center center;
+    }
+
+    .tape-day.active {
+      background: var(--fill-secondary);
+      box-shadow: inset 0 0 0 1.5px var(--text), var(--shadow-sm);
+      transform: scale(1.02);
+      opacity: 1;
+      z-index: 1;
+      min-height: 82px;
+    }
+
+    .tape-day.is-today:not(.active) .tape-num {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .tape-day .tape-dow {
+      font-size: 0.625rem;
+      font-weight: 600;
+      color: var(--secondary);
+      text-transform: lowercase;
+      line-height: 1.1;
+    }
+
+    .tape-day.active .tape-dow {
+      color: var(--text);
+    }
+
+    .tape-day .tape-num {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      line-height: 1.15;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tape-day.active .tape-num {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .tape-day .md-tag {
+      position: static;
+      margin-top: 3px;
+    }
+
+    .tape-day .crest-wrap {
+      margin-top: 3px;
+      min-height: 22px;
+    }
+
+    .tape-day.active .crest-wrap {
+      min-height: 26px;
+    }
+
+    .tape-day .crest {
+      max-width: 22px;
+      max-height: 22px;
+    }
+
+    .tape-day.active .crest {
+      max-width: 28px;
+      max-height: 28px;
+    }
+
+    .tape-day .rival-short {
+      font-size: 0.5rem;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .day-focus {
+      margin-top: 16px;
+    }
+
+    .day-focus-heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 12px;
+      margin-bottom: 12px;
+    }
+
+    .day-focus h3 {
+      font-size: clamp(1.25rem, 4.5vw, 1.5rem);
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+      color: var(--text);
+    }
+
+    .day-focus-md {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 11px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      background: var(--fill-secondary);
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .day-focus-duration {
+      flex-basis: 100%;
+      margin: -2px 0 0;
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+      color: var(--secondary);
+      line-height: 1.3;
+    }
+
+    .content-table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .content-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .content-table th,
+    .content-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .content-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .content-table th {
+      background: var(--bg);
+      color: var(--secondary);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .content-table td.empty {
+      color: var(--secondary);
+    }
+
+    .content-table tr.section-head td {
+      background: var(--bg);
+      color: var(--secondary);
+      font-weight: 600;
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 10px 14px 6px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .content-table tr.section-head + tr td {
+      padding-top: 10px;
+    }
+
+    .content-table tr.day-note td {
+      color: var(--secondary);
+      font-size: 0.8125rem;
+      font-style: normal;
+    }
+
+    .plan-general {
+      margin-top: 8px;
+    }
+
+    .plan-details {
+      margin: 0;
+    }
+
+    .plan-summary {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: -0.02em;
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s ease;
+    }
+
+    .plan-summary::-webkit-details-marker,
+    .plan-summary::marker {
+      display: none;
+      content: "";
+    }
+
+    .plan-summary::after {
+      content: "";
+      flex-shrink: 0;
+      width: 7px;
+      height: 7px;
+      margin-top: -2px;
+      border-right: 2px solid var(--secondary);
+      border-bottom: 2px solid var(--secondary);
+      transform: rotate(45deg);
+      transition: transform 0.2s ease, border-color 0.15s ease;
+    }
+
+    .plan-summary:hover::after {
+      border-color: var(--text);
+    }
+
+    .plan-summary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 6px;
+    }
+
+    .plan-details[open] .plan-summary {
+      margin-bottom: 16px;
+    }
+
+    .plan-details[open] .plan-summary::after {
+      transform: rotate(-135deg);
+      margin-top: 2px;
+    }
+
+    .plan-block {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .plan-block:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .plan-block:first-of-type {
+      padding-top: 0;
+    }
+
+    .plan-block h3 {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .plan-block p {
+      margin: 0;
+      font-size: 0.9375rem;
+      color: var(--secondary);
+      line-height: 1.45;
+    }
+
+    .plan-block p strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .view-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      padding: 4px;
+      background: var(--fill-secondary);
+      border-radius: var(--radius);
+    }
+
+    .view-tab {
+      flex: 1;
+      margin: 0;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--secondary);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .view-tab:hover {
+      color: var(--text);
+    }
+
+    .view-tab[aria-selected="true"] {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .view-tab:focus-visible {
+      outline: 2px solid var(--text);
+      outline-offset: 2px;
+    }
+
+    .view-panel[hidden] {
+      display: none !important;
+    }
+
+    .page.view-work-weeks {
+      max-width: 720px;
+    }
+
+    .work-weeks-intro {
+      margin: 0 0 12px;
+      padding: 0 2px;
+      font-size: 0.75rem;
+      color: var(--secondary);
+      line-height: 1.4;
+    }
+
+    .work-weeks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .work-weeks-month-card {
+      margin-bottom: 0;
+      padding: 12px 12px 10px;
+    }
+
+    .work-weeks-break-card {
+      margin-bottom: 0;
+      padding: 12px 14px;
+    }
+
+    .work-weeks-month-title {
+      margin: 0 0 8px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .work-weeks-month-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .work-week-meta {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 3.65rem;
+      max-width: 3.65rem;
+      padding-right: 6px;
+      align-self: center;
+    }
+
+    .work-week-num {
+      font-size: 0.5625rem;
+      font-weight: 600;
+      color: var(--secondary);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .work-week-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 0;
+      border: none;
+      background: transparent;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .work-weeks-month-body .work-week-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .work-weeks-month-body .work-week-row:first-child {
+      padding-top: 0;
+    }
+
+    .work-week-row.is-break {
+      padding: 0;
+      border: none;
+      gap: 10px;
+    }
+
+    .work-week-type {
+      font-size: 0.5625rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      line-height: 1.2;
+      color: var(--text);
+    }
+
+    .work-week-type.is-pretemporada {
+      text-transform: none;
+      letter-spacing: -0.02em;
+      font-weight: 600;
+    }
+
+    .work-week-row.is-break .work-week-type {
+      flex-shrink: 0;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .work-week-strip {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: flex-end;
+      gap: 2px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .ww-day {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      flex-shrink: 0;
+      min-width: 26px;
+      padding: 2px 1px 3px;
+      border: none;
+      border-radius: 5px;
+      background: transparent;
+      cursor: pointer;
+      font-family: var(--font);
+      color: var(--text);
+      transition: background 0.12s ease;
+    }
+
+    .ww-day:hover {
+      background: var(--fill-secondary);
+    }
+
+    .ww-day.is-md {
+      min-width: 30px;
+    }
+
+    .ww-day.is-selected {
+      background: var(--fill-secondary);
+      box-shadow: inset 0 0 0 1px var(--text);
+    }
+
+    .ww-day.is-today .ww-num {
+      font-weight: 700;
+    }
+
+    .ww-dow {
+      font-size: 0.5rem;
+      font-weight: 600;
+      color: var(--secondary);
+      text-transform: lowercase;
+      line-height: 1;
+    }
+
+    .ww-num {
+      font-size: 0.5625rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+
+    .ww-day .md-tag {
+      position: static;
+      margin-top: 1px;
+      font-size: 7px;
+      line-height: 1;
+    }
+
+    .ww-day.is-md .md-tag {
+      font-size: 7px;
+    }
+
+    .ww-day .venue-icon {
+      width: 8px;
+      height: 8px;
+      top: 1px;
+      right: 1px;
+    }
+
+    .ww-day .crest-wrap {
+      margin-top: 1px;
+      min-height: 14px;
+    }
+
+    .ww-day .crest {
+      max-width: 14px;
+      max-height: 14px;
+    }
+
+    .ww-day.load-md-plus2 { background: rgba(52, 199, 89, 0.08); }
+    .ww-day.load-md-minus2 { background: rgba(52, 199, 89, 0.14); }
+    .ww-day.load-md-plus1 { background: rgba(168, 187, 72, 0.16); }
+    .ww-day.load-md-minus3 { background: rgba(255, 149, 0, 0.16); }
+    .ww-day.load-md-minus5 { background: rgba(255, 69, 58, 0.18); }
+    .ww-day.load-md-minus4 { background: rgba(255, 59, 48, 0.2); }
+
+    .ww-day.is-md.load-md-minus3,
+    .ww-day.is-md.load-md-minus4,
+    .ww-day.is-md.load-md-minus5,
+    .ww-day.is-md.load-md-plus1,
+    .ww-day.is-md.load-md-minus2,
+    .ww-day.is-md.load-md-plus2 {
+      background: transparent;
+    }
+
+    .ww-day.is-selected.load-md-plus2,
+    .ww-day.is-selected.load-md-minus2,
+    .ww-day.is-selected.load-md-plus1,
+    .ww-day.is-selected.load-md-minus3,
+    .ww-day.is-selected.load-md-minus4,
+    .ww-day.is-selected.load-md-minus5 {
+      background: var(--fill-secondary);
+    }
+
+    .break-range {
+      flex: 1;
+      margin: 0;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--secondary);
+      letter-spacing: -0.01em;
+      line-height: 1.35;
+    }
+
+    @media (min-width: 480px) {
+      .page { padding: 20px 20px 48px; }
+      .cal-grid { gap: 8px; }
+      .cal-day { min-height: 64px; }
+      .brand-logo { width: 34px; height: 34px; }
+      .view-tab { font-size: 0.875rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page" id="page-root">
+    <header class="doc-header">
+      <div class="brand-row">
+        <img class="brand-logo" src="logo-optimo.png" width="32" height="32" alt="">
+        <span class="brand-title">Óptimo</span>
+        <span class="brand-sep" aria-hidden="true">·</span>
+        <span class="brand-player">Ricardo Visus</span>
+        <span class="brand-sep" aria-hidden="true">·</span>
+        <span class="brand-meta">#14 Widzew</span>
+      </div>
+    </header>
+
+    <div class="view-tabs" role="tablist" aria-label="Vista del plan">
+      <button type="button" class="view-tab" role="tab" id="tab-plan" aria-selected="true" aria-controls="panel-plan" data-view="plan">Calendario</button>
+      <button type="button" class="view-tab" role="tab" id="tab-work-weeks" aria-selected="false" aria-controls="panel-work-weeks" data-view="work-weeks">Semanas de carga</button>
+    </div>
+
+    <div id="panel-plan" class="view-panel" role="tabpanel" aria-labelledby="tab-plan">
+    <section class="card" aria-label="Calendario">
+      <div class="cal-nav">
+        <button type="button" class="icon-btn" id="cal-prev" aria-label="Mes anterior">‹</button>
+        <h2 id="cal-month-label">—</h2>
+        <button type="button" class="icon-btn" id="cal-next" aria-label="Mes siguiente">›</button>
+      </div>
+      <div class="cal-grid" id="cal-head"></div>
+      <div class="cal-grid" id="cal-body"></div>
+    </section>
+
+    <section class="card week-tape-section" aria-label="Semana en cinta">
+      <div class="week-tape">
+        <button type="button" class="icon-btn tape-nav" id="tape-prev" aria-label="Día anterior">‹</button>
+        <div class="tape-segmented">
+          <div class="tape-strip" id="tape-strip"></div>
+        </div>
+        <button type="button" class="icon-btn tape-nav" id="tape-next" aria-label="Día siguiente">›</button>
+      </div>
+      <div class="day-focus" id="day-focus" aria-live="polite"></div>
+    </section>
+    </div>
+
+    <div id="panel-work-weeks" class="view-panel" role="tabpanel" aria-labelledby="tab-work-weeks" hidden>
+      <p class="work-weeks-intro">Pretemporada: de MD-5 al primer escudo. Resto: MD+1 al escudo. Mes = mes del partido.</p>
+      <div class="work-weeks-list" id="work-weeks-list"></div>
+    </div>
+
+    <section class="card plan-general" aria-label="Plan general">
+      <details class="plan-details">
+        <summary class="plan-summary">Cómo encaja tu semana</summary>
+
+      <div class="plan-block">
+        <h3>MD (partido)</h3>
+        <p>Partido con Widzew. Ese día no tienes sesión con Óptimo.</p>
+      </div>
+
+      <div class="plan-block">
+        <h3>MD-1</h3>
+        <p>El club hace la sesión previa al partido (van concentrados). Ese día <strong>no entrenas con Óptimo</strong>.</p>
+      </div>
+
+      <div class="plan-block">
+        <h3>MD-2</h3>
+        <p>El club suele meter poca carga. Es un <strong>buen día de gimnasio con Óptimo</strong>: fuerza básica, movilidad y <strong>arrastres cortos</strong> (sustituto de alta velocidad y cambios de dirección, que no hacemos en campo). <strong>Sin campo</strong>: el club lo vería mal.</p>
+      </div>
+
+      <div class="plan-block">
+        <h3>MD-3</h3>
+        <p>El club suele meter <strong>más velocidad en campo</strong>. Ese día Óptimo <strong>no</strong> hace alta velocidad ni COD en campo, ni arrastres. <strong>Sí toca más carga de fuerza en gimnasio</strong>.</p>
+      </div>
+
+      <div class="plan-block">
+        <h3>MD-4</h3>
+        <p>Día extra en <strong>semana larga</strong> (entre MD+2 y MD-3). <strong>Gimnasio</strong> o carga <strong>compensatoria</strong> según tus minutos; <strong>sin campo</strong> si el club no entrena ese día.</p>
+      </div>
+
+      <div class="plan-block">
+        <h3>MD-5</h3>
+        <p>Otro día de <strong>semana larga</strong> u otro hueco antes del partido. Igual que MD-4: gym o compensación según lo que hayas jugado; campo solo si el club entrena.</p>
+      </div>
+
+      <div class="plan-block">
+        <h3>MD+1</h3>
+        <p>Depende de los minutos del partido: a veces se puede aprovechar bastante (te lo concretamos cuando toque).</p>
+      </div>
+
+      <div class="plan-block">
+        <h3>MD+2</h3>
+        <p><strong>Movilidad y activación en gimnasio</strong> (descanso activo). Sin arrastres ni alta velocidad ni cambios de dirección.</p>
+      </div>
+
+      <div class="plan-block">
+        <h3>Semanas largas</h3>
+        <p>Cuando hay más días entre partidos (entre MD+2 y MD-3) o parón, aparecen huecos entre semana. <strong>Distancia larga en campo</strong> solo el día que entrena el club; si no entrena, no vas al campo y Óptimo tampoco te manda ahí. Con <strong>pocos minutos o casi sin jugar</strong>, sumamos carga <strong>compensatoria</strong>; la <strong>distancia extra</strong> en campo solo cuando el club entrena. <strong>Si no has jugado</strong>, más <strong>gimnasio</strong> y <strong>sin campo</strong>.</p>
+      </div>
+      </details>
+    </section>
+  </div>
+
+  <script>
+    const MATCHES = [
+      { date: "2026-07-25", time: null, home: "Widzew", away: "Motor Lublin", venue: "casa", comp: "Ekstraklasa J1", note: "Ventana 24–27 jul", window: true },
+      { date: "2026-08-01", time: null, home: "Wisła Płock", away: "Widzew", venue: "fuera", comp: "Ekstraklasa J2", note: "Ventana 31 jul–3 ago", window: true },
+      { date: "2026-08-08", time: null, home: "Jagiellonia Białystok", away: "Widzew", venue: "fuera", comp: "Ekstraklasa J3", note: "Ventana 7–10 ago", window: true },
+      { date: "2026-08-15", time: null, home: "Widzew", away: "Korona Kielce", venue: "casa", comp: "Ekstraklasa J4", note: "Ventana 14–17 ago", window: true },
+      { date: "2026-08-22", time: null, home: "Śląsk Wrocław", away: "Widzew", venue: "fuera", comp: "Ekstraklasa J5", note: "Ventana 21–24 ago", window: true },
+      { date: "2026-08-29", time: null, home: "Widzew", away: "Lech Poznań", venue: "casa", comp: "Ekstraklasa J6", note: "Ventana 28–31 ago", window: true },
+      { date: "2026-09-05", time: null, home: "Widzew", away: "Radomiak Radom", venue: "casa", comp: "Ekstraklasa J7", note: "Ventana 4–6 sep", window: true },
+      { date: "2026-09-12", time: null, home: "Legia Warszawa", away: "Widzew", venue: "fuera", comp: "Ekstraklasa J8", note: "Ventana 11–14 sep", window: true },
+      { date: "2026-09-19", time: null, home: "Widzew", away: "Wieczysta Kraków", venue: "casa", comp: "Ekstraklasa J9", note: "Ventana 18–20 sep", window: true },
+      { date: "2026-09-02", time: "20:30", home: "Widzew", away: "Korona Kielce", venue: "casa", comp: "Puchar Polski", note: "0-1, eliminado" },
+      { date: "2026-10-11", time: "14:45", home: "Piast Gliwice", away: "Widzew", venue: "fuera", comp: "Ekstraklasa J10", note: "2-1; Visus no titular" },
+      { date: "2026-10-16", time: "20:30", home: "Widzew", away: "Wisła Kraków", venue: "casa", comp: "Ekstraklasa" },
+      { date: "2026-10-23", time: "20:30", home: "Widzew", away: "Górnik Zabrze", venue: "casa", comp: "Ekstraklasa" },
+      { date: "2026-10-31", time: "20:15", home: "GKS Katowice", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2026-11-07", time: "20:15", home: "Widzew", away: "Pogoń Szczecin", venue: "casa", comp: "Ekstraklasa" },
+      { date: "2026-11-21", time: null, home: "Raków Częstochowa", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2026-11-28", time: null, home: "Widzew", away: "Zagłębie Lubin", venue: "casa", comp: "Ekstraklasa" },
+      { date: "2026-12-05", time: null, home: "Cracovia", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2026-12-12", time: null, home: "Motor Lublin", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2027-01-30", time: null, home: "Widzew", away: "Wisła Płock", venue: "casa", comp: "Ekstraklasa" },
+      { date: "2027-02-06", time: null, home: "Widzew", away: "Jagiellonia Białystok", venue: "casa", comp: "Ekstraklasa" },
+      { date: "2027-02-13", time: null, home: "Korona Kielce", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2027-02-20", time: null, home: "Widzew", away: "Śląsk Wrocław", venue: "casa", comp: "Ekstraklasa" },
+      { date: "2027-02-27", time: null, home: "Lech Poznań", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2027-03-06", time: null, home: "Radomiak Radom", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2027-03-13", time: null, home: "Widzew", away: "Legia Warszawa", venue: "casa", comp: "Ekstraklasa" },
+      { date: "2027-03-20", time: null, home: "Wieczysta Kraków", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2027-04-03", time: null, home: "Widzew", away: "Piast Gliwice", venue: "casa", comp: "Ekstraklasa" },
+      { date: "2027-04-10", time: null, home: "Wisła Kraków", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2027-04-17", time: null, home: "Górnik Zabrze", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2027-04-23", time: null, home: "Widzew", away: "GKS Katowice", venue: "casa", comp: "Ekstraklasa" },
+      { date: "2027-05-01", time: null, home: "Pogoń Szczecin", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2027-05-08", time: null, home: "Widzew", away: "Raków Częstochowa", venue: "casa", comp: "Ekstraklasa" },
+      { date: "2027-05-15", time: null, home: "Zagłębie Lubin", away: "Widzew", venue: "fuera", comp: "Ekstraklasa" },
+      { date: "2027-05-22", time: null, home: "Widzew", away: "Cracovia", venue: "casa", comp: "Ekstraklasa" }
+    ];
+
+    const CRESTS = {
+      "Widzew": "escudos/widzew.png",
+      "Motor Lublin": "escudos/motor.png",
+      "Wisła Płock": "escudos/wisla-plock.png",
+      "Jagiellonia Białystok": "escudos/jagiellonia.png",
+      "Korona Kielce": "escudos/korona.png",
+      "Śląsk Wrocław": "escudos/slask.png",
+      "Lech Poznań": "escudos/lech.png",
+      "Radomiak Radom": "escudos/radomiak.png",
+      "Legia Warszawa": "escudos/legia.png",
+      "Wieczysta Kraków": "escudos/wieczysta.png",
+      "Piast Gliwice": "escudos/piast.png",
+      "Wisła Kraków": "escudos/wisla-krakow.png",
+      "Górnik Zabrze": "escudos/gornik.png",
+      "GKS Katowice": "escudos/katowice.png",
+      "Pogoń Szczecin": "escudos/pogon.png",
+      "Raków Częstochowa": "escudos/rakow.png",
+      "Zagłębie Lubin": "escudos/zaglebie.png",
+      "Cracovia": "escudos/cracovia.png"
+    };
+
+    const SHORT = {
+      "Widzew": "Widzew",
+      "Motor Lublin": "Motor",
+      "Wisła Płock": "W. Płock",
+      "Jagiellonia Białystok": "Jagiellonia",
+      "Korona Kielce": "Korona",
+      "Śląsk Wrocław": "Śląsk",
+      "Lech Poznań": "Lech",
+      "Radomiak Radom": "Radomiak",
+      "Legia Warszawa": "Legia",
+      "Wieczysta Kraków": "Wieczysta",
+      "Piast Gliwice": "Piast",
+      "Wisła Kraków": "Wisła K.",
+      "Górnik Zabrze": "Górnik",
+      "GKS Katowice": "Katowice",
+      "Pogoń Szczecin": "Pogoń",
+      "Raków Częstochowa": "Raków",
+      "Zagłębie Lubin": "Zagłębie",
+      "Cracovia": "Cracovia"
+    };
+
+    /** Bloques de sesión online (protocolo wiki → fila de tabla). Vídeo vacío hasta enlazar. */
+    const PROTOCOLS = {
+      "rutina-movilidad-1": { label: "Movilidad 1 (cadera)", qty: "6 reps / ejercicio · 1 serie" },
+      "rutina-movilidad-2": { label: "Movilidad 2 (lumbar)", qty: "6 reps / ejercicio · 1 serie" },
+      "rutina-movilidad-slider-1": { label: "Movilidad sliders", qty: "6 reps / ejercicio · 1 serie" },
+      "rutina-movilidad-4": { label: "Movilidad isquio", qty: "6 reps / ejercicio · 1 serie" },
+      "movilidad-cadera-lumbar-1": { label: "Movilidad cadera", qty: "6 reps / ejercicio · 1 serie" },
+      "movilidad-lumbar-especifica": { label: "Movilidad lumbar (específica)", qty: "6 reps / ejercicio · 1 serie" },
+      "rutina-movilidad-3": { label: "Movilidad tobillo", qty: "6 reps / ejercicio · 1 serie" },
+      "activacion-basica-isquios-1": { label: "Activación básica isquios", qty: "6–8 reps · 1 serie" },
+      "activacion-complementaria-isquios-1": { label: "Activación complementaria isquios 1", qty: "6–8 reps · 1 serie" },
+      "activacion-complementaria-isquios-2": { label: "Activación complementaria isquios 2", qty: "6–8 reps · 1 serie" },
+      "activacion-basica-aductores": { label: "Activación básica aductores", qty: "6–8 reps · 1 serie" },
+      "activacion-adicional-aductores-1": { label: "Activación adicional aductores (complementaria 1)", qty: "6–8 reps · 1 serie" },
+      "activacion-complementaria-aductores-2": { label: "Activación complementaria aductores 2", qty: "6–8 reps · 1 serie" },
+      "activacion-basica-lumbar-1": { label: "Activación básica lumbar", qty: "6–8 reps · 1 serie" },
+      "activacion-basica-cuadriceps": { label: "Activación básica cuádriceps", qty: "6–8 reps · 1 serie" },
+      "activacion-complementaria-cuadriceps": { label: "Activación complementaria cuádriceps", qty: "6–8 reps · 1 serie" },
+      "fuerza-cuadriceps-bilateral": { label: "Sentadilla a cajón (controlada)", qty: "6–8 reps · 1 serie" },
+      "fuerza-cuadriceps-unilateral": { label: "Step-down lateral lento (o zancada inversa + mini-banda)", qty: "6–8 reps/pierna · 1 serie" },
+      "fuerza-isquios-bilateral": { label: "Puente de isquios / glúteo (o RDL a cajón)", qty: "6–8 reps · 1 serie" },
+      "fuerza-isquios-unilateral": { label: "Variante unilateral controlada (opcional)", qty: "6–8 reps/pierna · 1 serie" },
+      "aceleracion-sled-push": { label: "Sled push (trineo empujando)", qty: "3×5 m · 1 serie · 45–50 kg" },
+      "campo-reloj-arena": { label: "Reloj de arena", qty: "4 diagonales · 1 serie · ~90% Vmax" },
+      "tren-superior-empujes-1": { label: "Tren superior empujes 1", qty: "" }
+    };
+
+    const BASE_ONLINE = [
+      "rutina-movilidad-1",
+      "rutina-movilidad-2",
+      "rutina-movilidad-slider-1"
+    ];
+
+    const MD_ONLINE_BLOCKS = {
+      "MD-5": {
+        specific: ["rutina-movilidad-4"],
+        activation: ["activacion-basica-isquios-1", "activacion-complementaria-isquios-1"],
+        post: ["tren-superior-empujes-1"]
+      },
+      "MD-4": {
+        specific: ["movilidad-cadera-lumbar-1"],
+        activation: ["activacion-basica-aductores", "activacion-adicional-aductores-1"],
+        post: ["tren-superior-empujes-1"]
+      },
+      "MD-3": {
+        specific: ["movilidad-lumbar-especifica"],
+        activation: ["activacion-basica-isquios-1", "activacion-complementaria-isquios-2"],
+        post: ["tren-superior-empujes-1"]
+      },
+      "MD-2": {
+        specific: ["rutina-movilidad-3"],
+        activation: ["activacion-basica-aductores", "activacion-complementaria-aductores-2"],
+        post: ["tren-superior-empujes-1"]
+      },
+      "MD+2": {
+        activation: [
+          "activacion-basica-aductores",
+          "activacion-basica-isquios-1",
+          "activacion-basica-lumbar-1"
+        ]
+      }
+    };
+
+    /** Duración PRE (base + específica + activación + fuerza momentánea). */
+    function sessionDurationLabel(md, iso) {
+      if (!md || md === "MD" || md === "MD-1" || md === "MD+1") return null;
+      const blocks = MD_ONLINE_BLOCKS[md];
+      if (!blocks) return null;
+
+      const strengthRole = iso && iso >= STRENGTH_FROM ? STRENGTH_DAY_MAP[iso] : null;
+
+      let min = 7;
+      let max = 7;
+      if (strengthRole === "posterior" || (blocks.specific && blocks.specific.length)) {
+        min += 5;
+        max += 5;
+      }
+      if (strengthRole === "anterior") {
+        min += 5;
+        max += 10;
+      } else if (strengthRole === "posterior") {
+        min += 5;
+        max += 10;
+      } else if (blocks.activation && blocks.activation.length) {
+        min += 5;
+        max += 10;
+      }
+      if (strengthRole) {
+        min += 10;
+        max += 10;
+      }
+      if (md === "MD-2") {
+        min += 5;
+        max += 5;
+      }
+      if (iso && FIELD_DAY_MAP[iso]) {
+        min += 8;
+        max += 12;
+      }
+
+      return `Sesión ~${min}–${max} min`;
+    }
+
+    function buildFieldDayMap(strengthMap) {
+      const map = {};
+      Object.keys(strengthMap).forEach((key) => {
+        if (strengthMap[key] !== "anterior") return;
+        const antDate = parseDateLocal(key);
+        const fieldKey = dateKey(addDays(antDate, 1));
+        const postKey = dateKey(addDays(antDate, 2));
+        if (strengthMap[postKey] === "posterior") map[fieldKey] = true;
+      });
+      return map;
+    }
+
+    function appendCampoRelojArenaBlock(appendSectionHead, appendProtocolRow, appendNoteRow) {
+      appendSectionHead("Campo");
+      appendProtocolRow("campo-reloj-arena");
+      appendNoteRow(
+        "Diagonales del campo en progresión hasta ~90% Vmax; el ancho del campo en trote y luego la otra diagonal. 1 serie × 4 progresiones en diagonal. En semanas siguientes subiremos series/reps y cambiaremos ejercicios."
+      );
+    }
+
+    function appendMd2SledBlock(appendSectionHead, appendProtocolRow, appendNoteRow) {
+      appendSectionHead("Aceleración");
+      appendProtocolRow("aceleracion-sled-push");
+      appendNoteRow(
+        "5 m por salida, lo más rápido/fuerte posible (trineo ≥45–50 kg). Más adelante subiremos series y repeticiones y añadiremos pliometría; de momento sin plyo."
+      );
+    }
+
+    const STRENGTH_FROM = "2026-10-19";
+
+    function buildStrengthDayMap() {
+      const map = {};
+      const sorted = sortedMatches();
+
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const start = parseDateLocal(sorted[i].date);
+        const end = parseDateLocal(sorted[i + 1].date);
+        const workDays = [];
+
+        for (let d = addDays(start, 1); d < end; d = addDays(d, 1)) {
+          const key = dateKey(d);
+          if (key < STRENGTH_FROM) continue;
+          const tag = MD_MAP[key];
+          if (!tag || tag === "MD" || tag === "MD-1" || tag === "MD+1" || tag === "MD+2") continue;
+          workDays.push({ key, tag });
+        }
+
+        if (!workDays.length) continue;
+
+        const tags = new Set(workDays.map((w) => w.tag));
+        let anteriorTag = null;
+        if (tags.has("MD-5")) anteriorTag = "MD-5";
+        else if (tags.has("MD-4")) anteriorTag = "MD-4";
+        else if (tags.has("MD-3")) anteriorTag = "MD-3";
+
+        let posteriorTag = null;
+        if (anteriorTag === "MD-5") posteriorTag = "MD-3";
+        else if (anteriorTag === "MD-4") posteriorTag = "MD-2";
+        else if (anteriorTag === "MD-3") posteriorTag = "MD-1";
+
+        function dayForTag(tag) {
+          return workDays.find((w) => w.tag === tag);
+        }
+
+        if (posteriorTag === "MD-1") posteriorTag = null;
+
+        const antDay = anteriorTag ? dayForTag(anteriorTag) : null;
+        const postDay = posteriorTag ? dayForTag(posteriorTag) : null;
+
+        if (antDay && postDay && daysBetween(parseDateLocal(antDay.key), parseDateLocal(postDay.key)) === 2) {
+          map[antDay.key] = "anterior";
+          map[postDay.key] = "posterior";
+        } else if (antDay && (anteriorTag === "MD-4" || anteriorTag === "MD-3")) {
+          map[antDay.key] = "anterior";
+        }
+      }
+
+      return map;
+    }
+
+    function isquioComplementariaForPosterior(md, weekHasMd5) {
+      if (md === "MD-3" || md === "MD-2") return "activacion-complementaria-isquios-2";
+      return weekHasMd5 ? "activacion-complementaria-isquios-1" : "activacion-complementaria-isquios-1";
+    }
+
+    function microcycleHasMd5(iso) {
+      const sorted = sortedMatches();
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const start = parseDateLocal(sorted[i].date);
+        const end = parseDateLocal(sorted[i + 1].date);
+        const d = parseDateLocal(iso);
+        if (d <= start || d >= end) continue;
+        for (let cur = addDays(start, 1); cur < end; cur = addDays(cur, 1)) {
+          if (MD_MAP[dateKey(cur)] === "MD-5") return true;
+        }
+        return false;
+      }
+      return false;
+    }
+
+    const MONTHS_ES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const DOW_ES = ["L", "M", "X", "J", "V", "S", "D"];
+    const DOW_SHORT = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+    const DOW_FULL = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+
+    function parseDateLocal(iso) {
+      const [y, m, d] = iso.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function dateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function startOfDay(d) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function daysBetween(a, b) {
+      const ms = startOfDay(b) - startOfDay(a);
+      return Math.round(ms / 86400000);
+    }
+
+    function addDays(d, n) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+    }
+
+    function sortedMatches() {
+      return [...MATCHES].sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function rivalLabel(m) {
+      return m.venue === "casa" ? m.away : m.home;
+    }
+
+    const VENUE_SVG = {
+      casa: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1 1 7v7h5V9h4v5h5V7L8 1z"/></svg>',
+      fuera: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M14.8 8.1 11 7.8 9.6 5.2H7.4L6 7.8 2.2 8.1 1 9.4l1.6.7 2.3-.2.7 2.4H6l.6-1.8h2.8l.6 1.8h1.4l.7-2.4 2.3.2 1.6-.7-1.2-1.3z"/></svg>'
+    };
+
+    function appendVenueIcons(cell, venue) {
+      if (venue !== "casa" && venue !== "fuera") return;
+      const markup = VENUE_SVG[venue];
+      ["corner-tr"].forEach((corner) => {
+        const el = document.createElement("span");
+        el.className = `venue-icon ${corner}`;
+        el.setAttribute("aria-hidden", "true");
+        el.innerHTML = markup;
+        cell.appendChild(el);
+      });
+    }
+
+    function mdLabelForDay(daysFromStart, daysToEnd) {
+      if (daysFromStart === 0 || daysToEnd === 0) return "MD";
+      if (daysFromStart === 1) return "MD+1";
+      if (daysFromStart === 2) return "MD+2";
+      if (daysToEnd === 1) return "MD-1";
+      if (daysToEnd === 2) return "MD-2";
+      if (daysToEnd === 3) return "MD-3";
+      if (daysToEnd === 4) return "MD-4";
+      if (daysToEnd === 5) return "MD-5";
+      return null;
+    }
+
+    function buildMdMap() {
+      const map = {};
+      const sorted = sortedMatches();
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const start = parseDateLocal(sorted[i].date);
+        const end = parseDateLocal(sorted[i + 1].date);
+        for (let d = start; d <= end; d = addDays(d, 1)) {
+          const key = dateKey(d);
+          const fromStart = daysBetween(start, d);
+          const toEnd = daysBetween(d, end);
+          const label = mdLabelForDay(fromStart, toEnd);
+          if (label) map[key] = label;
+        }
+      }
+      return map;
+    }
+
+    const MD_MAP = buildMdMap();
+    const STRENGTH_DAY_MAP = buildStrengthDayMap();
+    const FIELD_DAY_MAP = buildFieldDayMap(STRENGTH_DAY_MAP);
+
+    const LOAD_TINT_FROM = "2026-10-19";
+
+    const WINTER_BREAK = { from: "2026-12-12", to: "2027-01-30" };
+    const WORK_WEEKS_FROM = "2026-10-11";
+
+    function loadClassForMdTag(tag) {
+      if (!tag || tag === "MD" || tag === "MD-1") return null;
+      const byTag = {
+        "MD+2": "load-md-plus2",
+        "MD-2": "load-md-minus2",
+        "MD+1": "load-md-plus1",
+        "MD-3": "load-md-minus3",
+        "MD-4": "load-md-minus4",
+        "MD-5": "load-md-minus5"
+      };
+      return byTag[tag] || null;
+    }
+
+    function applyCalLoadClass(cell, iso) {
+      if (iso < LOAD_TINT_FROM) return;
+      const cls = loadClassForMdTag(MD_MAP[iso]);
+      if (cls) cell.classList.add(cls);
+    }
+
+    function applyWwLoadClass(cell, iso) {
+      if (iso < LOAD_TINT_FROM) return;
+      const cls = loadClassForMdTag(MD_MAP[iso]);
+      if (cls) cell.classList.add(cls);
+    }
+
+    function weekTypeFromLabels(labelSet) {
+      if (labelSet.has("MD-5")) return "Larga";
+      if (labelSet.has("MD-4")) return "Natural";
+      if (labelSet.has("MD-3")) return "Corta";
+      return "Muy corta";
+    }
+
+    function isWinterBreakInterval(prevMatch, nextMatch) {
+      return prevMatch.date === WINTER_BREAK.from && nextMatch.date === WINTER_BREAK.to;
+    }
+
+    function pushWorkWeekDay(days, labelSet, d) {
+      const key = dateKey(d);
+      const tag = MD_MAP[key] || null;
+      if (tag && tag !== "MD") labelSet.add(tag);
+      days.push({
+        date: new Date(d.getTime()),
+        key,
+        tag,
+        match: matchesByDate[key] ? matchesByDate[key][0] : null
+      });
+    }
+
+    function buildPretemporadaDays(startMd, endMd) {
+      const days = [];
+      const labelSet = new Set();
+      let fromMd5 = false;
+
+      for (let d = addDays(startMd, 1); d <= endMd; d = addDays(d, 1)) {
+        const tag = MD_MAP[dateKey(d)] || null;
+        if (!fromMd5) {
+          if (tag === "MD-5") fromMd5 = true;
+          else continue;
+        }
+        pushWorkWeekDay(days, labelSet, d);
+      }
+
+      if (days.length) return { days, labelSet };
+
+      /* Sin MD-5 en el tramo: desde el primer MD negativo hasta el partido */
+      for (let d = addDays(startMd, 1); d <= endMd; d = addDays(d, 1)) {
+        const tag = MD_MAP[dateKey(d)] || null;
+        if (!tag || tag === "MD" || tag.startsWith("MD+")) continue;
+        for (let d2 = d; d2 <= endMd; d2 = addDays(d2, 1)) {
+          pushWorkWeekDay(days, labelSet, d2);
+        }
+        break;
+      }
+
+      return { days, labelSet };
+    }
+
+    function buildWorkWeekEntries() {
+      const sorted = sortedMatches();
+      const entries = [];
+      let firstWorkWeek = true;
+
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const prev = sorted[i];
+        const next = sorted[i + 1];
+        if (next.date < WORK_WEEKS_FROM) continue;
+
+        if (isWinterBreakInterval(prev, next)) {
+          entries.push({ kind: "break", from: WINTER_BREAK.from, to: WINTER_BREAK.to });
+          firstWorkWeek = false;
+          continue;
+        }
+
+        const startMd = parseDateLocal(prev.date);
+        const endMd = parseDateLocal(next.date);
+        let days = [];
+        let labelSet = new Set();
+        const isPretemporada = firstWorkWeek;
+
+        if (isPretemporada) {
+          ({ days, labelSet } = buildPretemporadaDays(startMd, endMd));
+          firstWorkWeek = false;
+        } else {
+          for (let d = addDays(startMd, 1); d <= endMd; d = addDays(d, 1)) {
+            pushWorkWeekDay(days, labelSet, d);
+          }
+        }
+
+        if (!days.length) continue;
+
+        entries.push({
+          kind: "week",
+          prevMatch: prev,
+          nextMatch: next,
+          mdDate: next.date,
+          isPretemporada,
+          type: isPretemporada ? "Pretemporada" : weekTypeFromLabels(labelSet),
+          days
+        });
+      }
+      return entries;
+    }
+
+    let activeView = "plan";
+
+    function setActiveView(view) {
+      activeView = view;
+      const isPlan = view === "plan";
+      document.getElementById("panel-plan").hidden = !isPlan;
+      document.getElementById("panel-work-weeks").hidden = isPlan;
+      document.getElementById("tab-plan").setAttribute("aria-selected", isPlan ? "true" : "false");
+      document.getElementById("tab-work-weeks").setAttribute("aria-selected", isPlan ? "false" : "true");
+      document.getElementById("page-root").classList.toggle("view-work-weeks", !isPlan);
+      if (!isPlan) renderWorkWeeks();
+    }
+
+    function formatBreakRange(fromIso, toIso) {
+      const a = parseDateLocal(fromIso);
+      const b = parseDateLocal(toIso);
+      return `${a.getDate()} ${MONTHS_ES[a.getMonth()].toLowerCase()} ${a.getFullYear()} – ${b.getDate()} ${MONTHS_ES[b.getMonth()].toLowerCase()} ${b.getFullYear()}`;
+    }
+
+    function createWwDayButton(dayInfo) {
+      const d = dayInfo.date;
+      const key = dayInfo.key;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ww-day";
+      btn.dataset.date = key;
+      if (dayInfo.tag === "MD") btn.classList.add("is-md");
+      if (key === dateKey(centerDate)) btn.classList.add("is-selected");
+      if (key === dateKey(today)) btn.classList.add("is-today");
+
+      const dow = document.createElement("span");
+      dow.className = "ww-dow";
+      dow.textContent = DOW_SHORT[d.getDay()].charAt(0);
+      btn.appendChild(dow);
+
+      const num = document.createElement("span");
+      num.className = "ww-num";
+      num.textContent = d.getDate();
+      btn.appendChild(num);
+
+      if (dayInfo.tag) {
+        const el = document.createElement("span");
+        el.className = "md-tag";
+        el.textContent = dayInfo.tag;
+        btn.appendChild(el);
+      }
+
+      const match = dayInfo.match;
+      if (match && dayInfo.tag === "MD") {
+        appendVenueIcons(btn, match.venue);
+        appendMatchVisual(btn, match, "crest");
+      }
+
+      applyWwLoadClass(btn, key);
+
+      btn.setAttribute("aria-label", formatShortDate(d) + (dayInfo.tag ? ` · ${dayInfo.tag}` : ""));
+      btn.addEventListener("click", () => setCenterDate(d));
+      return btn;
+    }
+
+    function monthGroupKeyFromMdIso(iso) {
+      const d = parseDateLocal(iso);
+      return `${d.getFullYear()}-${d.getMonth()}`;
+    }
+
+    function monthGroupLabelFromMdIso(iso) {
+      const d = parseDateLocal(iso);
+      return `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    function groupWorkWeekEntries(entries) {
+      const groups = [];
+      let monthBlock = null;
+      let weekInMonth = 0;
+
+      function flushMonth() {
+        if (monthBlock) {
+          groups.push(monthBlock);
+          monthBlock = null;
+        }
+        weekInMonth = 0;
+      }
+
+      entries.forEach((entry) => {
+        if (entry.kind === "break") {
+          flushMonth();
+          groups.push({ kind: "break", entry });
+          return;
+        }
+
+        const key = monthGroupKeyFromMdIso(entry.mdDate);
+        if (!monthBlock || monthBlock.key !== key) {
+          flushMonth();
+          monthBlock = {
+            kind: "month",
+            key,
+            label: monthGroupLabelFromMdIso(entry.mdDate),
+            rows: []
+          };
+          weekInMonth = 0;
+        }
+        weekInMonth += 1;
+        monthBlock.rows.push({ entry, weekNum: weekInMonth });
+      });
+
+      flushMonth();
+      return groups;
+    }
+
+    function createWorkWeekRow(entry, weekNum) {
+      const row = document.createElement("div");
+      row.className = "work-week-row" + (entry.kind === "break" ? " is-break" : "");
+
+      if (entry.kind === "break") {
+        const typeEl = document.createElement("div");
+        typeEl.className = "work-week-type";
+        typeEl.textContent = "Parón";
+        row.appendChild(typeEl);
+        const range = document.createElement("p");
+        range.className = "break-range";
+        range.textContent = formatBreakRange(entry.from, entry.to);
+        row.appendChild(range);
+        return row;
+      }
+
+      const meta = document.createElement("div");
+      meta.className = "work-week-meta";
+
+      const numEl = document.createElement("span");
+      numEl.className = "work-week-num";
+      numEl.textContent = `Semana ${weekNum}`;
+      meta.appendChild(numEl);
+
+      const typeEl = document.createElement("div");
+      typeEl.className = "work-week-type" + (entry.isPretemporada ? " is-pretemporada" : "");
+      typeEl.textContent = entry.type;
+      meta.appendChild(typeEl);
+
+      row.appendChild(meta);
+
+      const strip = document.createElement("div");
+      strip.className = "work-week-strip";
+      entry.days.forEach((dayInfo) => strip.appendChild(createWwDayButton(dayInfo)));
+      row.appendChild(strip);
+
+      return row;
+    }
+
+    function renderWorkWeeks() {
+      const list = document.getElementById("work-weeks-list");
+      if (!list) return;
+      list.innerHTML = "";
+      const groups = groupWorkWeekEntries(buildWorkWeekEntries());
+
+      groups.forEach((group) => {
+        if (group.kind === "break") {
+          const section = document.createElement("section");
+          section.className = "card work-weeks-break-card";
+          section.setAttribute("aria-label", "Parón invernal");
+          section.appendChild(createWorkWeekRow(group.entry, null));
+          list.appendChild(section);
+          return;
+        }
+
+        const section = document.createElement("section");
+        section.className = "card work-weeks-month-card";
+        section.setAttribute("aria-label", group.label);
+
+        const title = document.createElement("h3");
+        title.className = "work-weeks-month-title";
+        title.textContent = group.label;
+        section.appendChild(title);
+
+        const body = document.createElement("div");
+        body.className = "work-weeks-month-body";
+        group.rows.forEach(({ entry, weekNum }) => {
+          body.appendChild(createWorkWeekRow(entry, weekNum));
+        });
+        section.appendChild(body);
+
+        list.appendChild(section);
+      });
+    }
+
+    const matchesByDate = {};
+    sortedMatches().forEach((m) => {
+      if (!matchesByDate[m.date]) matchesByDate[m.date] = [];
+      matchesByDate[m.date].push(m);
+    });
+
+    const today = startOfDay(new Date());
+    let calYear, calMonth;
+    let centerDate = today;
+    const calCellsByDate = {};
+
+    function formatShortDate(d) {
+      const dow = DOW_SHORT[d.getDay()];
+      const day = d.getDate();
+      const mon = d.getMonth() + 1;
+      return `${dow} ${day}/${String(mon).padStart(2, "0")}`;
+    }
+
+    function formatLongDate(d) {
+      const dow = DOW_FULL[d.getDay()];
+      const day = d.getDate();
+      const mon = MONTHS_ES[d.getMonth()].toLowerCase();
+      const dowCap = dow.charAt(0).toUpperCase() + dow.slice(1);
+      return `${dowCap} ${day} de ${mon} de ${d.getFullYear()}`;
+    }
+
+    function initCalendar() {
+      calYear = today.getFullYear();
+      calMonth = today.getMonth();
+      renderMonth();
+      renderTape();
+      renderDayFocus();
+    }
+
+    function setCenterDate(d) {
+      centerDate = startOfDay(d);
+      const needMonth = centerDate.getFullYear() !== calYear || centerDate.getMonth() !== calMonth;
+      if (needMonth) {
+        calYear = centerDate.getFullYear();
+        calMonth = centerDate.getMonth();
+        renderCalendar();
+      } else {
+        setCalHighlight(dateKey(centerDate));
+      }
+      renderTape();
+      renderDayFocus();
+      if (activeView === "work-weeks") renderWorkWeeks();
+    }
+
+    function shiftCenter(days) {
+      setCenterDate(addDays(centerDate, days));
+    }
+
+    function appendMdTag(cell, key) {
+      const tag = MD_MAP[key];
+      if (tag) {
+        const el = document.createElement("span");
+        el.className = "md-tag";
+        el.textContent = tag;
+        cell.appendChild(el);
+      }
+    }
+
+    function appendMatchVisual(cell, m, sizeClass) {
+      const rival = rivalLabel(m);
+      const wrap = document.createElement("div");
+      wrap.className = "crest-wrap";
+      const crestSrc = CRESTS[rival];
+      if (crestSrc) {
+        const img = document.createElement("img");
+        img.className = sizeClass || "crest";
+        img.alt = rival;
+        img.src = crestSrc;
+        img.addEventListener("error", () => {
+          img.remove();
+          const sp = document.createElement("span");
+          sp.className = "rival-short";
+          sp.textContent = SHORT[rival] || rival;
+          wrap.appendChild(sp);
+        });
+        wrap.appendChild(img);
+      } else {
+        const sp = document.createElement("span");
+        sp.className = "rival-short";
+        sp.textContent = SHORT[rival] || rival;
+        wrap.appendChild(sp);
+      }
+      cell.appendChild(wrap);
+    }
+
+    function setCalHighlight(iso) {
+      clearCalHighlight();
+      const cell = calCellsByDate[iso];
+      if (cell) cell.classList.add("cal-highlight");
+    }
+
+    function clearCalHighlight() {
+      document.querySelectorAll(".cal-day.cal-highlight").forEach((c) => c.classList.remove("cal-highlight"));
+    }
+
+    function renderCalendar() {
+      Object.keys(calCellsByDate).forEach((k) => delete calCellsByDate[k]);
+      document.getElementById("cal-month-label").textContent = `${MONTHS_ES[calMonth]} ${calYear}`;
+      const head = document.getElementById("cal-head");
+      const body = document.getElementById("cal-body");
+      head.innerHTML = "";
+      body.innerHTML = "";
+      DOW_ES.forEach((d) => {
+        const el = document.createElement("div");
+        el.className = "cal-dow";
+        el.textContent = d;
+        head.appendChild(el);
+      });
+
+      const first = new Date(calYear, calMonth, 1);
+      let startPad = first.getDay() - 1;
+      if (startPad < 0) startPad = 6;
+
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+      for (let i = 0; i < startPad; i++) {
+        const empty = document.createElement("div");
+        empty.className = "cal-day empty";
+        body.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const d = new Date(calYear, calMonth, day);
+        const key = dateKey(d);
+        const cell = document.createElement("div");
+        cell.className = "cal-day";
+        cell.dataset.date = key;
+
+        appendMdTag(cell, key);
+
+        const num = document.createElement("span");
+        num.className = "day-num";
+        num.textContent = day;
+        cell.appendChild(num);
+
+        if (dateKey(today) === key) cell.classList.add("today");
+
+        const match = matchesByDate[key] ? matchesByDate[key][0] : null;
+
+        if (match) {
+          cell.classList.add("match");
+          appendVenueIcons(cell, match.venue);
+          appendMatchVisual(cell, match);
+        }
+
+        applyCalLoadClass(cell, key);
+
+        cell.classList.add("has-list");
+        cell.addEventListener("click", () => setCenterDate(d));
+
+        calCellsByDate[key] = cell;
+        body.appendChild(cell);
+      }
+
+      setCalHighlight(dateKey(centerDate));
+    }
+
+    function renderTape() {
+      const strip = document.getElementById("tape-strip");
+      strip.innerHTML = "";
+      const centerKey = dateKey(centerDate);
+      const todayKey = dateKey(today);
+
+      for (let offset = -3; offset <= 3; offset++) {
+        const d = addDays(centerDate, offset);
+        const key = dateKey(d);
+        const isActive = key === centerKey;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tape-day" + (isActive ? " active" : " side");
+        if (key === todayKey) btn.classList.add("is-today");
+        btn.setAttribute("aria-label", formatShortDate(d));
+        if (isActive) btn.setAttribute("aria-current", "date");
+
+        const dow = document.createElement("span");
+        dow.className = "tape-dow";
+        dow.textContent = DOW_SHORT[d.getDay()];
+        btn.appendChild(dow);
+
+        const num = document.createElement("span");
+        num.className = "tape-num";
+        num.textContent = d.getDate();
+        btn.appendChild(num);
+
+        appendMdTag(btn, key);
+
+        const match = matchesByDate[key] ? matchesByDate[key][0] : null;
+        if (match) {
+          appendVenueIcons(btn, match.venue);
+          appendMatchVisual(btn, match, "crest");
+        }
+
+        btn.addEventListener("click", () => {
+          if (!isActive) setCenterDate(d);
+        });
+
+        strip.appendChild(btn);
+      }
+    }
+
+    function renderDayFocus() {
+      const wrap = document.getElementById("day-focus");
+      const key = dateKey(centerDate);
+      const match = matchesByDate[key] ? matchesByDate[key][0] : null;
+      const md = MD_MAP[key];
+
+      wrap.innerHTML = "";
+
+      const heading = document.createElement("div");
+      heading.className = "day-focus-heading";
+
+      const title = document.createElement("h3");
+      title.textContent = formatLongDate(centerDate);
+      heading.appendChild(title);
+
+      if (md) {
+        const badge = document.createElement("span");
+        badge.className = "day-focus-md";
+        badge.textContent = md;
+        heading.appendChild(badge);
+      }
+
+      const durationText = sessionDurationLabel(md, key);
+      if (durationText) {
+        const durationEl = document.createElement("p");
+        durationEl.className = "day-focus-duration";
+        durationEl.textContent = durationText;
+        heading.appendChild(durationEl);
+      }
+
+      wrap.appendChild(heading);
+
+      const tableWrap = document.createElement("div");
+      tableWrap.className = "content-table-wrap";
+      const table = document.createElement("table");
+      table.className = "content-table";
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th scope="col">Ejercicio</th>
+            <th scope="col">Cantidad</th>
+            <th scope="col">Vídeo</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+      const tbody = table.querySelector("tbody");
+
+      function appendVideoCell(tr, url) {
+        const td = document.createElement("td");
+        if (url) {
+          const a = document.createElement("a");
+          a.href = url;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = "Vídeo";
+          td.appendChild(a);
+        } else {
+          td.className = "empty";
+          td.textContent = "—";
+        }
+        tr.appendChild(td);
+      }
+
+      function appendSectionHead(titleText) {
+        const tr = document.createElement("tr");
+        tr.className = "section-head";
+        const td = document.createElement("td");
+        td.colSpan = 3;
+        td.textContent = titleText;
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      }
+
+      function appendProtocolRow(protocolId) {
+        const p = PROTOCOLS[protocolId];
+        if (!p) return;
+        const tr = document.createElement("tr");
+        tr.dataset.protocol = protocolId;
+        const tdName = document.createElement("td");
+        tdName.textContent = p.label;
+        tr.appendChild(tdName);
+        const tdQty = document.createElement("td");
+        if (p.qty) {
+          tdQty.textContent = p.qty;
+        } else {
+          tdQty.className = "empty";
+          tdQty.textContent = "—";
+        }
+        tr.appendChild(tdQty);
+        appendVideoCell(tr, p.video || null);
+        tbody.appendChild(tr);
+      }
+
+      function appendNoteRow(text) {
+        const tr = document.createElement("tr");
+        tr.className = "day-note";
+        const td = document.createElement("td");
+        td.colSpan = 3;
+        td.textContent = text;
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      }
+
+      if (match) {
+        const rival = rivalLabel(match);
+        const trMatch = document.createElement("tr");
+        const venueText = match.venue === "casa" ? "casa" : "fuera";
+        const timeText = match.time ? match.time : "—";
+        const tdContent = document.createElement("td");
+        tdContent.textContent = `Partido · ${SHORT[rival] || rival} (${venueText}) · ${timeText}`;
+        trMatch.appendChild(tdContent);
+        const tdQty = document.createElement("td");
+        tdQty.className = "empty";
+        tdQty.textContent = "—";
+        trMatch.appendChild(tdQty);
+        appendVideoCell(trMatch, null);
+        tbody.appendChild(trMatch);
+        if (md === "MD") {
+          appendNoteRow("Sin sesión de gimnasio Óptimo este día.");
+        }
+      }
+
+      if (md === "MD-1") {
+        appendNoteRow("Sesión previa al partido con el club (concentrados). Sin entrenamiento Óptimo.");
+      } else if (md === "MD+1") {
+        appendNoteRow("Recuperación según minutos del partido; te concretamos la sesión cuando toque.");
+      } else if (md && MD_ONLINE_BLOCKS[md]) {
+        const blocks = MD_ONLINE_BLOCKS[md];
+        const strengthRole = key >= STRENGTH_FROM ? STRENGTH_DAY_MAP[key] : null;
+
+        appendSectionHead("Base");
+        BASE_ONLINE.forEach(appendProtocolRow);
+
+        if (strengthRole === "posterior") {
+          appendSectionHead("Específica");
+          appendProtocolRow("rutina-movilidad-4");
+          appendSectionHead("Activación");
+          appendProtocolRow("activacion-basica-isquios-1");
+          appendProtocolRow(isquioComplementariaForPosterior(md, microcycleHasMd5(key)));
+          appendSectionHead("Fuerza");
+          appendProtocolRow("fuerza-isquios-bilateral");
+          appendProtocolRow("fuerza-isquios-unilateral");
+        } else if (strengthRole === "anterior") {
+          if (blocks.specific && blocks.specific.length) {
+            appendSectionHead("Específica");
+            blocks.specific.forEach(appendProtocolRow);
+          }
+          appendSectionHead("Activación");
+          appendProtocolRow("activacion-basica-cuadriceps");
+          appendProtocolRow("activacion-complementaria-cuadriceps");
+          appendSectionHead("Fuerza");
+          appendProtocolRow("fuerza-cuadriceps-bilateral");
+          appendProtocolRow("fuerza-cuadriceps-unilateral");
+        } else {
+          if (blocks.specific && blocks.specific.length) {
+            appendSectionHead("Específica");
+            blocks.specific.forEach(appendProtocolRow);
+          }
+          if (blocks.activation && blocks.activation.length) {
+            appendSectionHead("Activación");
+            blocks.activation.forEach(appendProtocolRow);
+          }
+        }
+
+        if (key >= STRENGTH_FROM && FIELD_DAY_MAP[key]) {
+          appendCampoRelojArenaBlock(appendSectionHead, appendProtocolRow, appendNoteRow);
+        }
+
+        if (md === "MD-2") {
+          appendMd2SledBlock(appendSectionHead, appendProtocolRow, appendNoteRow);
+        }
+      } else if (!match) {
+        appendNoteRow("Sin bloque asignado para este día.");
+      }
+
+      tableWrap.appendChild(table);
+      wrap.appendChild(tableWrap);
+    }
+
+    function renderMonth() {
+      renderCalendar();
+    }
+
+    document.getElementById("cal-prev").addEventListener("click", () => {
+      calMonth--;
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      renderMonth();
+    });
+
+    document.getElementById("cal-next").addEventListener("click", () => {
+      calMonth++;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      renderMonth();
+    });
+
+    document.getElementById("tape-prev").addEventListener("click", () => shiftCenter(-1));
+    document.getElementById("tape-next").addEventListener("click", () => shiftCenter(1));
+
+    document.getElementById("tab-plan").addEventListener("click", () => setActiveView("plan"));
+    document.getElementById("tab-work-weeks").addEventListener("click", () => setActiveView("work-weeks"));
+
+    initCalendar();
+  </script>
+</body>
+</html>
