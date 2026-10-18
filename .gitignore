@@ -11,3 +11,5 @@ node_modules
 *.avi
 *.mkv
 Biblioteca de Ejercicios/
+
+.vercel

@@ -14,8 +14,8 @@
       --secondary: #86868B;
       --line: #D2D2D7;
       --fill-secondary: #E8E8ED;
-      --accent: #0071E3;
-      --accent-hover: #0077ED;
+      --accent: #1D1D1F;
+      --accent-hover: #424245;
       --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
       --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.08);
       --radius: 12px;
@@ -133,8 +133,153 @@
     .icon-btn:active { transform: scale(0.96); }
 
     .icon-btn:focus-visible {
-      outline: 2px solid var(--accent);
+      outline: 2px solid var(--text);
       outline-offset: 2px;
+    }
+
+    /* Flex on <td> breaks row height / borders — flex lives on inner wrapper */
+    .exercise-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .exercise-label {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .info-btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      margin-top: 1px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--fill-secondary);
+      font-family: var(--font);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      font-style: italic;
+      line-height: 1;
+      color: var(--secondary);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .info-btn:hover {
+      background: #DCDCE0;
+      color: var(--text);
+      border-color: #C7C7CC;
+    }
+
+    .info-btn:focus-visible {
+      outline: 2px solid var(--text);
+      outline-offset: 2px;
+    }
+
+    .info-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+      pointer-events: none;
+    }
+
+    .info-modal:not([hidden]) {
+      pointer-events: auto;
+    }
+
+    .info-modal[hidden] {
+      display: none !important;
+    }
+
+    .info-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.32);
+      opacity: 0;
+      transition: opacity 0.22s ease;
+    }
+
+    .info-modal.is-open .info-overlay {
+      opacity: 1;
+    }
+
+    .info-sheet {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      max-height: min(72vh, 520px);
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: var(--shadow-md);
+      transform: translateY(12px);
+      opacity: 0;
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.22s ease;
+    }
+
+    .info-modal.is-open .info-sheet {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    @media (min-width: 480px) {
+      .info-modal {
+        align-items: center;
+        padding: 24px;
+      }
+      .info-sheet {
+        border-radius: var(--radius);
+      }
+    }
+
+    .info-sheet-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 16px 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .info-sheet-header h4 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--text);
+      padding-right: 4px;
+    }
+
+    .info-close {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      font-size: 1.25rem;
+      font-weight: 400;
+    }
+
+    .info-sheet-body {
+      padding: 12px 16px 18px;
+      overflow-y: auto;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      color: var(--secondary);
+    }
+
+    .info-sheet-body p {
+      margin: 0;
     }
 
     .cal-grid {
@@ -496,7 +641,7 @@
       border-bottom: 1px solid var(--line);
       padding: 12px 14px;
       text-align: left;
-      vertical-align: top;
+      vertical-align: middle;
     }
 
     .content-table tr:last-child td {
@@ -525,6 +670,18 @@
       letter-spacing: 0.06em;
       padding: 10px 14px 6px;
       border-bottom: 1px solid var(--line);
+    }
+
+    .content-table th:nth-child(2),
+    .content-table td:nth-child(2) {
+      white-space: nowrap;
+      min-width: 9.5rem;
+    }
+
+    .content-table th:nth-child(3),
+    .content-table td:nth-child(3) {
+      white-space: nowrap;
+      width: 4.25rem;
     }
 
     .content-table tr.section-head + tr td {
@@ -584,7 +741,7 @@
     }
 
     .plan-summary:focus-visible {
-      outline: 2px solid var(--accent);
+      outline: 2px solid var(--text);
       outline-offset: 3px;
       border-radius: 6px;
     }
@@ -1017,6 +1174,17 @@
     </section>
   </div>
 
+  <div id="info-modal" class="info-modal" hidden aria-hidden="true">
+    <div class="info-overlay" id="info-overlay" tabindex="-1"></div>
+    <div class="info-sheet" role="dialog" aria-modal="true" aria-labelledby="info-sheet-title">
+      <div class="info-sheet-header">
+        <h4 id="info-sheet-title"></h4>
+        <button type="button" class="icon-btn info-close" id="info-close" aria-label="Cerrar">×</button>
+      </div>
+      <div class="info-sheet-body" id="info-sheet-body"></div>
+    </div>
+  </div>
+
   <script>
     const MATCHES = [
       { date: "2026-07-25", time: null, home: "Widzew", away: "Motor Lublin", venue: "casa", comp: "Ekstraklasa J1", note: "Ventana 24–27 jul", window: true },
@@ -1114,15 +1282,56 @@
       "activacion-adicional-aductores-1": { label: "Activación adicional aductores (complementaria 1)", qty: "6–8 reps · 1 serie" },
       "activacion-complementaria-aductores-2": { label: "Activación complementaria aductores 2", qty: "6–8 reps · 1 serie" },
       "activacion-basica-lumbar-1": { label: "Activación básica lumbar", qty: "6–8 reps · 1 serie" },
-      "oso-isometrico": { label: "Oso isométrico", qty: "15 s" },
-      "oso-pierna-atras-rodilla-pecho": { label: "Oso: pierna atrás + rodilla al pecho (sin apoyar)", qty: "10 reps seguidas / pierna" },
-      "oso-pierna-extendida-mano-contraria": { label: "Oso: pierna extendida + mano contraria", qty: "" },
-      "bicho-muerto-elastico-empeines": { label: "Bicho muerto (elástico corto en empeines)", qty: "10 reps / pierna" },
-      "caballero-isometrico-rodilla-cerca-suelo": { label: "Caballero isométrico (rodilla 1–2 cm del suelo)", qty: "15 s / pierna" },
-      "caballero-subida-posicion-a": { label: "Caballero a posición de A", qty: "8 reps" },
-      "caballero-tandem": { label: "Caballero a tándem", qty: "8 reps" },
-      "fuerza-cuadriceps-bilateral": { label: "", qty: "" },
-      "fuerza-cuadriceps-unilateral": { label: "", qty: "" },
+      "oso-isometrico": {
+        label: "Oso isométrico",
+        qty: "15 s · 2 series",
+        info: "Mantén la posición de oso 15 segundos. Haz 2 series."
+      },
+      "oso-pierna-atras-rodilla-pecho": {
+        label: "Oso: pierna atrás + rodilla al pecho (sin apoyar)",
+        qty: "10 reps seguidas / pierna",
+        info: "Desde oso, extiende la pierna atrás y lleva la rodilla al pecho sin apoyar. Haz 10 seguidas y cambia de pierna."
+      },
+      "oso-pierna-extendida-mano-contraria": {
+        label: "Oso: pierna extendida + mano contraria",
+        qty: "15 s · 2 series / pierna",
+        info: "En oso, extiende pierna y mano contrarias y mantén 15 segundos. Haz 2 series por pierna."
+      },
+      "bicho-muerto-elastico-empeines": {
+        label: "Bicho muerto (elástico corto en empeines)",
+        qty: "10 reps / pierna",
+        info: "Tumbado boca arriba, bicho muerto con elástico corto en los empeines; las manos no hacen nada. Extiende una pierna 10 veces. Trabajas la cara anterior y superior del cuádriceps y los flexores de cadera."
+      },
+      "caballero-isometrico-rodilla-cerca-suelo": {
+        label: "Caballero isométrico (rodilla 1–2 cm del suelo)",
+        qty: "15 s / pierna",
+        info: "En caballero, deja la rodilla de atrás a 1–2 cm del suelo y mantén 15 segundos. Cambia de pierna."
+      },
+      "caballero-subida-posicion-a": {
+        label: "Caballero a posición de A",
+        qty: "8 reps",
+        info: "Desde caballero sube a la posición de A, baja lento hasta tocar el suelo y sube rápido. Carga el cuádriceps de atrás."
+      },
+      "caballero-tandem": {
+        label: "Caballero a tándem",
+        qty: "8 reps",
+        info: "Desde caballero levántate a tándem."
+      },
+      "fuerza-cuadriceps-bilateral": {
+        label: "Sentadilla española (2 piernas, cajón 30 cm, elástico tenso)",
+        qty: "10 reps · 1 serie",
+        info: "Elástico tenso. Siéntate en el cajón de 30 cm a dos piernas: 10 repeticiones, 1 serie. Controla la bajada (excéntrica) y que cueste subir (concéntrica). Foco en vasto interno; tras la activación notarás mucho trabajo metabólico y acidez."
+      },
+      "fuerza-cuadriceps-unilateral": {
+        label: "Sentadilla española (1 pierna, cajón 45 cm, elástico tenso)",
+        qty: "10 reps · 2 series / pierna",
+        info: "Igual que a dos piernas, pero cajón de 45 cm (más alto porque a una pierna es más duro e incómodo): 10 repeticiones, 2 series por pierna. Mismo foco en vasto interno y en excéntrica–concéntrica."
+      },
+      "fuerza-cuadriceps-salto-cajon": {
+        label: "Salto al cajón desde sentado (30 cm → cajón 60 cm, 2 piernas)",
+        qty: "6 saltos · 2 series",
+        info: "Squat jump al cajón: quitas la excéntrica y dejas el concéntrico rápido; menos riesgo de fatiga y trabajas velocidades en extensión (triple extensión). Aún no es plyo: es la primera piedra, muy progresivo. El cajón de 60 cm es alto (difícil; aún no saltarás con calma). Sales del cajón de 30 cm: 6 saltos × 2 series. Entre series: plancha o tren superior."
+      },
       "fuerza-isquios-bilateral": { label: "", qty: "" },
       "fuerza-isquios-unilateral": { label: "", qty: "" },
       "aceleracion-sled-push": { label: "Sled push (trineo empujando)", qty: "3×5 m · 1 serie · 45–50 kg" },
@@ -1991,7 +2200,22 @@
         const tr = document.createElement("tr");
         tr.dataset.protocol = protocolId;
         const tdName = document.createElement("td");
-        tdName.textContent = p.label;
+        const nameWrap = document.createElement("div");
+        nameWrap.className = "exercise-name-cell";
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "exercise-label";
+        nameSpan.textContent = p.label;
+        nameWrap.appendChild(nameSpan);
+        if (p.info) {
+          const infoBtn = document.createElement("button");
+          infoBtn.type = "button";
+          infoBtn.className = "info-btn";
+          infoBtn.setAttribute("aria-label", `Más información: ${p.label}`);
+          infoBtn.textContent = "i";
+          infoBtn.addEventListener("click", () => openExerciseInfo(p.label, p.info));
+          nameWrap.appendChild(infoBtn);
+        }
+        tdName.appendChild(nameWrap);
         tr.appendChild(tdName);
         const tdQty = document.createElement("td");
         if (p.qty) {
@@ -2068,6 +2292,7 @@
           appendSectionHead("Fuerza");
           appendProtocolRow("fuerza-cuadriceps-bilateral");
           appendProtocolRow("fuerza-cuadriceps-unilateral");
+          appendProtocolRow("fuerza-cuadriceps-salto-cajon");
         } else {
           if (blocks.specific && blocks.specific.length) {
             appendSectionHead("Específica");
@@ -2115,6 +2340,50 @@
 
     document.getElementById("tab-plan").addEventListener("click", () => setActiveView("plan"));
     document.getElementById("tab-work-weeks").addEventListener("click", () => setActiveView("work-weeks"));
+
+    const infoModal = document.getElementById("info-modal");
+    const infoOverlay = document.getElementById("info-overlay");
+    const infoCloseBtn = document.getElementById("info-close");
+    const infoTitleEl = document.getElementById("info-sheet-title");
+    const infoBodyEl = document.getElementById("info-sheet-body");
+    let infoLastFocus = null;
+
+    function openExerciseInfo(title, text) {
+      infoLastFocus = document.activeElement;
+      infoTitleEl.textContent = title;
+      infoBodyEl.innerHTML = "";
+      const p = document.createElement("p");
+      p.textContent = text;
+      infoBodyEl.appendChild(p);
+      infoModal.hidden = false;
+      infoModal.setAttribute("aria-hidden", "false");
+      requestAnimationFrame(() => {
+        infoModal.classList.add("is-open");
+        infoCloseBtn.focus();
+      });
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeExerciseInfo() {
+      infoModal.classList.remove("is-open");
+      infoModal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      const restore = infoLastFocus;
+      infoLastFocus = null;
+      window.setTimeout(() => {
+        infoModal.hidden = true;
+        if (restore && typeof restore.focus === "function") restore.focus();
+      }, 220);
+    }
+
+    infoCloseBtn.addEventListener("click", closeExerciseInfo);
+    infoOverlay.addEventListener("click", closeExerciseInfo);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !infoModal.hidden) {
+        e.preventDefault();
+        closeExerciseInfo();
+      }
+    });
 
     initCalendar();
   </script>
