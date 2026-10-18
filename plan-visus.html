@@ -1114,8 +1114,13 @@
       "activacion-adicional-aductores-1": { label: "Activación adicional aductores (complementaria 1)", qty: "6–8 reps · 1 serie" },
       "activacion-complementaria-aductores-2": { label: "Activación complementaria aductores 2", qty: "6–8 reps · 1 serie" },
       "activacion-basica-lumbar-1": { label: "Activación básica lumbar", qty: "6–8 reps · 1 serie" },
-      "activacion-basica-cuadriceps": { label: "Activación básica cuádriceps", qty: "6–8 reps · 1 serie" },
-      "activacion-complementaria-cuadriceps": { label: "Activación complementaria cuádriceps", qty: "6–8 reps · 1 serie" },
+      "oso-isometrico": { label: "Oso isométrico", qty: "15 s" },
+      "oso-pierna-atras-rodilla-pecho": { label: "Oso: pierna atrás + rodilla al pecho (sin apoyar)", qty: "10 reps seguidas / pierna" },
+      "oso-pierna-extendida-mano-contraria": { label: "Oso: pierna extendida + mano contraria", qty: "" },
+      "bicho-muerto-elastico-empeines": { label: "Bicho muerto (elástico corto en empeines)", qty: "10 reps / pierna" },
+      "caballero-isometrico-rodilla-cerca-suelo": { label: "Caballero isométrico (rodilla 1–2 cm del suelo)", qty: "15 s / pierna" },
+      "caballero-subida-posicion-a": { label: "Caballero a posición de A", qty: "8 reps" },
+      "caballero-tandem": { label: "Caballero a tándem", qty: "8 reps" },
       "fuerza-cuadriceps-bilateral": { label: "", qty: "" },
       "fuerza-cuadriceps-unilateral": { label: "", qty: "" },
       "fuerza-isquios-bilateral": { label: "", qty: "" },
@@ -2050,13 +2055,16 @@
           appendProtocolRow("fuerza-isquios-bilateral");
           appendProtocolRow("fuerza-isquios-unilateral");
         } else if (strengthRole === "anterior") {
-          if (blocks.specific && blocks.specific.length) {
-            appendSectionHead("Específica");
-            blocks.specific.forEach(appendProtocolRow);
-          }
+          appendSectionHead("Específica");
+          appendProtocolRow("movilidad-cadera-lumbar-1");
           appendSectionHead("Activación");
-          appendProtocolRow("activacion-basica-cuadriceps");
-          appendProtocolRow("activacion-complementaria-cuadriceps");
+          appendProtocolRow("oso-isometrico");
+          appendProtocolRow("oso-pierna-atras-rodilla-pecho");
+          appendProtocolRow("oso-pierna-extendida-mano-contraria");
+          appendProtocolRow("bicho-muerto-elastico-empeines");
+          appendProtocolRow("caballero-isometrico-rodilla-cerca-suelo");
+          appendProtocolRow("caballero-subida-posicion-a");
+          appendProtocolRow("caballero-tandem");
           appendSectionHead("Fuerza");
           appendProtocolRow("fuerza-cuadriceps-bilateral");
           appendProtocolRow("fuerza-cuadriceps-unilateral");
