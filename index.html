@@ -1332,8 +1332,26 @@
         qty: "6 saltos · 2 series",
         info: "Squat jump al cajón: quitas la excéntrica y dejas el concéntrico rápido; menos riesgo de fatiga y trabajas velocidades en extensión (triple extensión). Aún no es plyo: es la primera piedra, muy progresivo. El cajón de 60 cm es alto (difícil; aún no saltarás con calma). Sales del cajón de 30 cm: 6 saltos × 2 series. Entre series: plancha o tren superior."
       },
-      "fuerza-isquios-bilateral": { label: "", qty: "" },
-      "fuerza-isquios-unilateral": { label: "", qty: "" },
+      "fuerza-isquios-bilateral": {
+        label: "Hip thrust sin peso (pies en cuña)",
+        qty: "8 reps 2 piernas + 8 + 8 por pierna · 2 series",
+        info: "Pies en la cuña (o plano inclinado). 8 reps a dos piernas, luego 8 a una pierna y 8 a la otra. Va en superset con el isométrico de cuña: 2 series del bloque completo (este ejercicio + el isométrico)."
+      },
+      "fuerza-isquios-isometrico-cuna": {
+        label: "Isométrico cuña (gemelo y sóleo activos)",
+        qty: "15 s / pierna · 2 series",
+        info: "Punta del pie en la cuña, gemelo y sóleo muy activos. Mantén 15 segundos con una pierna y 15 con la otra. Va en superset con el hip thrust sin peso: 2 series del bloque completo."
+      },
+      "fuerza-isquios-unilateral": {
+        label: "Hip thrust cuña, solo punta del pie",
+        qty: "8 reps / pierna · 2 series",
+        info: "Misma cuña, pero solo la punta del pie apoyada, gemelo activo. 8 reps por pierna, 2 series consecutivas. Sigue siendo hip thrust / cadena posterior, no cambia el patrón."
+      },
+      "fuerza-isquios-discos-miniband": {
+        label: "Hip thrust con discos y mini-band",
+        qty: "8 reps / pierna · 2 series",
+        info: "Dos discos de 5 kg (10 kg en total) en la cadera, unidos por una mini-band. 8 reps a una pierna y 8 a la otra, 2 series."
+      },
       "aceleracion-sled-push": { label: "Sled push (trineo empujando)", qty: "3×5 m · 1 serie · 45–50 kg" },
       "campo-reloj-arena": { label: "Reloj de arena", qty: "4 diagonales · 1 serie · ~90% Vmax" },
       "tren-superior-empujes-1": { label: "Tren superior empujes 1", qty: "" }
@@ -2277,7 +2295,10 @@
           appendProtocolRow(isquioComplementariaForPosterior(md, microcycleHasMd5(key)));
           appendSectionHead("Fuerza");
           appendProtocolRow("fuerza-isquios-bilateral");
+          appendProtocolRow("fuerza-isquios-isometrico-cuna");
+          appendNoteRow("2 series del bloque: hip thrust sin peso + isométrico de cuña.");
           appendProtocolRow("fuerza-isquios-unilateral");
+          appendProtocolRow("fuerza-isquios-discos-miniband");
         } else if (strengthRole === "anterior") {
           appendSectionHead("Específica");
           appendProtocolRow("movilidad-cadera-lumbar-1");
