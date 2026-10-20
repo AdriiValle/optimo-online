@@ -13,3 +13,7 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
   Plan compartible al jugador; Vercel production sirve `main`. Trabajo sigue en `dev`.
 - 2026-10-20: fuerza posterior (MD-2) = sesión hip thrust glúteo 1 (1.5)
   Se rellenaron `fuerza-isquios-bilateral/unilateral` + 2 ids nuevos (isométrico cuña, discos+miniband). Afecta a todos los días "posterior" futuros, igual que cuádriceps en "anterior"; no solo al 21 oct.
+- 2026-10-20: MD-2 genérico = sled + activación isquios (básica + complementaria 1)
+  El 29 oct es MD-2 sin rol de fuerza. Complementaria 1 porque el 28 (posterior) ya usa la 2. Hip thrust 10 kg = mancuernas, no discos.
+- 2026-10-20: OK → `main`
+  Plan del 21 y del 29 al jugador. Vercel production sirve `main`.

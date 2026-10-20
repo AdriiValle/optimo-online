@@ -627,7 +627,7 @@
       overflow-x: auto;
       border-radius: var(--radius);
       border: 1px solid var(--line);
-      overflow: hidden;
+      -webkit-overflow-scrolling: touch;
     }
 
     .content-table {
@@ -682,6 +682,30 @@
     .content-table td:nth-child(3) {
       white-space: nowrap;
       width: 4.25rem;
+    }
+
+    @media (max-width: 479px) {
+      .content-table th:nth-child(1),
+      .content-table td:nth-child(1) {
+        white-space: normal;
+        min-width: 0;
+      }
+
+      .content-table th:nth-child(2),
+      .content-table td:nth-child(2) {
+        white-space: pre-line;
+        min-width: 0;
+        max-width: 10.5rem;
+        line-height: 1.4;
+        vertical-align: top;
+      }
+
+      .content-table th:nth-child(3),
+      .content-table td:nth-child(3) {
+        width: 3.25rem;
+        padding-left: 8px;
+        padding-right: 8px;
+      }
     }
 
     .content-table tr.section-head + tr td {
@@ -1354,7 +1378,7 @@
       },
       "hip-thrust-barra": {
         label: "Hip thrust con barra",
-        qty: "Calentamiento solo barra: 6–7 reps · 1 serie · luego 40 kg: 2 series de 8",
+        qty: "Barra 6–7 reps · 1 serie\n40 kg · 2×8 reps",
         info: "Calienta con la barra sola: 6 o 7 repeticiones, 1 serie. Después hip thrust con 40 kg: 2 series de 8 repeticiones."
       },
       "aceleracion-sled-push": { label: "Sled push (trineo empujando)", qty: "3×5 m · 1 serie · 45–50 kg" },
