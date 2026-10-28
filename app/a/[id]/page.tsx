@@ -19,17 +19,9 @@ export default async function AthleteHome({ params }: { params: Promise<{ id: st
 
   const parsed = parseIndexHtml();
 
-  const shirtMeta = data.athlete.shirtNumber
-    ? `#${data.athlete.shirtNumber} ${data.athlete.team ?? ""}`.trimEnd()
-    : undefined;
-
   return (
     <main className="page">
-      <BrandHeader
-        player={data.athlete.name}
-        meta={shirtMeta}
-        trailing={<LogoutButton />}
-      />
+      <BrandHeader trailing={<LogoutButton />} />
       <HomeClient
         athlete={data.athlete}
         plans={data.plans}

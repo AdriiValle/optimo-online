@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { addDays, dateKey, DOW_ES, DOW_SHORT, formatLongDate, MONTHS_ES, parseDateLocal, todayKey } from "@/lib/dates";
+import { dateKey, DOW_ES, formatLongDate, MONTHS_ES, parseDateLocal, todayKey } from "@/lib/dates";
 import { LOAD_TINT_FROM, loadClassForMdTag } from "@/lib/plan";
 import type { Athlete, DayPlan, Diary, Injury } from "@/lib/types";
 
@@ -51,6 +51,7 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
   const [photoMsg, setPhotoMsg] = useState<string | null>(null);
   const [diaryMsg, setDiaryMsg] = useState<string | null>(null);
   const [photoKey, setPhotoKey] = useState(0);
+  const [pane, setPane] = useState<"train" | "food" | "log">("train");
 
   const serverDate = diary?.date ?? initial;
 
@@ -89,7 +90,7 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
 
   const calendar = (
     <>
-      <section className="card" aria-label="Calendario">
+      <section className="card cal-compact" aria-label="Calendario">
         <div className="cal-nav">
           <button
             type="button"
@@ -164,107 +165,30 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
           })}
         </div>
       </section>
-
-      <section className="card" aria-label="Semana en cinta">
-        <div className="week-tape">
-          <button type="button" className="icon-btn" onClick={() => selectDate(dateKey(addDays(parseDateLocal(center), -1)))}>
-            ‹
-          </button>
-          <div className="tape-segmented">
-            <div className="tape-strip">
-              {tapeDays(center).map((d, idx) => {
-                const iso = dateKey(d);
-                const p = byDate[iso];
-                const active = iso === center;
-                const cls = ["tape-day", active ? "active" : "", idx === 0 || idx === 6 ? "side" : ""]
-                  .filter(Boolean)
-                  .join(" ");
-                const crest = p?.matchOpponent ? crests[p.matchOpponent] : null;
-                return (
-                  <button key={iso} type="button" className={cls} onClick={() => selectDate(iso)}>
-                    <span className="tape-dow">{DOW_SHORT[d.getDay()]}</span>
-                    <span className="tape-num">{d.getDate()}</span>
-                    {p?.mdTag ? <span className="md-tag">{p.mdTag}</span> : null}
-                    {crest ? <img className="crest" src={crest} alt="" /> : null}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <button type="button" className="icon-btn" onClick={() => selectDate(dateKey(addDays(parseDateLocal(center), 1)))}>
-            ›
-          </button>
-        </div>
-        <div className="day-focus">
-          <div className="day-focus-heading">
-            <h3>{formatLongDate(parseDateLocal(center))}</h3>
-            {plan?.mdTag ? <span className="day-focus-md">{plan.mdTag}</span> : null}
-            {plan?.minutes ? <p className="day-focus-duration">Sesión ~{plan.minutes} min</p> : null}
-          </div>
-          <SessionTable plan={plan} />
-        </div>
-      </section>
     </>
   );
 
-  const recovery = (
-    <section className="card">
-      <div className="recovery-strip">
-        <div>
-          <h2>Recuperación</h2>
-          <p className="muted">Hoy · proveedor Whoop desconectado</p>
-        </div>
-        <div className="recovery-value">{dayDiary.date === today && dayDiary.recovery !== null ? dayDiary.recovery : "—"}</div>
-      </div>
-    </section>
-  );
-
-  const photo = (
-    <section className="card">
-      <h2>Foto</h2>
-      <div className="photo-block">
-        <img
-          className="avatar"
-          src={athlete.hasPhoto ? `/api/athletes/${athlete.id}/photo?t=${photoKey}` : "/logo-optimo.png"}
-          alt={athlete.name}
-        />
-        {canEdit ? (
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setPhotoMsg(null);
-              const file = (e.currentTarget.elements.namedItem("photo") as HTMLInputElement).files?.[0];
-              if (!file) return;
-              const fd = new FormData();
-              fd.set("photo", file);
-              const res = await fetch(`/api/athletes/${athlete.id}/photo`, { method: "POST", body: fd });
-              if (res.status === 422) {
-                const json = await res.json().catch(() => null);
-                setPhotoMsg(json?.error?.message ?? "La foto no es válida.");
-                return;
-              }
-              if (!res.ok) {
-                setPhotoMsg("No se pudo subir.");
-                return;
-              }
-              setPhotoKey((n) => n + 1);
-              setPhotoMsg("Foto actualizada.");
-            }}
-          >
-            <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" />
-            <button className="btn" type="submit">
-              Subir (máx 400 KB)
-            </button>
-          </form>
-        ) : null}
-      </div>
-      {photoMsg ? <p className={photoMsg.includes("400") || photoMsg.includes("válida") ? "error" : "ok"}>{photoMsg}</p> : null}
-    </section>
-  );
+  async function uploadPhoto(file: File) {
+    setPhotoMsg(null);
+    const fd = new FormData();
+    fd.set("photo", file);
+    const res = await fetch(`/api/athletes/${athlete.id}/photo`, { method: "POST", body: fd });
+    if (res.status === 422) {
+      const json = await res.json().catch(() => null);
+      setPhotoMsg(json?.error?.message ?? "La foto no es válida.");
+      return;
+    }
+    if (!res.ok) {
+      setPhotoMsg("No se pudo subir.");
+      return;
+    }
+    setPhotoKey((n) => n + 1);
+    setPhotoMsg("Foto actualizada.");
+  }
 
   const diaryForm = (
     <section className="card">
-      <h2>Diario del día</h2>
+      <h2>Registro</h2>
       {diaryMsg ? <p className={diaryMsg === "Guardado." ? "ok" : "error"}>{diaryMsg}</p> : null}
       {dayDiary.date === center ? (
       <form
@@ -372,49 +296,88 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
     </section>
   );
 
-  const extras = (
-    <>
-      <section className="card">
-        <h2>Dieta vigente</h2>
-        <p>{athlete.dietNotes || "Sin texto aún."}</p>
-      </section>
-      <section className="card">
-        <h2>Rutina de sueño</h2>
-        <p>{athlete.sleepRoutine || "Sin texto aún."}</p>
-      </section>
-      <section className="card">
-        <h2>Lesiones</h2>
-        {injuries.length ? (
-          injuries.map((inj) => (
-            <p key={inj.id}>
-              {inj.zone} · {inj.status === "open" ? "abierta" : "cerrada"}
-              {inj.note ? ` · ${inj.note}` : ""}
-            </p>
-          ))
-        ) : (
-          <p className="muted">Ninguna abierta.</p>
-        )}
-      </section>
-    </>
+  const nutrition = (
+    <section className="card dash-pane">
+      <h2>Nutrición</h2>
+      <p className="dash-kicker">Pauta</p>
+      <p>{athlete.dietNotes || "Aún no hay pauta de nutrición."}</p>
+      <p className="dash-kicker">Este día</p>
+      <p>{dayDiary.date === center && dayDiary.dietNote ? dayDiary.dietNote : "Sin apunte de comida."}</p>
+      {athlete.sleepRoutine ? (
+        <>
+          <p className="dash-kicker">Sueño</p>
+          <p>{athlete.sleepRoutine}</p>
+        </>
+      ) : null}
+    </section>
   );
 
+  const recoveryNow = dayDiary.date === today && dayDiary.recovery !== null ? dayDiary.recovery : null;
+
   return (
-    <>
-      {photo}
-      {recovery}
-      {football ? (
-        <>
-          {calendar}
-          {diaryForm}
-        </>
-      ) : (
-        <>
-          {diaryForm}
-          {calendar}
-        </>
-      )}
-      {extras}
-    </>
+    <div className="dash">
+      <section className="card dash-head">
+        <label className="dash-photo">
+          <img
+            className="avatar avatar-sm"
+            src={athlete.hasPhoto ? `/api/athletes/${athlete.id}/photo?t=${photoKey}` : "/logo-optimo.png"}
+            alt=""
+          />
+          {canEdit ? (
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              aria-label="Cambiar foto"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void uploadPhoto(file);
+              }}
+            />
+          ) : null}
+        </label>
+        <div className="dash-id">
+          <strong>{athlete.name}</strong>
+          <span className="muted">
+            {football ? "Fútbol" : running ? "Running" : "Deporte"}
+            {athlete.team ? ` · ${athlete.team}` : ""}
+            {athlete.shirtNumber ? ` #${athlete.shirtNumber}` : ""}
+          </span>
+          {injuries[0] ? <span className="dash-injury">Lesión: {injuries[0].zone}</span> : null}
+        </div>
+        <div className="recovery-value recovery-sm" title="Recuperación de hoy">
+          {recoveryNow ?? "—"}
+        </div>
+      </section>
+      {photoMsg ? <p className={photoMsg.includes("400") || photoMsg.includes("válida") ? "error" : "ok"}>{photoMsg}</p> : null}
+
+      {calendar}
+
+      <div className="day-line">
+        <strong>{formatLongDate(parseDateLocal(center))}</strong>
+        {plan?.mdTag ? <span className="day-focus-md">{plan.mdTag}</span> : null}
+        {plan?.minutes ? <span className="muted">~{plan.minutes} min</span> : null}
+      </div>
+
+      <div className="dash-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={pane === "train"} className={pane === "train" ? "on" : ""} onClick={() => setPane("train")}>
+          Entrenamiento
+        </button>
+        <button type="button" role="tab" aria-selected={pane === "food"} className={pane === "food" ? "on" : ""} onClick={() => setPane("food")}>
+          Nutrición
+        </button>
+        <button type="button" role="tab" aria-selected={pane === "log"} className={pane === "log" ? "on" : ""} onClick={() => setPane("log")}>
+          Registro
+        </button>
+      </div>
+
+      {pane === "train" ? (
+        <section className="card dash-pane">
+          <SessionTable plan={plan} />
+        </section>
+      ) : null}
+      {pane === "food" ? nutrition : null}
+      {pane === "log" ? diaryForm : null}
+    </div>
   );
 }
 
@@ -471,7 +434,3 @@ function monthCells(year: number, month: number) {
   return cells;
 }
 
-function tapeDays(centerIso: string) {
-  const center = parseDateLocal(centerIso);
-  return Array.from({ length: 7 }, (_, i) => addDays(center, i - 3));
-}
