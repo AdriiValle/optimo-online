@@ -11,3 +11,5 @@
 - Duda:
 - Recomendación:
 - Bloquea a Adrián: no
+
+(nota despachar: corte Pro detectado, relanzado con grok)

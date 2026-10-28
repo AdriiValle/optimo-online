@@ -22,3 +22,5 @@ Prueba (comando y qué pasó):
 - login Visus 302; GET `/panel` 404; GET `/a/00000000-0000-4000-8000-000000000099` 404
 - POST `/api/diaries` 200 (recovery 72)
 - POST foto 68 bytes 200 y GET la sirve; POST foto >400 KB 422 `PAYLOAD_TOO_LARGE`
+
+(nota despachar: corte Pro detectado, relanzado con grok)

@@ -17,3 +17,6 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
   El 29 oct es MD-2 sin rol de fuerza. Complementaria 1 porque el 28 (posterior) ya usa la 2. Hip thrust 10 kg = mancuernas, no discos.
 - 2026-10-20: OK → `main`
   Plan del 21 y del 29 al jugador. Vercel production sirve `main`.
+- 2026-10-28: la app de varios deportistas vive en este repo, en `dev`. Visus es el piloto.
+  Cuentas que da el admin. Neon propio `entrenamiento-online` (us-west-2; el alta no dejó Frankfurt). Whoop solo como hueco, a mano.
+  `main` sigue sirviendo el HTML hasta que Adrián diga OK.

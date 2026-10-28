@@ -12,4 +12,5 @@ Formato: `YYYY-MM-DD HH:MM | repo | tarea | arranque | preguntas | repitió | pu
 
 ## Registro
 
+2026-10-28 15:02 | Ricardo Visus | base multi-atleta en dev | más lento | 0 | no | no | no
 2026-10-20 13:58 | Ricardo Visus | plan 21 oct + 29 oct + ship | más rápido | 0 | no | no | no
