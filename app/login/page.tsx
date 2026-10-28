@@ -1,6 +1,7 @@
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
+import { BrandHeader } from "@/app/components/brand-header";
 
 async function login(formData: FormData) {
   "use server";
@@ -26,16 +27,7 @@ export default async function LoginPage({
   const q = await searchParams;
   return (
     <main className="page">
-      <header className="doc-header">
-        <div className="brand-row">
-          <img className="brand-logo" src="/logo-optimo.png" width={32} height={32} alt="" />
-          <span className="brand-title">Óptimo</span>
-          <span className="brand-sep" aria-hidden="true">
-            ·
-          </span>
-          <span className="brand-meta">Entrenamientos online</span>
-        </div>
-      </header>
+      <BrandHeader meta="Entrenamientos online" />
       <section className="card">
         <h1>Entrar</h1>
         {q.error ? <p className="error">Email o contraseña incorrectos.</p> : null}

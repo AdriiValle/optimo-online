@@ -5,6 +5,7 @@ import { athleteById, dayPlansForAthlete, diaryFor, openInjuries } from "@/lib/q
 import { todayKey } from "@/lib/dates";
 import { parseIndexHtml } from "@/lib/html-parse";
 import { LogoutButton } from "@/app/logout-button";
+import { BrandHeader } from "@/app/components/brand-header";
 import { HomeClient } from "./home-client";
 
 export default async function AthleteHome({ params }: { params: Promise<{ id: string }> }) {
@@ -25,25 +26,17 @@ export default async function AthleteHome({ params }: { params: Promise<{ id: st
 
   const parsed = parseIndexHtml();
 
+  const shirtMeta = data.athlete.shirtNumber
+    ? `#${data.athlete.shirtNumber} ${data.athlete.team ?? ""}`.trimEnd()
+    : undefined;
+
   return (
     <main className="page">
-      <header className="doc-header">
-        <div className="brand-row">
-          <img className="brand-logo" src="/logo-optimo.png" width={32} height={32} alt="" />
-          <span className="brand-title">Óptimo</span>
-          <span className="brand-sep">·</span>
-          <span className="brand-player">{data.athlete.name}</span>
-          {data.athlete.shirtNumber ? (
-            <>
-              <span className="brand-sep">·</span>
-              <span className="brand-meta">
-                #{data.athlete.shirtNumber} {data.athlete.team}
-              </span>
-            </>
-          ) : null}
-        </div>
-      </header>
-      <LogoutButton />
+      <BrandHeader
+        player={data.athlete.name}
+        meta={shirtMeta}
+        trailing={<LogoutButton />}
+      />
       <HomeClient
         athlete={data.athlete}
         plans={data.plans}

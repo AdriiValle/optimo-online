@@ -5,6 +5,7 @@ import { withRls } from "@/lib/rls";
 import { diaryFor, listAthletes, openInjuries } from "@/lib/queries";
 import { todayKey } from "@/lib/dates";
 import { LogoutButton } from "@/app/logout-button";
+import { BrandHeader } from "@/app/components/brand-header";
 import { CreateAthleteForm } from "./create-form";
 
 export default async function PanelPage() {
@@ -29,20 +30,12 @@ export default async function PanelPage() {
 
   return (
     <main className="page">
-      <header className="doc-header">
-        <div className="brand-row">
-          <img className="brand-logo" src="/logo-optimo.png" width={32} height={32} alt="" />
-          <span className="brand-title">Óptimo</span>
-          <span className="brand-sep">·</span>
-          <span className="brand-meta">Panel</span>
-        </div>
-      </header>
-      <LogoutButton />
-      <section className="card">
+      <BrandHeader meta="Panel" trailing={<LogoutButton />} />
+      <section className="stack">
         <h1>Deportistas</h1>
         <div className="athlete-list">
           {cards.map((a) => (
-            <Link key={a.id} className="athlete-card card" href={`/a/${a.id}`} style={{ marginBottom: 0 }}>
+            <Link key={a.id} className="athlete-card card" href={`/a/${a.id}`}>
               <img
                 className="avatar"
                 src={a.hasPhoto ? `/api/athletes/${a.id}/photo` : "/logo-optimo.png"}
