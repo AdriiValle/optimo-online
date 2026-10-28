@@ -18,7 +18,7 @@ export async function GET(_req: Request, { params }: Params) {
   return new Response(photo.bytes, {
     headers: {
       "Content-Type": photo.mime,
-      "Cache-Control": "private, no-store"
+      "Cache-Control": "private, max-age=86400"
     }
   });
 }

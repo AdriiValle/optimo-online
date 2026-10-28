@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import type { HtmlMatch, MatchVenue, Protocol } from "@/lib/types";
 
@@ -63,11 +63,27 @@ export type ParsedPlan = {
   strengthFrom: string;
 };
 
+const indexPath = () => resolve(process.cwd(), "index.html");
+
 export function readIndexHtml() {
-  return readFileSync(resolve(process.cwd(), "index.html"), "utf8");
+  return readFileSync(indexPath(), "utf8");
 }
 
-export function parseIndexHtml(html = readIndexHtml()): ParsedPlan {
+let parsedCache: { mtimeMs: number; parsed: ParsedPlan } | null = null;
+
+export function parseIndexHtml(html?: string): ParsedPlan {
+  if (html === undefined) {
+    const path = indexPath();
+    const mtimeMs = statSync(path).mtimeMs;
+    if (parsedCache?.mtimeMs === mtimeMs) return parsedCache.parsed;
+    const parsed = parseHtml(readFileSync(path, "utf8"));
+    parsedCache = { mtimeMs, parsed };
+    return parsed;
+  }
+  return parseHtml(html);
+}
+
+function parseHtml(html: string): ParsedPlan {
   const matches = extractBinding(html, "MATCHES") as HtmlMatch[];
   const crests = extractBinding(html, "CRESTS") as Record<string, string>;
   const shortNames = extractBinding(html, "SHORT") as Record<string, string>;

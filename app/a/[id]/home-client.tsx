@@ -38,7 +38,8 @@ function emptyDiary(athleteId: string, date: string): Diary {
 }
 
 export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }: Props) {
-  const byDate = useMemo(() => Object.fromEntries(plans.map((p) => [p.date, p])), [plans]);
+  const [planRows, setPlanRows] = useState(plans);
+  const byDate = useMemo(() => Object.fromEntries(planRows.map((p) => [p.date, p])), [planRows]);
   const today = todayKey();
   const firstMatch = plans.find((p) => p.matchOpponent)?.date ?? today;
   const initial = byDate[today] ? today : firstMatch;
@@ -51,18 +52,28 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
   const [diaryMsg, setDiaryMsg] = useState<string | null>(null);
   const [photoKey, setPhotoKey] = useState(0);
 
+  const serverDate = diary?.date ?? initial;
+
   useEffect(() => {
+    if (center === serverDate) {
+      setDayDiary(diary ?? emptyDiary(athlete.id, center));
+      return;
+    }
     let cancelled = false;
     (async () => {
       const res = await fetch(`/api/diaries?athleteId=${athlete.id}&date=${center}`);
       if (!res.ok || cancelled) return;
       const json = await res.json();
-      if (!cancelled) setDayDiary(json.data ?? emptyDiary(athlete.id, center));
+      if (cancelled) return;
+      setDayDiary(json.data ?? emptyDiary(athlete.id, center));
+      if (Array.isArray(json.blocks)) {
+        setPlanRows((rows) => rows.map((p) => (p.date === center ? { ...p, blocks: json.blocks } : p)));
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [athlete.id, center]);
+  }, [athlete.id, center, diary, serverDate]);
 
   function selectDate(iso: string) {
     const d = parseDateLocal(iso);
@@ -255,7 +266,9 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
     <section className="card">
       <h2>Diario del día</h2>
       {diaryMsg ? <p className={diaryMsg === "Guardado." ? "ok" : "error"}>{diaryMsg}</p> : null}
+      {dayDiary.date === center ? (
       <form
+        key={center}
         className="form-grid"
         onSubmit={async (e) => {
           e.preventDefault();
@@ -353,6 +366,9 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
           </button>
         </div>
       </form>
+      ) : (
+        <p className="muted">Cargando el día…</p>
+      )}
     </section>
   );
 

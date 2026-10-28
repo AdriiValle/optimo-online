@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { currentUser, rlsFrom } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
-import { diaryFor, listAthletes, openInjuries } from "@/lib/queries";
+import { panelCards } from "@/lib/queries";
 import { todayKey } from "@/lib/dates";
 import { LogoutButton } from "@/app/logout-button";
 import { BrandHeader } from "@/app/components/brand-header";
@@ -13,20 +13,7 @@ export default async function PanelPage() {
   if (!user || user.role !== "admin") notFound();
   const today = todayKey();
 
-  const cards = await withRls(rlsFrom(user), async (tx) => {
-    const athletes = await listAthletes(tx);
-    const out = [];
-    for (const a of athletes) {
-      const diary = await diaryFor(tx, a.id, today);
-      const injuries = await openInjuries(tx, a.id);
-      out.push({
-        ...a,
-        recovery: diary?.recovery ?? null,
-        injury: injuries[0] ?? null
-      });
-    }
-    return out;
-  });
+  const cards = await withRls(rlsFrom(user), (tx) => panelCards(tx, today));
 
   return (
     <main className="page">

@@ -30,4 +30,4 @@ export function unpooledSql() {
 }
 
 export type Sql = ReturnType<typeof sql>;
-export type Tx = Parameters<Parameters<Sql["begin"]>[0]>[0];
+export type Tx = postgres.TransactionSql;

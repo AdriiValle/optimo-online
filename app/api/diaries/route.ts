@@ -4,7 +4,7 @@ import { currentUser, rlsFrom } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
 import { canSeeAthlete } from "@/lib/access";
 import { apiError, notFound, unauthenticated } from "@/lib/errors";
-import { diaryFor } from "@/lib/queries";
+import { dayBlocks, diaryFor } from "@/lib/queries";
 
 const GetSchema = z.object({
   athleteId: z.string().uuid(),
@@ -40,10 +40,11 @@ export async function GET(req: Request) {
   }
   if (!canSeeAthlete(user, parsed.data.athleteId)) return notFound();
 
-  const diary = await withRls(rlsFrom(user), (tx) =>
-    diaryFor(tx, parsed.data.athleteId, parsed.data.date)
-  );
-  return NextResponse.json({ data: diary });
+  const { diary, blocks } = await withRls(rlsFrom(user), async (tx) => ({
+    diary: await diaryFor(tx, parsed.data.athleteId, parsed.data.date),
+    blocks: await dayBlocks(tx, parsed.data.athleteId, parsed.data.date)
+  }));
+  return NextResponse.json({ data: diary, blocks });
 }
 
 export async function POST(req: Request) {

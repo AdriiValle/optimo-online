@@ -55,9 +55,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     session({ session, token }) {
-      session.user.id = token.id;
-      session.user.role = token.role;
-      session.user.athleteId = token.athleteId;
+      session.user.id = String(token.id ?? "");
+      session.user.role = token.role as SessionUser["role"];
+      session.user.athleteId = typeof token.athleteId === "string" ? token.athleteId : null;
       return session;
     }
   }
