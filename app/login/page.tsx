@@ -30,10 +30,10 @@ export default async function LoginPage({
       <BrandHeader meta="Entrenamientos online" />
       <section className="card">
         <h1>Entrar</h1>
-        {q.error ? <p className="error">Email o contraseña incorrectos.</p> : null}
+        {q.error ? <p className="error">Usuario o contraseña incorrectos.</p> : null}
         <form action={login}>
-          <label htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" autoComplete="username" required />
+          <label htmlFor="email">Usuario</label>
+          <input id="email" name="email" type="text" autoComplete="username" required />
           <label htmlFor="password">Contraseña</label>
           <input id="password" name="password" type="password" autoComplete="current-password" required />
           <button className="btn" type="submit">
