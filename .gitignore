@@ -5,11 +5,11 @@ Thumbs.db
 !.env.example
 .vercel
 node_modules
+.next
+*.tsbuildinfo
 *.log
 *.mp4
 *.mov
 *.avi
 *.mkv
 Biblioteca de Ejercicios/
-
-.vercel
