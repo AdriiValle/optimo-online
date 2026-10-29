@@ -1,9 +1,14 @@
 import { signOut } from "@/lib/auth";
 
-export function LogoutButton() {
+type Props = {
+  /** Dentro de `.top-actions` compartido con Ajustes */
+  inline?: boolean;
+};
+
+export function LogoutButton({ inline }: Props) {
   return (
     <form
-      className="top-actions"
+      className={inline ? "logout-inline" : "top-actions"}
       action={async () => {
         "use server";
         await signOut({ redirectTo: "/login" });

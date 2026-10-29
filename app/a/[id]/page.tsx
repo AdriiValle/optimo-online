@@ -5,6 +5,7 @@ import { athleteHome, diaryHistory } from "@/lib/queries";
 import { addDays, dateKey, parseDateLocal, todayKey } from "@/lib/dates";
 import { parseIndexHtml } from "@/lib/html-parse";
 import { LogoutButton } from "@/app/logout-button";
+import { HeaderActions } from "@/app/components/header-actions";
 import { BrandHeader } from "@/app/components/brand-header";
 import { HeaderBackButton } from "@/app/components/header-back-button";
 import { HomeClient } from "./home-client";
@@ -33,7 +34,7 @@ export default async function AthleteHome({ params }: { params: Promise<{ id: st
     <>
       <BrandHeader
         leading={isAdmin ? <HeaderBackButton href="/panel" /> : null}
-        trailing={<LogoutButton />}
+        trailing={isAdmin ? <LogoutButton /> : <HeaderActions settingsHref="/ajustes" />}
       />
       <main className="page">
         <HomeClient

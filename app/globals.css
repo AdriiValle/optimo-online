@@ -219,6 +219,40 @@ textarea { min-height: 72px; resize: vertical; }
   font-size: 0.8125rem;
   flex-shrink: 0;
 }
+.section-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.settings-stack .card form label + input,
+.settings-stack .card form label + button {
+  margin-top: 8px;
+}
+.settings-account-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.settings-account-item {
+  margin: 0;
+}
+.settings-account-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.settings-account-head .avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
 
 .create-overlay {
   position: fixed;
@@ -517,13 +551,19 @@ textarea { min-height: 72px; resize: vertical; }
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 8px;
   grid-column: 3;
   justify-self: end;
   margin: 0;
 }
-.top-actions .btn {
+.top-actions .btn,
+.top-actions .logout-inline .btn {
   padding: 6px 12px;
   font-size: 0.8125rem;
+}
+.logout-inline {
+  margin: 0;
+  display: contents;
 }
 
 @media (prefers-reduced-transparency: reduce) {
