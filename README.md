@@ -1,5 +1,8 @@
-# Plan Ricardo Visus
+# Óptimo Online
 
-Sitio HTML estatico con el plan de entrenamientos de Ricardo Visus (Optimo).
+App de entrenamientos online de Óptimo: varios deportistas, panel admin y registro del día.
 
-Despliegue: Vercel, framework Other (static). La raiz del repo sirve index.html.
+- Local: `npm run dev` → http://localhost:3001  
+- Producción: https://optimo-online.vercel.app  
+
+Ricardo Visus es el piloto; no el nombre del producto.

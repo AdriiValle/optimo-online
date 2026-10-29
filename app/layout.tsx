@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Óptimo — Entrenamientos online",
-  description: "Recuperación y plan del día"
+  title: "Óptimo Online",
+  description: "Entrenamientos online · Óptimo"
 };
 
 export const viewport: Viewport = {
