@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { PasswordForm } from "@/app/components/password-form";
 
 type Row = {
   athleteId: string;
@@ -16,7 +17,6 @@ export function AdminAjustesClient() {
   const [rows, setRows] = useState<Row[]>([]);
   const [admin, setAdmin] = useState<AdminInfo | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
-  const [adminPwdMsg, setAdminPwdMsg] = useState<string | null>(null);
   const [rowMsg, setRowMsg] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
@@ -34,31 +34,6 @@ export function AdminAjustesClient() {
   useEffect(() => {
     void load();
   }, [load]);
-
-  async function saveAdminPassword(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setAdminPwdMsg(null);
-    const fd = new FormData(e.currentTarget);
-    const res = await fetch("/api/me/password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        currentPassword: String(fd.get("current") ?? ""),
-        newPassword: String(fd.get("next") ?? "")
-      })
-    });
-    if (res.status === 422) {
-      const json = await res.json().catch(() => null);
-      setAdminPwdMsg(json?.error?.message ?? "Revisa las contraseñas.");
-      return;
-    }
-    if (!res.ok) {
-      setAdminPwdMsg("No se pudo cambiar.");
-      return;
-    }
-    e.currentTarget.reset();
-    setAdminPwdMsg("Tu contraseña se actualizó.");
-  }
 
   async function resetPassword(accountId: string, password: string) {
     const res = await fetch(`/api/admin/accounts/${accountId}/password`, {
@@ -95,20 +70,9 @@ export function AdminAjustesClient() {
       </section>
 
       <section className="card">
-        <h2>Tu contraseña</h2>
+        <h2>Tu cuenta</h2>
         {admin ? <p className="muted">Usuario: {admin.email}</p> : null}
-        {adminPwdMsg ? (
-          <p className={adminPwdMsg.includes("actualizó") ? "ok" : "error"}>{adminPwdMsg}</p>
-        ) : null}
-        <form onSubmit={saveAdminPassword}>
-          <label htmlFor="admin-pwd-current">Contraseña actual</label>
-          <input id="admin-pwd-current" name="current" type="password" autoComplete="current-password" required />
-          <label htmlFor="admin-pwd-next">Nueva contraseña</label>
-          <input id="admin-pwd-next" name="next" type="password" autoComplete="new-password" minLength={8} required />
-          <button className="btn" type="submit">
-            Cambiar mi contraseña
-          </button>
-        </form>
+        <PasswordForm heading="Tu contraseña" submitLabel="Cambiar mi contraseña" />
       </section>
 
       <section className="card">
