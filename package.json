@@ -1,5 +1,5 @@
 {
-  "name": "entrenamiento-online",
+  "name": "optimo-online",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001",

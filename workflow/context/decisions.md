@@ -31,3 +31,5 @@ Tras cada slice, 3 lÃ­neas. El worker no hereda el chat.
   Nombre en `PATCH /api/athletes/[id]`; reset admin en `/api/admin/accounts/[id]/password`; UI `/ajustes` y `/panel/ajustes`.
 
 - 2026-10-29: Adrián OK ? merge dev a main (c45b041) y push. Producción = app Next.
+
+- 2026-10-29: Producto y URL = **Óptimo Online** (optimo-online). Repo GH + proyecto Vercel renombrados; Visus es piloto, no el nombre del producto.
