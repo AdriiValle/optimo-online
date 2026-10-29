@@ -3,9 +3,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { currentUser, rlsFrom } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
-import { sql } from "@/lib/db";
 import { apiError, notFound, unauthenticated } from "@/lib/errors";
-import { lookupAccountByEmail, setOwnPasswordHash } from "@/lib/queries";
+import { accountById, setOwnPasswordHash } from "@/lib/queries";
 
 const Schema = z.object({
   currentPassword: z.string().min(1).max(200),
@@ -23,7 +22,7 @@ export async function POST(req: Request) {
     return apiError(422, "VALIDATION_ERROR", "Invalid password", parsed.error.flatten());
   }
 
-  const account = await sql().begin(async (tx) => lookupAccountByEmail(tx, user.email));
+  const account = await withRls(rlsFrom(user), (tx) => accountById(tx, user.id));
   if (!account) return notFound();
   const currentOk = await bcrypt.compare(parsed.data.currentPassword, account.password_hash);
   if (!currentOk) {
