@@ -29,3 +29,5 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
   Uso diario PWA: no login cada mañana; iOS standalone y previews Vercel con dominio nuevo son excepciones conocidas.
 - 2026-10-29: Contraseña propia vía `set_own_password_hash` (SECURITY DEFINER, solo `app_account_id()`).
   Nombre en `PATCH /api/athletes/[id]`; reset admin en `/api/admin/accounts/[id]/password`; UI `/ajustes` y `/panel/ajustes`.
+
+- 2026-10-29: Adri�n OK ? merge dev a main (c45b041) y push. Producci�n = app Next.
