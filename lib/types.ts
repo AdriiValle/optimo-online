@@ -80,6 +80,13 @@ export type Injury = {
   closedOn: string | null;
 };
 
+/** Pauta de suplementación del entrenador (nombre + hora de toma). */
+export type SupplementEntry = {
+  name: string;
+  time: string;
+  notes?: string | null;
+};
+
 export type Athlete = {
   id: string;
   accountId: string;
@@ -88,6 +95,8 @@ export type Athlete = {
   hasPhoto: boolean;
   team: string | null;
   shirtNumber: string | null;
+  /** Plan de dieta del entrenador; columna `athletes.diet_notes`. */
   dietNotes: string | null;
+  supplements: SupplementEntry[];
   sleepRoutine: string | null;
 };

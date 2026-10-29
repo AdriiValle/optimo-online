@@ -1,5 +1,5 @@
 import type { Tx } from "@/lib/db";
-import type { Athlete, DayPlan, Diary, Injury, SessionUser, Sport } from "@/lib/types";
+import type { Athlete, DayPlan, Diary, Injury, SessionUser, Sport, SupplementEntry } from "@/lib/types";
 import { isoDate } from "@/lib/dates";
 
 type AccountRow = { id: string; email: string; password_hash: string; role: SessionUser["role"] };
@@ -12,8 +12,21 @@ type AthleteRow = {
   team: string | null;
   shirt_number: string | null;
   diet_notes: string | null;
+  supplements: SupplementEntry[] | null;
   sleep_routine: string | null;
 };
+
+function mapSupplements(raw: SupplementEntry[] | null | undefined): SupplementEntry[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((s) => s && typeof s.name === "string" && typeof s.time === "string")
+    .map((s) => ({
+      name: s.name.trim(),
+      time: s.time.trim(),
+      notes: s.notes?.trim() || null
+    }))
+    .filter((s) => s.name && s.time);
+}
 
 function mapAthlete(row: AthleteRow): Athlete {
   return {
@@ -25,6 +38,7 @@ function mapAthlete(row: AthleteRow): Athlete {
     team: row.team,
     shirtNumber: row.shirt_number,
     dietNotes: row.diet_notes,
+    supplements: mapSupplements(row.supplements),
     sleepRoutine: row.sleep_routine
   };
 }
@@ -38,7 +52,7 @@ export async function athleteByAccountId(tx: Tx, accountId: string) {
   const rows = await tx<AthleteRow[]>`
     select id, account_id, name, sport,
       (photo_bytes is not null and octet_length(photo_bytes) > 0) as has_photo,
-      team, shirt_number, diet_notes, sleep_routine
+      team, shirt_number, diet_notes, supplements, sleep_routine
     from athletes
     where account_id = ${accountId}
     limit 1
@@ -50,7 +64,7 @@ export async function athleteById(tx: Tx, id: string) {
   const rows = await tx<AthleteRow[]>`
     select id, account_id, name, sport,
       (photo_bytes is not null and octet_length(photo_bytes) > 0) as has_photo,
-      team, shirt_number, diet_notes, sleep_routine
+      team, shirt_number, diet_notes, supplements, sleep_routine
     from athletes
     where id = ${id}
     limit 1
@@ -62,7 +76,7 @@ export async function listAthletes(tx: Tx) {
   const rows = await tx<AthleteRow[]>`
     select id, account_id, name, sport,
       (photo_bytes is not null and octet_length(photo_bytes) > 0) as has_photo,
-      team, shirt_number, diet_notes, sleep_routine
+      team, shirt_number, diet_notes, supplements, sleep_routine
     from athletes
     order by name
   `;
@@ -320,6 +334,7 @@ export async function athleteHome(tx: Tx, athleteId: string, date: string) {
           'team', a.team,
           'shirt_number', a.shirt_number,
           'diet_notes', a.diet_notes,
+          'supplements', coalesce(a.supplements, '[]'::jsonb),
           'sleep_routine', a.sleep_routine
         )
         from athletes a
@@ -412,7 +427,7 @@ export async function panelCards(tx: Tx, date: string) {
     select
       a.id, a.account_id, a.name, a.sport,
       (a.photo_bytes is not null and octet_length(a.photo_bytes) > 0) as has_photo,
-      a.team, a.shirt_number, a.diet_notes, a.sleep_routine,
+      a.team, a.shirt_number, a.diet_notes, a.supplements, a.sleep_routine,
       d.recovery,
       i.id as injury_id,
       i.zone as injury_zone,
@@ -445,6 +460,26 @@ export async function panelCards(tx: Tx, date: string) {
         } satisfies Injury)
       : null
   }));
+}
+
+export async function updateAthleteNutrition(
+  tx: Tx,
+  athleteId: string,
+  dietNotes: string | null,
+  supplements: SupplementEntry[]
+) {
+  const rows = await tx<AthleteRow[]>`
+    update athletes
+    set
+      diet_notes = ${dietNotes},
+      supplements = ${tx.json(supplements)}
+    where id = ${athleteId}
+    returning
+      id, account_id, name, sport,
+      (photo_bytes is not null and octet_length(photo_bytes) > 0) as has_photo,
+      team, shirt_number, diet_notes, supplements, sleep_routine
+  `;
+  return rows[0] ? mapAthlete(rows[0]) : null;
 }
 
 export async function photoFor(tx: Tx, athleteId: string) {

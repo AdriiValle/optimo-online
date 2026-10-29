@@ -23,3 +23,5 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
 - 2026-10-29: pestaña Análisis solo para admin en `/a/[id]`
   Historial 60 días en servidor (`diaryHistory`); gráficas SVG inline sin deps. El jugador sigue en Registro; admin no ve el form.
   Sin API nueva, sin tocar schema; RPE diario sin acumulados (carga queda fuera).
+- 2026-10-29: Nutrición = Suplementación + Dieta en `<details>`; dieta en `athletes.diet_notes`, suplementos en `supplements` jsonb.
+  PATCH `/api/athletes/[id]/nutrition` solo admin (404 athlete). Molestias siguen en `diaries.diet_note`; no mezclar con plan.

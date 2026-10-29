@@ -5,6 +5,7 @@ import { dateKey, DOW_ES, formatLongDate, MONTHS_ES, parseDateLocal, todayKey } 
 import { LOAD_TINT_FROM, loadClassForMdTag } from "@/lib/plan";
 import type { Athlete, DayPlan, Diary, Injury } from "@/lib/types";
 import { Analisis } from "./analisis";
+import { NutritionPane } from "./nutrition-pane";
 
 const VENUE_SVG = {
   casa: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1 1 7v7h5V9h4v5h5V7L8 1z"/></svg>',
@@ -308,17 +309,12 @@ export function HomeClient({
   );
 
   const nutrition = (
-    <section className="card dash-pane">
-      <h2>Nutrición</h2>
-      <p className="dash-kicker">Pauta</p>
-      <p>{athlete.dietNotes || "Aún no hay pauta de nutrición."}</p>
-      {athlete.sleepRoutine ? (
-        <>
-          <p className="dash-kicker">Sueño</p>
-          <p>{athlete.sleepRoutine}</p>
-        </>
-      ) : null}
-    </section>
+    <NutritionPane
+      athleteId={athlete.id}
+      initialDietNotes={athlete.dietNotes}
+      initialSupplements={athlete.supplements}
+      isAdmin={isAdmin}
+    />
   );
 
   const recoveryNow = dayDiary.date === today && dayDiary.recovery !== null ? dayDiary.recovery : null;

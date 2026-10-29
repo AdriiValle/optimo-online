@@ -51,9 +51,12 @@ CREATE TABLE IF NOT EXISTS athletes (
   height_cm numeric,
   weight_kg numeric,
   diet_notes text,
+  supplements jsonb NOT NULL DEFAULT '[]'::jsonb,
   sleep_routine text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS supplements jsonb NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE TABLE IF NOT EXISTS day_plans (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
