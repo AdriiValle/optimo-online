@@ -4,7 +4,7 @@ import { currentUser, rlsFrom } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
 import { panelCards } from "@/lib/queries";
 import { todayKey } from "@/lib/dates";
-import { LogoutButton } from "@/app/logout-button";
+import { HeaderActions } from "@/app/components/header-actions";
 import { BrandHeader } from "@/app/components/brand-header";
 import { DeportistasSection } from "./deportistas-section";
 
@@ -17,7 +17,7 @@ export default async function PanelPage() {
 
   return (
     <>
-      <BrandHeader meta="Panel" trailing={<LogoutButton />} />
+      <BrandHeader meta="Panel" trailing={<HeaderActions settingsHref="/panel/ajustes" />} />
       <main className="page">
         <DeportistasSection>
         <div className="athlete-list">

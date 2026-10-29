@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useId, useState, type ReactNode } from "react";
 import { CreateAthleteForm } from "./create-form";
 
@@ -31,7 +32,11 @@ export function DeportistasSection({ children }: Props) {
     <section className="stack">
       <div className="section-head-row">
         <h1>Deportistas</h1>
-        <button
+        <div className="section-head-actions">
+          <Link className="btn secondary" href="/panel/ajustes">
+            Ajustes
+          </Link>
+          <button
           type="button"
           className="btn secondary"
           aria-expanded={open}
@@ -40,6 +45,7 @@ export function DeportistasSection({ children }: Props) {
         >
           Añadir
         </button>
+        </div>
       </div>
       {children}
       {open ? (
