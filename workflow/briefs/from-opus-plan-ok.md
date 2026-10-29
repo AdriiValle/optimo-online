@@ -1,36 +1,48 @@
-# from-opus-plan-ok
+# From Opus: plan-ok (Ajustes)
 
-- **Hecho:** sí
-- **Qué cambió (rutas):**
-  - `workflow/briefs/plan-analisis-admin.md` — reescrito y anclado al código (sin tocar código).
-  - `workflow/briefs/from-opus-plan-ok.md` — este archivo.
+- Hecho: sí
+- Qué cambió (rutas):
+  - `workflow/briefs/plan-ajustes.md`: reescrito. El árbol ya tenía APIs/UI. Nombre canónico = `PATCH /api/athletes/[id]`. Oleadas = huecos (build roto, leer hash bajo RLS, headers, UI a la ruta canónica, repetir contraseña).
+  - `workflow/briefs/from-opus-plan-ok.md`: este archivo.
+  - No se ha tocado código.
+- Duda:
+- Recomendación:
+- Bloquea a Adrián: no
 
 ## Visto bueno
 
-Plan **OK** con estos ajustes:
-- `canEdit` no distingue rol (el jugador también es `canEdit`) → prop nueva `isAdmin`.
-- Gráficas: **SVG inline propio, sin dependencias** (no hay lib de charts en el repo).
-- Rango fijo **60 días hasta hoy**; carga en servidor **solo para admin** (sin API nueva).
-- Se reutiliza el tipo `Diary` → `lib/types.ts` queda fuera.
-- RPE solo serie diaria, sin acumulado (eso es carga → fuera).
-- Contrato de funciones/props fijado en el plan para poder paralelizar.
+OK con estos cambios al ancla anterior:
 
-## Trozos / oleadas
+1. **No partir de cero.** `/ajustes`, `/panel/ajustes`, `/api/me/password`, `/api/admin/accounts`, `set_own_password_hash`, `SESSION_MAX_AGE`, `PATCH /api/athletes/[id]` y el botón del panel ya están. No recrear. `/api/me/profile` y `/api/admin/athletes/[id]/profile` sobran: no cablear, no borrar.
+2. **Sesión:** 90 días JWT. El middleware `auth()` re-firma la cookie en cada request (`now + maxAge`). Eso es el rolling. `updateAge` solo vale con strategy `database`; no es el mecanismo. Si ya está en `lib/auth.ts`, se deja. `decisions.md` ya tiene las entradas: no duplicar.
+3. **Contraseña propia:** la función SQL y `setOwnPasswordHash` ya existen. El hueco es `POST /api/me/password`: `const ok` duplicado (no compila) y hay que leer el hash con `accountById` bajo RLS propia, sin escalate a admin y sin `lookup_account_by_email`.
+4. **Nombre:** canónico `PATCH /api/athletes/[id]` (atleta y admin). La UI de oleadas 2/3 apunta ahí.
+5. **Reset admin:** `PATCH` `{ password }`, no `POST` `{ newPassword }`. Código de error: `VALIDATION_ERROR`, no `INVALID_PASSWORD`.
+6. **UI:** extraer `PasswordForm` (actual + nueva + repetir). En las páginas de Ajustes, `HeaderBackButton` + `LogoutButton` (hoy `HeaderActions` apunta a sí mismo). Reset admin: un campo `type="text"` para que Adrián lea/copie. `dash-photo` y `home-client.tsx` no se tocan.
+7. **Paralelo:** no. Mismo checkout.
 
-- **Oleada 1 (en paralelo, no se pisan):**
-  - **A** `lib/queries.ts` → `diaryHistory(tx, athleteId, from, to): Promise<Diary[]>`.
-  - **B** `app/a/[id]/analisis.tsx` (nuevo) + bloque `.an-*` en `app/globals.css`.
-- **Oleada 2:**
-  - **C** `app/a/[id]/page.tsx` + `app/a/[id]/home-client.tsx` (tab según rol) + `next build`.
-  - Smoke manual: admin → Análisis; Ricardo → Registro guarda.
+## Oleadas
 
-## Riesgos
+| Oleada | Worker | Archivos | Commits |
+|---|---|---|---|
+| 1 | 1 | `app/api/me/password/route.ts`, `workflow/context/decisions.md` (+ migrate; `lib/auth.ts` / `db/schema.sql` / `lib/queries.ts` solo si faltara lo ya listado) | 1 |
+| 2 | 1 | `app/components/password-form.tsx`, `app/ajustes/**`, `app/a/[id]/page.tsx` (no deshacer trailing), `app/globals.css` (solo añadir) | 1 |
+| 3 | 1 | `app/panel/ajustes/**`, `app/panel/deportistas-section.tsx` (Link ya está), `app/globals.css` (solo añadir) | 1 |
+| Cierre | orquestador | `workflow/session.md` + smoke + push `origin/dev` | 1 |
 
-1. **Diff sin commitear de otro trabajo** (molestias / calidad 1–100 / header fijo) en `home-client.tsx`, `globals.css`, `queries.ts`, `types.ts`, `api/diaries`, `panel/*`. Hay que commitearlo antes de la oleada 1, si no C pisa ese trabajo.
-2. Calidad de sueño con escala mezclada 1–5 / 1–100 en datos viejos: saldrán bajos en el eje 0–100. No se convierte nada (sería tocar datos).
-3. `todayKey()` usa la hora del servidor (UTC en Vercel): el rango puede moverse un día cerca de medianoche. Es el mismo criterio que la carga actual.
-4. El admin pierde el form desde la UI (la API lo sigue permitiendo). Coherente con «Fuera».
+## Riesgos (resumen)
 
-- **Duda:** ninguna que bloquee.
-- **Recomendación:** el orquestador commitea (o hace que su dueño commitee) el diff en vuelo de molestias/header **antes** de despachar la oleada 1; luego A ∥ B, después C.
-- **Bloquea a Adrián:** no.
+- Reset no echa sesiones abiertas (JWT sin revocación).
+- iOS PWA y previews de Vercel piden login otra vez; no es bug del slice.
+- Sin `npm run db:migrate` el cambio de contraseña propia da 500.
+- Hoy `next build` falla por `const ok` duplicado en `app/api/me/password/route.ts`.
+- Header a 375 px: plan B ⚙.
+
+## Orden de commits
+
+1. `Ajustes API: sesión JWT 90 días y contraseña propia sin escalate.`
+2. `Ajustes jugador: página /ajustes y botón en la ficha.`
+3. `Ajustes admin: cuentas y reset en /panel/ajustes.`
+4. `Session: slice Ajustes cerrado.`
+
+Si el working tree ya mezcla 1–3, el worker parte en esos commits; no un wip único. Serie: 1 → 2 → 3 → cierre. No merge a `main`.
