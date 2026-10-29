@@ -3,7 +3,8 @@ import { currentUser, rlsFrom } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
 import { athleteByAccountId } from "@/lib/queries";
 import { BrandHeader } from "@/app/components/brand-header";
-import { HeaderActions } from "@/app/components/header-actions";
+import { HeaderBackButton } from "@/app/components/header-back-button";
+import { LogoutButton } from "@/app/logout-button";
 import { AjustesClient } from "./ajustes-client";
 
 export default async function AjustesPage() {
@@ -17,7 +18,11 @@ export default async function AjustesPage() {
 
   return (
     <>
-      <BrandHeader meta="Ajustes" trailing={<HeaderActions settingsHref="/ajustes" />} />
+      <BrandHeader
+        meta="Ajustes"
+        leading={<HeaderBackButton href={`/a/${athlete.id}`} />}
+        trailing={<LogoutButton />}
+      />
       <main className="page">
         <AjustesClient
           athleteId={athlete.id}

@@ -1,7 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Link from "next/link";
+import { PasswordForm } from "@/app/components/password-form";
 
 type Props = {
   athleteId: string;
@@ -11,11 +12,11 @@ type Props = {
 };
 
 export function AjustesClient({ athleteId, initialName, email, hasPhoto }: Props) {
+  const router = useRouter();
   const [name, setName] = useState(initialName);
   const [nameMsg, setNameMsg] = useState<string | null>(null);
   const [photoMsg, setPhotoMsg] = useState<string | null>(null);
   const [photoKey, setPhotoKey] = useState(0);
-  const [pwdMsg, setPwdMsg] = useState<string | null>(null);
 
   async function saveName(e: React.FormEvent) {
     e.preventDefault();
@@ -30,6 +31,7 @@ export function AjustesClient({ athleteId, initialName, email, hasPhoto }: Props
       return;
     }
     setNameMsg("Nombre guardado.");
+    router.refresh();
   }
 
   async function onPhoto(file: File) {
@@ -48,40 +50,13 @@ export function AjustesClient({ athleteId, initialName, email, hasPhoto }: Props
     }
     setPhotoKey((n) => n + 1);
     setPhotoMsg("Foto actualizada.");
-  }
-
-  async function changePassword(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setPwdMsg(null);
-    const fd = new FormData(e.currentTarget);
-    const res = await fetch("/api/me/password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        currentPassword: String(fd.get("current") ?? ""),
-        newPassword: String(fd.get("next") ?? "")
-      })
-    });
-    if (res.status === 422) {
-      const json = await res.json().catch(() => null);
-      setPwdMsg(json?.error?.message ?? "Revisa las contraseñas.");
-      return;
-    }
-    if (!res.ok) {
-      setPwdMsg("No se pudo cambiar.");
-      return;
-    }
-    e.currentTarget.reset();
-    setPwdMsg("Contraseña actualizada.");
+    router.refresh();
   }
 
   const photoSrc = hasPhoto || photoKey > 0 ? `/api/athletes/${athleteId}/photo?v=${photoKey}` : "/logo-optimo.png";
 
   return (
     <div className="stack settings-stack">
-      <p className="muted">
-        <Link href={`/a/${athleteId}`}>← Volver al plan</Link>
-      </p>
       <section className="card">
         <h1>Ajustes</h1>
         <p className="muted">Usuario: {email}</p>
@@ -127,17 +102,7 @@ export function AjustesClient({ athleteId, initialName, email, hasPhoto }: Props
       </section>
 
       <section className="card">
-        <h2>Contraseña</h2>
-        {pwdMsg ? <p className={pwdMsg.includes("actualizada") ? "ok" : "error"}>{pwdMsg}</p> : null}
-        <form onSubmit={changePassword}>
-          <label htmlFor="pwd-current">Contraseña actual</label>
-          <input id="pwd-current" name="current" type="password" autoComplete="current-password" required />
-          <label htmlFor="pwd-next">Nueva contraseña (mín. 8)</label>
-          <input id="pwd-next" name="next" type="password" autoComplete="new-password" minLength={8} required />
-          <button className="btn" type="submit">
-            Cambiar contraseña
-          </button>
-        </form>
+        <PasswordForm />
       </section>
     </div>
   );
