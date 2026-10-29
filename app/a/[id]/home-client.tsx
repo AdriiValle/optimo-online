@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { dateKey, DOW_ES, formatLongDate, MONTHS_ES, parseDateLocal, todayKey } from "@/lib/dates";
 import { LOAD_TINT_FROM, loadClassForMdTag } from "@/lib/plan";
 import type { Athlete, DayPlan, Diary, Injury } from "@/lib/types";
-import { Analisis } from "./analisis";
+import { Analisis, type AnalysisView } from "./analisis";
 import { NutritionPane } from "./nutrition-pane";
 
 const VENUE_SVG = {
@@ -69,8 +69,17 @@ export function HomeClient({
   const [diaryMsg, setDiaryMsg] = useState<string | null>(null);
   const [photoKey, setPhotoKey] = useState(0);
   const [pane, setPane] = useState<"train" | "food" | "log" | "stats">("train");
+  const [analysisView, setAnalysisView] = useState<AnalysisView>("range");
+  const [analysisRangeDays, setAnalysisRangeDays] = useState(30);
 
   const serverDate = diary?.date ?? initial;
+
+  const analysisDayRecord = useMemo(() => {
+    const fromHistory = history?.find((d) => d.date === center);
+    if (fromHistory) return fromHistory;
+    if (dayDiary.date === center) return dayDiary;
+    return emptyDiary(athlete.id, center);
+  }, [history, center, dayDiary, athlete.id]);
 
   useEffect(() => {
     if (center === serverDate) {
@@ -99,6 +108,7 @@ export function HomeClient({
     setYear(d.getFullYear());
     setMonth(d.getMonth());
     setDiaryMsg(null);
+    if (pane === "stats") setAnalysisView("day");
   }
 
   const plan = byDate[center];
@@ -376,7 +386,10 @@ export function HomeClient({
             role="tab"
             aria-selected={pane === "stats"}
             className={pane === "stats" ? "on" : ""}
-            onClick={() => setPane("stats")}
+            onClick={() => {
+              setPane("stats");
+              setAnalysisView("range");
+            }}
           >
             Análisis
           </button>
@@ -396,7 +409,17 @@ export function HomeClient({
       {pane === "log" && !isAdmin ? diaryForm : null}
       {pane === "stats" && isAdmin && history ? (
         <section className="dash-pane">
-          <Analisis diaries={history} from={historyFrom} to={historyTo} />
+          <Analisis
+            diaries={history}
+            dataFrom={historyFrom}
+            dataTo={historyTo}
+            view={analysisView}
+            rangeDays={analysisRangeDays}
+            dayDate={center}
+            dayRecord={analysisDayRecord}
+            onViewChange={setAnalysisView}
+            onRangeDaysChange={setAnalysisRangeDays}
+          />
         </section>
       ) : null}
     </div>
