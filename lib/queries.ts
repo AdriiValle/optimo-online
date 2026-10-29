@@ -83,6 +83,53 @@ export async function listAthletes(tx: Tx) {
   return rows.map(mapAthlete);
 }
 
+export type AdminAthleteAccount = {
+  athleteId: string;
+  accountId: string;
+  email: string;
+  name: string;
+  hasPhoto: boolean;
+};
+
+export async function adminAthleteAccounts(tx: Tx): Promise<AdminAthleteAccount[]> {
+  const rows = await tx<
+    { athlete_id: string; account_id: string; email: string; name: string; has_photo: boolean }[]
+  >`
+    select a.id as athlete_id, a.account_id, c.email, a.name,
+      (a.photo_bytes is not null and octet_length(a.photo_bytes) > 0) as has_photo
+    from athletes a
+    inner join accounts c on c.id = a.account_id
+    order by a.name
+  `;
+  return rows.map((r) => ({
+    athleteId: r.athlete_id,
+    accountId: r.account_id,
+    email: r.email,
+    name: r.name,
+    hasPhoto: r.has_photo
+  }));
+}
+
+export async function accountById(tx: Tx, accountId: string) {
+  const rows = await tx<Pick<AccountRow, "id" | "email" | "password_hash" | "role">[]>`
+    select id, email, password_hash, role from accounts where id = ${accountId} limit 1
+  `;
+  return rows[0] ?? null;
+}
+
+export async function updateAthleteName(tx: Tx, athleteId: string, name: string) {
+  await tx`update athletes set name = ${name} where id = ${athleteId}`;
+}
+
+export async function setOwnPasswordHash(tx: Tx, passwordHash: string) {
+  const rows = await tx<{ ok: boolean }[]>`select set_own_password_hash(${passwordHash}) as ok`;
+  return rows[0]?.ok ?? false;
+}
+
+export async function setAccountPasswordHash(tx: Tx, accountId: string, passwordHash: string) {
+  await tx`update accounts set password_hash = ${passwordHash} where id = ${accountId}`;
+}
+
 export async function dayPlansForAthlete(tx: Tx, athleteId: string) {
   const rows = await tx<{
     date: string;

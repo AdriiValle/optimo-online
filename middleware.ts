@@ -28,6 +28,26 @@ export default auth((req) => {
     return NextResponse.rewrite(new URL("/__not_found", req.url));
   }
 
+  if (pathname.startsWith("/api/admin") && session.user.role !== "admin") {
+    return NextResponse.rewrite(new URL("/__not_found", req.url));
+  }
+
+  if (pathname.startsWith("/api/me") && session.user.role !== "athlete" && session.user.role !== "admin") {
+    return NextResponse.rewrite(new URL("/__not_found", req.url));
+  }
+
+  if (pathname === "/ajustes" && session.user.role === "admin") {
+    return NextResponse.redirect(new URL("/panel/ajustes", req.url));
+  }
+
+  if (pathname === "/ajustes" && session.user.role === "athlete") {
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith("/panel/ajustes") && session.user.role !== "admin") {
+    return NextResponse.rewrite(new URL("/__not_found", req.url));
+  }
+
   const athletePage = pathname.match(/^\/a\/([^/]+)/);
   if (athletePage && session.user.role === "athlete" && athletePage[1] !== session.user.athleteId) {
     return NextResponse.rewrite(new URL("/__not_found", req.url));

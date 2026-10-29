@@ -138,6 +138,19 @@ AS $$
   LIMIT 1
 $$;
 
+CREATE OR REPLACE FUNCTION set_own_password_hash(p_hash text)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+SET row_security = off
+AS $$
+BEGIN
+  UPDATE accounts SET password_hash = p_hash WHERE id = app_account_id();
+  RETURN FOUND;
+END;
+$$;
+
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE accounts FORCE ROW LEVEL SECURITY;
 ALTER TABLE athletes ENABLE ROW LEVEL SECURITY;
