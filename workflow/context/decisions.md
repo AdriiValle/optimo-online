@@ -25,3 +25,7 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
   Sin API nueva, sin tocar schema; RPE diario sin acumulados (carga queda fuera).
 - 2026-10-29: Nutrición = Suplementación + Dieta en `<details>`; dieta en `athletes.diet_notes`, suplementos en `supplements` jsonb.
   PATCH `/api/athletes/[id]/nutrition` solo admin (404 athlete). Molestias siguen en `diaries.diet_note`; no mezclar con plan.
+- 2026-10-29: Sesión JWT **90 días rolling** (`maxAge` + `updateAge` 1 día) en Auth.js; sin revocación al cambiar contraseña (JWT sin estado).
+  Uso diario PWA: no login cada mañana; iOS standalone y previews Vercel con dominio nuevo son excepciones conocidas.
+- 2026-10-29: Contraseña propia vía `set_own_password_hash` (SECURITY DEFINER, solo `app_account_id()`).
+  Nombre en `PATCH /api/athletes/[id]`; reset admin en `/api/admin/accounts/[id]/password`; UI `/ajustes` y `/panel/ajustes`.
