@@ -26,9 +26,10 @@ export default async function LoginPage({
 }) {
   const q = await searchParams;
   return (
-    <main className="page">
+    <>
       <BrandHeader meta="Entrenamientos online" />
-      <section className="card">
+      <main className="page">
+        <section className="card">
         <h1>Entrar</h1>
         {q.error ? <p className="error">Usuario o contraseña incorrectos.</p> : null}
         <form action={login}>
@@ -40,7 +41,8 @@ export default async function LoginPage({
             Entrar
           </button>
         </form>
-      </section>
-    </main>
+        </section>
+      </main>
+    </>
   );
 }

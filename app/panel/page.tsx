@@ -16,9 +16,10 @@ export default async function PanelPage() {
   const cards = await withRls(rlsFrom(user), (tx) => panelCards(tx, today));
 
   return (
-    <main className="page">
+    <>
       <BrandHeader meta="Panel" trailing={<LogoutButton />} />
-      <DeportistasSection>
+      <main className="page">
+        <DeportistasSection>
         <div className="athlete-list">
           {cards.map((a) => (
             <Link key={a.id} className="athlete-card card" href={`/a/${a.id}`}>
@@ -44,7 +45,8 @@ export default async function PanelPage() {
             </Link>
           ))}
         </div>
-      </DeportistasSection>
-    </main>
+        </DeportistasSection>
+      </main>
+    </>
   );
 }

@@ -32,18 +32,18 @@ export default async function AthleteHome({ params }: { params: Promise<{ id: st
     <>
       <BrandHeader trailing={<LogoutButton />} />
       <main className="page">
-      <HomeClient
-        athlete={data.home.athlete}
-        plans={data.home.plans}
-        diary={data.home.diary}
-        injuries={data.home.injuries}
-        crests={parsed.crests}
-        canEdit={isAdmin || user.athleteId === id}
-        isAdmin={isAdmin}
-        history={data.history}
-        historyFrom={historyFrom}
-        historyTo={historyTo}
-      />
+        <HomeClient
+          athlete={data.home.athlete}
+          plans={data.home.plans}
+          diary={data.home.diary}
+          injuries={data.home.injuries}
+          crests={parsed.crests}
+          canEdit={isAdmin || user.athleteId === id}
+          isAdmin={isAdmin}
+          history={data.history}
+          historyFrom={historyFrom}
+          historyTo={historyTo}
+        />
       </main>
     </>
   );
