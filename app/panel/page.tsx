@@ -6,7 +6,7 @@ import { panelCards } from "@/lib/queries";
 import { todayKey } from "@/lib/dates";
 import { LogoutButton } from "@/app/logout-button";
 import { BrandHeader } from "@/app/components/brand-header";
-import { CreateAthleteForm } from "./create-form";
+import { DeportistasSection } from "./deportistas-section";
 
 export default async function PanelPage() {
   const user = await currentUser();
@@ -18,8 +18,7 @@ export default async function PanelPage() {
   return (
     <main className="page">
       <BrandHeader meta="Panel" trailing={<LogoutButton />} />
-      <section className="stack">
-        <h1>Deportistas</h1>
+      <DeportistasSection>
         <div className="athlete-list">
           {cards.map((a) => (
             <Link key={a.id} className="athlete-card card" href={`/a/${a.id}`}>
@@ -45,8 +44,7 @@ export default async function PanelPage() {
             </Link>
           ))}
         </div>
-      </section>
-      <CreateAthleteForm />
+      </DeportistasSection>
     </main>
   );
 }

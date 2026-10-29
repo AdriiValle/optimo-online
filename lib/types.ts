@@ -66,6 +66,7 @@ export type Diary = {
   feeling: number | null;
   km: number | null;
   avgHr: number | null;
+  /** Texto libre de molestias/dolor del día; persiste en columna `diaries.diet_note`. */
   dietNote: string | null;
   freeNote: string | null;
 };

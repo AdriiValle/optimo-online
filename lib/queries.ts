@@ -137,7 +137,7 @@ export async function diaryFor(tx: Tx, athleteId: string, date: string) {
     feeling: r.feeling,
     km: num(r.km),
     avgHr: r.avg_hr,
-    dietNote: r.diet_note,
+    dietNote: r.diet_note, // molestias (UI deportista); columna legacy diet_note
     freeNote: r.free_note
   } satisfies Diary;
 }
@@ -242,7 +242,7 @@ function mapDiaryJson(r: DiaryJson): Diary {
     feeling: r.feeling,
     km: num(r.km),
     avgHr: r.avg_hr,
-    dietNote: r.diet_note,
+    dietNote: r.diet_note, // molestias (UI deportista); columna legacy diet_note
     freeNote: r.free_note
   };
 }

@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-export function CreateAthleteForm() {
+type Props = {
+  onClose?: () => void;
+  titleId?: string;
+};
+
+export function CreateAthleteForm({ onClose, titleId }: Props) {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -32,8 +37,15 @@ export function CreateAthleteForm() {
   }
 
   return (
-    <section className="card">
-      <h2>Alta de deportista</h2>
+    <>
+      <div className="create-form-head">
+        <h2 id={titleId}>Alta de deportista</h2>
+        {onClose ? (
+          <button type="button" className="icon-btn" aria-label="Cerrar" onClick={onClose}>
+            ×
+          </button>
+        ) : null}
+      </div>
       {err ? <p className="error">{err}</p> : null}
       {msg ? <p className="ok">{msg}</p> : null}
       <form onSubmit={onSubmit}>
@@ -53,6 +65,6 @@ export function CreateAthleteForm() {
           Crear
         </button>
       </form>
-    </section>
+    </>
   );
 }

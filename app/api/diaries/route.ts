@@ -15,14 +15,14 @@ const BodySchema = z.object({
   athleteId: z.string().uuid(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   sleepHours: z.number().min(0).max(24).nullable().optional(),
-  sleepQuality: z.number().int().min(1).max(5).nullable().optional(),
+  sleepQuality: z.number().int().min(1).max(100).nullable().optional(),
   recovery: z.number().int().min(0).max(100).nullable().optional(),
   hrv: z.number().min(0).max(400).nullable().optional(),
   restingHr: z.number().int().min(20).max(220).nullable().optional(),
   rpe: z.number().int().min(1).max(10).nullable().optional(),
-  feeling: z.number().int().min(1).max(5).nullable().optional(),
   km: z.number().min(0).max(400).nullable().optional(),
   avgHr: z.number().int().min(20).max(220).nullable().optional(),
+  /** Molestias del deportista; columna BD `diet_note` (legacy). */
   dietNote: z.string().max(4000).nullable().optional(),
   freeNote: z.string().max(4000).nullable().optional()
 });
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       ) values (
         ${d.athleteId}, ${d.date}::date, ${d.sleepHours ?? null}, ${d.sleepQuality ?? null},
         ${d.recovery ?? null}, ${d.hrv ?? null}, ${d.restingHr ?? null}, ${d.rpe ?? null},
-        ${d.feeling ?? null}, ${d.km ?? null}, ${d.avgHr ?? null}, ${d.dietNote ?? null},
+        null, ${d.km ?? null}, ${d.avgHr ?? null}, ${d.dietNote ?? null},
         ${d.freeNote ?? null}
       )
       on conflict (athlete_id, date) do update set
@@ -76,7 +76,6 @@ export async function POST(req: Request) {
         hrv = excluded.hrv,
         resting_hr = excluded.resting_hr,
         rpe = excluded.rpe,
-        feeling = excluded.feeling,
         km = excluded.km,
         avg_hr = excluded.avg_hr,
         diet_note = excluded.diet_note,

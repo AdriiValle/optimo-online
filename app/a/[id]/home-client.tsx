@@ -214,10 +214,9 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
               hrv: num("hrv"),
               restingHr: num("restingHr"),
               rpe: num("rpe"),
-              feeling: num("feeling"),
               km: running ? num("km") : null,
               avgHr: running ? num("avgHr") : null,
-              dietNote: String(fd.get("dietNote") ?? "") || null,
+              dietNote: String(fd.get("molestias") ?? "").trim() || null,
               freeNote: String(fd.get("freeNote") ?? "") || null
             })
           });
@@ -237,10 +236,6 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
               <input name="km" type="number" step="0.1" defaultValue={dayDiary.km ?? ""} key={`km-${center}`} />
             </label>
             <label>
-              Sensación 1–5
-              <input name="feeling" type="number" min={1} max={5} defaultValue={dayDiary.feeling ?? ""} key={`feel-${center}`} />
-            </label>
-            <label>
               Pulso medio
               <input name="avgHr" type="number" defaultValue={dayDiary.avgHr ?? ""} key={`avg-${center}`} />
             </label>
@@ -251,8 +246,8 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
           <input name="sleepHours" type="number" step="0.1" defaultValue={dayDiary.sleepHours ?? ""} key={`sh-${center}`} />
         </label>
         <label>
-          Calidad 1–5
-          <input name="sleepQuality" type="number" min={1} max={5} defaultValue={dayDiary.sleepQuality ?? ""} key={`sq-${center}`} />
+          Calidad 1–100
+          <input name="sleepQuality" type="number" min={1} max={100} defaultValue={dayDiary.sleepQuality ?? ""} key={`sq-${center}`} />
         </label>
         <label>
           Recuperación 0–100
@@ -270,15 +265,15 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
           RPE 1–10
           <input name="rpe" type="number" min={1} max={10} defaultValue={dayDiary.rpe ?? ""} key={`rpe-${center}`} />
         </label>
-        {!running ? (
-          <label>
-            Sensación 1–5
-            <input name="feeling" type="number" min={1} max={5} defaultValue={dayDiary.feeling ?? ""} key={`feel-${center}`} />
-          </label>
-        ) : null}
         <label className="span-2">
-          Dieta
-          <textarea name="dietNote" defaultValue={dayDiary.dietNote ?? ""} key={`dn-${center}`} />
+          Molestias
+          <textarea
+            name="molestias"
+            rows={3}
+            placeholder="Qué te duele o molesta…"
+            defaultValue={dayDiary.dietNote ?? ""}
+            key={`mol-${center}`}
+          />
         </label>
         <label className="span-2">
           Nota
@@ -301,8 +296,6 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
       <h2>Nutrición</h2>
       <p className="dash-kicker">Pauta</p>
       <p>{athlete.dietNotes || "Aún no hay pauta de nutrición."}</p>
-      <p className="dash-kicker">Este día</p>
-      <p>{dayDiary.date === center && dayDiary.dietNote ? dayDiary.dietNote : "Sin apunte de comida."}</p>
       {athlete.sleepRoutine ? (
         <>
           <p className="dash-kicker">Sueño</p>
