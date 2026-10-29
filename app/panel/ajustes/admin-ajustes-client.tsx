@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { PasswordForm } from "@/app/components/password-form";
+import { UsernameForm } from "@/app/components/username-form";
 
 type Row = {
   athleteId: string;
@@ -60,6 +61,17 @@ export function AdminAjustesClient() {
     return res.ok;
   }
 
+  async function saveUsername(accountId: string, username: string) {
+    const res = await fetch(`/api/admin/accounts/${accountId}/username`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: username.trim() })
+    });
+    if (!res.ok) return null;
+    const json = await res.json().catch(() => null);
+    return String(json?.data?.username ?? username.trim().toLowerCase());
+  }
+
   return (
     <div className="stack settings-stack">
       {loadErr ? <p className="error">{loadErr}</p> : null}
@@ -71,7 +83,12 @@ export function AdminAjustesClient() {
 
       <section className="card">
         <h2>Tu cuenta</h2>
-        {admin ? <p className="muted">Usuario: {admin.email}</p> : null}
+        {admin ? (
+          <UsernameForm
+            initialUsername={admin.email}
+            onSaved={(u) => setAdmin((prev) => (prev ? { ...prev, email: u } : prev))}
+          />
+        ) : null}
         <PasswordForm heading="Tu contraseña" submitLabel="Cambiar mi contraseña" />
       </section>
 
@@ -85,6 +102,7 @@ export function AdminAjustesClient() {
               msg={rowMsg[row.accountId]}
               onMsg={(m) => setRowMsg((prev) => ({ ...prev, [row.accountId]: m }))}
               onSaveName={saveAthleteName}
+              onSaveUsername={saveUsername}
               onResetPassword={resetPassword}
               onPhoto={onPhoto}
             />
@@ -100,6 +118,7 @@ function AthleteAccountRow({
   msg,
   onMsg,
   onSaveName,
+  onSaveUsername,
   onResetPassword,
   onPhoto
 }: {
@@ -107,10 +126,12 @@ function AthleteAccountRow({
   msg?: string;
   onMsg: (m: string) => void;
   onSaveName: (athleteId: string, name: string) => Promise<boolean>;
+  onSaveUsername: (accountId: string, username: string) => Promise<string | null>;
   onResetPassword: (accountId: string, password: string) => Promise<boolean>;
   onPhoto: (athleteId: string, file: File) => Promise<boolean>;
 }) {
   const [name, setName] = useState(row.name);
+  const [loginUser, setLoginUser] = useState(row.email);
   const [newPwd, setNewPwd] = useState("");
   const [photoKey, setPhotoKey] = useState(0);
 
@@ -121,12 +142,34 @@ function AthleteAccountRow({
       <div className="settings-account-head">
         <img className="avatar" src={photoSrc} alt="" width={48} height={48} />
         <div>
-          <strong>{row.email}</strong>
-          <div className="muted">{row.name}</div>
+          <strong>{loginUser}</strong>
+          <div className="muted">{name}</div>
         </div>
       </div>
       {msg ? <p className={msg.includes("Guardado") || msg.includes("actualizada") ? "ok" : "error"}>{msg}</p> : null}
-      <label htmlFor={`name-${row.accountId}`}>Nombre</label>
+      <label htmlFor={`user-${row.accountId}`}>Nombre de usuario (login)</label>
+      <input
+        id={`user-${row.accountId}`}
+        value={loginUser}
+        onChange={(e) => setLoginUser(e.target.value)}
+        autoComplete="username"
+        maxLength={200}
+      />
+      <button
+        type="button"
+        className="btn secondary"
+        onClick={async () => {
+          onMsg("");
+          const saved = await onSaveUsername(row.accountId, loginUser);
+          if (saved) {
+            setLoginUser(saved);
+            onMsg("Usuario de login guardado.");
+          } else onMsg("No se pudo guardar el usuario.");
+        }}
+      >
+        Guardar usuario
+      </button>
+      <label htmlFor={`name-${row.accountId}`}>Nombre visible en la ficha</label>
       <input
         id={`name-${row.accountId}`}
         value={name}

@@ -151,6 +151,27 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION set_own_account_email(p_email text)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+SET row_security = off
+AS $$
+DECLARE
+  v_norm text;
+BEGIN
+  v_norm := lower(trim(p_email));
+  IF v_norm = '' OR length(v_norm) > 200 THEN
+    RETURN false;
+  END IF;
+  UPDATE accounts SET email = v_norm WHERE id = app_account_id();
+  RETURN FOUND;
+EXCEPTION WHEN unique_violation THEN
+  RETURN false;
+END;
+$$;
+
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE accounts FORCE ROW LEVEL SECURITY;
 ALTER TABLE athletes ENABLE ROW LEVEL SECURITY;

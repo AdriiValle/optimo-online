@@ -31,9 +31,9 @@ export default async function LoginPage({
       <main className="page">
         <section className="card">
         <h1>Entrar</h1>
-        {q.error ? <p className="error">Usuario o contraseña incorrectos.</p> : null}
+        {q.error ? <p className="error">Nombre de usuario o contraseña incorrectos.</p> : null}
         <form action={login}>
-          <label htmlFor="email">Usuario</label>
+          <label htmlFor="email">Nombre de usuario (login)</label>
           <input id="email" name="email" type="text" autoComplete="username" required />
           <label htmlFor="password">Contraseña</label>
           <input id="password" name="password" type="password" autoComplete="current-password" required />

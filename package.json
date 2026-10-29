@@ -2,11 +2,12 @@
   "name": "entrenamiento-online",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
     "db:migrate": "tsx db/migrate.ts",
-    "db:seed": "tsx db/seed.ts"
+    "db:seed": "tsx db/seed.ts",
+    "db:reset-passwords": "tsx db/reset-dev-passwords.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

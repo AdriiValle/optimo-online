@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PasswordForm } from "@/app/components/password-form";
+import { UsernameForm } from "@/app/components/username-form";
 
 type Props = {
   athleteId: string;
@@ -14,6 +15,7 @@ type Props = {
 export function AjustesClient({ athleteId, initialName, email, hasPhoto }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
+  const [loginUser, setLoginUser] = useState(email);
   const [nameMsg, setNameMsg] = useState<string | null>(null);
   const [photoMsg, setPhotoMsg] = useState<string | null>(null);
   const [photoKey, setPhotoKey] = useState(0);
@@ -59,7 +61,11 @@ export function AjustesClient({ athleteId, initialName, email, hasPhoto }: Props
     <div className="stack settings-stack">
       <section className="card">
         <h1>Ajustes</h1>
-        <p className="muted">Usuario: {email}</p>
+        <p className="muted">Usuario de login: {loginUser}</p>
+      </section>
+
+      <section className="card">
+        <UsernameForm initialUsername={email} onSaved={(u) => setLoginUser(u)} />
       </section>
 
       <section className="card">
@@ -87,7 +93,7 @@ export function AjustesClient({ athleteId, initialName, email, hasPhoto }: Props
         <h2>Nombre</h2>
         {nameMsg ? <p className={nameMsg.includes("guardado") ? "ok" : "error"}>{nameMsg}</p> : null}
         <form onSubmit={saveName}>
-          <label htmlFor="settings-name">Nombre en la ficha</label>
+          <label htmlFor="settings-name">Nombre visible en la ficha</label>
           <input
             id="settings-name"
             value={name}

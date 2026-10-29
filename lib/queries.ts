@@ -130,6 +130,31 @@ export async function setAccountPasswordHash(tx: Tx, accountId: string, password
   await tx`update accounts set password_hash = ${passwordHash} where id = ${accountId}`;
 }
 
+export async function accountEmailTaken(tx: Tx, email: string, excludeAccountId?: string) {
+  if (excludeAccountId) {
+    const rows = await tx<{ id: string }[]>`
+      select id from accounts where email = ${email} and id <> ${excludeAccountId} limit 1
+    `;
+    return Boolean(rows[0]);
+  }
+  const rows = await tx<{ id: string }[]>`
+    select id from accounts where email = ${email} limit 1
+  `;
+  return Boolean(rows[0]);
+}
+
+export async function setOwnAccountEmail(tx: Tx, email: string) {
+  const rows = await tx<{ ok: boolean }[]>`select set_own_account_email(${email}) as ok`;
+  return rows[0]?.ok ?? false;
+}
+
+export async function setAccountEmail(tx: Tx, accountId: string, email: string) {
+  const rows = await tx<{ id: string }[]>`
+    update accounts set email = ${email} where id = ${accountId} returning id
+  `;
+  return Boolean(rows[0]);
+}
+
 export async function dayPlansForAthlete(tx: Tx, athleteId: string) {
   const rows = await tx<{
     date: string;
