@@ -5,9 +5,13 @@ import { sql } from "@/lib/db";
 import { lookupAccountByEmail, athleteByAccountId } from "@/lib/queries";
 import type { SessionUser } from "@/lib/types";
 
+/** 90 días: la PWA/móvil no pide login en el día a día (cookie JWT persistente). */
+export const SESSION_MAX_AGE = 90 * 24 * 60 * 60;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: SESSION_MAX_AGE, updateAge: 24 * 60 * 60 },
+  jwt: { maxAge: SESSION_MAX_AGE },
   pages: { signIn: "/login" },
   providers: [
     Credentials({
