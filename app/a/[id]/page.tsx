@@ -6,6 +6,7 @@ import { addDays, dateKey, parseDateLocal, todayKey } from "@/lib/dates";
 import { parseIndexHtml } from "@/lib/html-parse";
 import { LogoutButton } from "@/app/logout-button";
 import { BrandHeader } from "@/app/components/brand-header";
+import { HeaderBackButton } from "@/app/components/header-back-button";
 import { HomeClient } from "./home-client";
 
 export default async function AthleteHome({ params }: { params: Promise<{ id: string }> }) {
@@ -30,7 +31,10 @@ export default async function AthleteHome({ params }: { params: Promise<{ id: st
 
   return (
     <>
-      <BrandHeader trailing={<LogoutButton />} />
+      <BrandHeader
+        leading={isAdmin ? <HeaderBackButton href="/panel" /> : null}
+        trailing={<LogoutButton />}
+      />
       <main className="page">
         <HomeClient
           athlete={data.home.athlete}
