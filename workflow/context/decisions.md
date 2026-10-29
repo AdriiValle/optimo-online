@@ -20,3 +20,6 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
 - 2026-10-28: la app de varios deportistas vive en este repo, en `dev`. Visus es el piloto.
   Cuentas que da el admin. Neon propio `entrenamiento-online` (us-west-2; el alta no dejó Frankfurt). Whoop solo como hueco, a mano.
   `main` sigue sirviendo el HTML hasta que Adrián diga OK.
+- 2026-10-29: pestaña Análisis solo para admin en `/a/[id]`
+  Historial 60 días en servidor (`diaryHistory`); gráficas SVG inline sin deps. El jugador sigue en Registro; admin no ve el form.
+  Sin API nueva, sin tocar schema; RPE diario sin acumulados (carga queda fuera).

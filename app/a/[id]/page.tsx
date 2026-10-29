@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { currentUser, rlsFrom } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
-import { athleteHome } from "@/lib/queries";
-import { todayKey } from "@/lib/dates";
+import { athleteHome, diaryHistory } from "@/lib/queries";
+import { addDays, dateKey, parseDateLocal, todayKey } from "@/lib/dates";
 import { parseIndexHtml } from "@/lib/html-parse";
 import { LogoutButton } from "@/app/logout-button";
 import { BrandHeader } from "@/app/components/brand-header";
@@ -14,22 +14,37 @@ export default async function AthleteHome({ params }: { params: Promise<{ id: st
   if (!user) notFound();
   if (user.role === "athlete" && user.athleteId !== id) notFound();
 
-  const data = await withRls(rlsFrom(user), (tx) => athleteHome(tx, id, todayKey()));
+  const isAdmin = user.role === "admin";
+  const historyTo = todayKey();
+  const historyFrom = dateKey(addDays(parseDateLocal(historyTo), -59));
+
+  const data = await withRls(rlsFrom(user), async (tx) => {
+    const home = await athleteHome(tx, id, historyTo);
+    if (!home) return null;
+    const history = isAdmin ? await diaryHistory(tx, id, historyFrom, historyTo) : null;
+    return { home, history };
+  });
   if (!data) notFound();
 
   const parsed = parseIndexHtml();
 
   return (
-    <main className="page">
+    <>
       <BrandHeader trailing={<LogoutButton />} />
+      <main className="page">
       <HomeClient
-        athlete={data.athlete}
-        plans={data.plans}
-        diary={data.diary}
-        injuries={data.injuries}
+        athlete={data.home.athlete}
+        plans={data.home.plans}
+        diary={data.home.diary}
+        injuries={data.home.injuries}
         crests={parsed.crests}
-        canEdit={user.role === "admin" || user.athleteId === id}
+        canEdit={isAdmin || user.athleteId === id}
+        isAdmin={isAdmin}
+        history={data.history}
+        historyFrom={historyFrom}
+        historyTo={historyTo}
       />
-    </main>
+      </main>
+    </>
   );
 }

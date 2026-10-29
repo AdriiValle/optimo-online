@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { dateKey, DOW_ES, formatLongDate, MONTHS_ES, parseDateLocal, todayKey } from "@/lib/dates";
 import { LOAD_TINT_FROM, loadClassForMdTag } from "@/lib/plan";
 import type { Athlete, DayPlan, Diary, Injury } from "@/lib/types";
+import { Analisis } from "./analisis";
 
 const VENUE_SVG = {
   casa: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1 1 7v7h5V9h4v5h5V7L8 1z"/></svg>',
@@ -17,6 +18,10 @@ type Props = {
   injuries: Injury[];
   crests: Record<string, string>;
   canEdit: boolean;
+  isAdmin: boolean;
+  history: Diary[] | null;
+  historyFrom: string;
+  historyTo: string;
 };
 
 function emptyDiary(athleteId: string, date: string): Diary {
@@ -37,7 +42,18 @@ function emptyDiary(athleteId: string, date: string): Diary {
   };
 }
 
-export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }: Props) {
+export function HomeClient({
+  athlete,
+  plans,
+  diary,
+  injuries,
+  crests,
+  canEdit,
+  isAdmin,
+  history,
+  historyFrom,
+  historyTo
+}: Props) {
   const [planRows, setPlanRows] = useState(plans);
   const byDate = useMemo(() => Object.fromEntries(planRows.map((p) => [p.date, p])), [planRows]);
   const today = todayKey();
@@ -51,7 +67,7 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
   const [photoMsg, setPhotoMsg] = useState<string | null>(null);
   const [diaryMsg, setDiaryMsg] = useState<string | null>(null);
   const [photoKey, setPhotoKey] = useState(0);
-  const [pane, setPane] = useState<"train" | "food" | "log">("train");
+  const [pane, setPane] = useState<"train" | "food" | "log" | "stats">("train");
 
   const serverDate = diary?.date ?? initial;
 
@@ -358,9 +374,21 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
         <button type="button" role="tab" aria-selected={pane === "food"} className={pane === "food" ? "on" : ""} onClick={() => setPane("food")}>
           Nutrición
         </button>
-        <button type="button" role="tab" aria-selected={pane === "log"} className={pane === "log" ? "on" : ""} onClick={() => setPane("log")}>
-          Registro
-        </button>
+        {isAdmin ? (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={pane === "stats"}
+            className={pane === "stats" ? "on" : ""}
+            onClick={() => setPane("stats")}
+          >
+            Análisis
+          </button>
+        ) : (
+          <button type="button" role="tab" aria-selected={pane === "log"} className={pane === "log" ? "on" : ""} onClick={() => setPane("log")}>
+            Registro
+          </button>
+        )}
       </div>
 
       {pane === "train" ? (
@@ -369,7 +397,12 @@ export function HomeClient({ athlete, plans, diary, injuries, crests, canEdit }:
         </section>
       ) : null}
       {pane === "food" ? nutrition : null}
-      {pane === "log" ? diaryForm : null}
+      {pane === "log" && !isAdmin ? diaryForm : null}
+      {pane === "stats" && isAdmin && history ? (
+        <section className="dash-pane">
+          <Analisis diaries={history} from={historyFrom} to={historyTo} />
+        </section>
+      ) : null}
     </div>
   );
 }

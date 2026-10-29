@@ -142,6 +142,47 @@ export async function diaryFor(tx: Tx, athleteId: string, date: string) {
   } satisfies Diary;
 }
 
+export async function diaryHistory(tx: Tx, athleteId: string, from: string, to: string): Promise<Diary[]> {
+  const rows = await tx<{
+    athlete_id: string;
+    date: string;
+    sleep_hours: string | number | null;
+    sleep_quality: number | null;
+    recovery: number | null;
+    hrv: string | number | null;
+    resting_hr: number | null;
+    rpe: number | null;
+    feeling: number | null;
+    km: string | number | null;
+    avg_hr: number | null;
+    diet_note: string | null;
+    free_note: string | null;
+  }[]>`
+    select athlete_id, date::text, sleep_hours, sleep_quality, recovery, hrv, resting_hr, rpe, feeling, km, avg_hr, diet_note, free_note
+    from diaries
+    where athlete_id = ${athleteId} and date between ${from}::date and ${to}::date
+    order by date asc
+  `;
+  const num = (v: string | number | null) => (v === null || v === undefined ? null : Number(v));
+  return rows.map(
+    (r): Diary => ({
+      athleteId: r.athlete_id,
+      date: isoDate(r.date),
+      sleepHours: num(r.sleep_hours),
+      sleepQuality: r.sleep_quality,
+      recovery: r.recovery,
+      hrv: num(r.hrv),
+      restingHr: r.resting_hr,
+      rpe: r.rpe,
+      feeling: r.feeling,
+      km: num(r.km),
+      avgHr: r.avg_hr,
+      dietNote: r.diet_note,
+      freeNote: r.free_note
+    })
+  );
+}
+
 export async function openInjuries(tx: Tx, athleteId: string) {
   const rows = await tx<{
     id: string;
