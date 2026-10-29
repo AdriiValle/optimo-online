@@ -46,3 +46,5 @@ OK con estos cambios al ancla anterior:
 4. `Session: slice Ajustes cerrado.`
 
 Si el working tree ya mezcla 1–3, el worker parte en esos commits; no un wip único. Serie: 1 → 2 → 3 → cierre. No merge a `main`.
+
+(nota despachar: corte Pro detectado, relanzado con grok)
