@@ -3,10 +3,11 @@ import { resolve } from "node:path";
 import { parseIndexHtml } from "../lib/html-parse";
 
 // Uso: npm run db:set-videos -- [subidos.csv] [--dry-run]
-// Vuelca la URL de cada fila de subidos.csv con protocolId en PROTOCOLS.video
-// de index.html (y plan-visus.html, copia espejo). Después: npm run db:sync-videos.
+// Vuelca la URL de cada fila de subidos.csv en PROTOCOLS.video de index.html
+// (y plan-visus.html, copia espejo). El id es protocolId; si falta, slug cuando
+// slug es una clave de PROTOCOLS; si no, la fila se ignora. Después: npm run db:sync-videos.
 
-const DEFAULT_CSV = resolve(process.cwd(), "..", "..", "..", "YouTube", "subidos", "subidos.csv");
+const DEFAULT_CSV = resolve(process.cwd(), "..", "..", "YouTube", "subidos", "subidos.csv");
 const HTML_FILES = ["index.html", "plan-visus.html"].map((f) => resolve(process.cwd(), f));
 
 function parseCsv(text: string): string[][] {
@@ -98,20 +99,22 @@ function main() {
   };
   const iUrl = col("url");
   const iProtocol = col("protocolId");
+  const iSlug = header.indexOf("slug");
+  const known = parseIndexHtml().protocols;
 
   // Última fila por protocolId gana (una re-subida reemplaza a la anterior).
   const wanted = new Map<string, string>();
   for (const r of data) {
-    const id = r[iProtocol]?.trim();
+    const slug = iSlug >= 0 ? r[iSlug]?.trim() : "";
+    const id = r[iProtocol]?.trim() || (slug && known[slug] ? slug : "");
     const url = r[iUrl]?.trim();
     if (id && url) wanted.set(id, url);
   }
   if (wanted.size === 0) {
-    console.log("set-protocol-videos: ninguna fila con protocolId, nada que hacer");
+    console.log("set-protocol-videos: ninguna fila con protocolId ni slug de PROTOCOLS, nada que hacer");
     return;
   }
 
-  const known = parseIndexHtml().protocols;
   const errors: string[] = [];
   for (const [id, url] of wanted) {
     if (!known[id]) errors.push(`protocolId desconocido: ${id}`);
