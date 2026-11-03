@@ -34,5 +34,6 @@ export function youtubeEmbedSrc(videoId: string): string {
     modestbranding: "1",
     playsinline: "1"
   });
-  return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params}`;
+  // youtube-nocookie + referrer en el iframe evitan Error 153 (player configuration).
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?${params}`;
 }
