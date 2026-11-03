@@ -229,9 +229,16 @@ function buildBlocks(
       pushProtocol(parsed, blocks, "caballero-subida-posicion-a");
       pushProtocol(parsed, blocks, "caballero-tandem");
       blocks.push({ kind: "section", title: "Fuerza" });
-      pushProtocol(parsed, blocks, "fuerza-cuadriceps-bilateral");
-      pushProtocol(parsed, blocks, "fuerza-cuadriceps-unilateral");
-      pushProtocol(parsed, blocks, "fuerza-cuadriceps-salto-cajon");
+      if (parsed.anteriorFuerzaV2.includes(iso)) {
+        pushProtocol(parsed, blocks, "fuerza-cuadriceps-unilateral");
+        pushProtocol(parsed, blocks, "fuerza-cuadriceps-zancada-caballero-mancuernas");
+        pushProtocol(parsed, blocks, "fuerza-cuadriceps-salto-cajon-carga");
+        pushProtocol(parsed, blocks, "fuerza-cuadriceps-hop-jump-trx");
+      } else {
+        pushProtocol(parsed, blocks, "fuerza-cuadriceps-bilateral");
+        pushProtocol(parsed, blocks, "fuerza-cuadriceps-unilateral");
+        pushProtocol(parsed, blocks, "fuerza-cuadriceps-salto-cajon");
+      }
     } else {
       if (mdBlocks.specific?.length) {
         blocks.push({ kind: "section", title: "Específica" });

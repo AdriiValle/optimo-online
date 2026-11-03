@@ -1356,6 +1356,21 @@
         qty: "6 saltos · 2 series",
         info: "Squat jump al cajón: quitas la excéntrica y dejas el concéntrico rápido; menos riesgo de fatiga y trabajas velocidades en extensión (triple extensión). Aún no es plyo: es la primera piedra, muy progresivo. El cajón de 60 cm es alto (difícil; aún no saltarás con calma). Sales del cajón de 30 cm: 6 saltos × 2 series. Entre series: plancha o tren superior."
       },
+      "fuerza-cuadriceps-zancada-caballero-mancuernas": {
+        label: "Zancadas ida y vuelta desde caballero con mancuernas",
+        qty: "8 reps / pierna · 2 series",
+        info: "Desde caballero, zancada con mancuernas: vas y vuelves a la posición de partida. 8 repeticiones por pierna, 2 series."
+      },
+      "fuerza-cuadriceps-salto-cajon-carga": {
+        label: "Salto al cajón desde sentado con carga (2×2,5 kg o disco 5 kg)",
+        qty: "6 saltos · 2 series",
+        info: "Mismo salto al cajón desde sentado (sin excéntrica, concéntrico rápido) pero con carga: 2 mancuernas de 2,5 kg o un disco de 5 kg (5 kg en total). 6 saltos × 2 series. Entre series: plancha o tren superior."
+      },
+      "fuerza-cuadriceps-hop-jump-trx": {
+        label: "CEA: saltos en TRX (hop jump)",
+        qty: "10 reps · 2 series",
+        info: "Saltos reactivos en TRX (hop jump): rápidos, con poco tiempo de contacto, apoyándote en el TRX para controlar. 10 repeticiones, 2 series."
+      },
       "fuerza-isquios-bilateral": {
         label: "Hip thrust sin peso (pies en cuña)",
         qty: "8 reps 2 piernas + 8 + 8 por pierna · 2 series",
@@ -1491,6 +1506,8 @@
     }
 
     const STRENGTH_FROM = "2026-10-19";
+    /** Días de cadena anterior con bloque de Fuerza v2 (sin española a 2 piernas). El resto de días anterior no cambia. */
+    const ANTERIOR_FUERZA_V2 = ["2026-11-03", "2026-11-16"];
 
     function buildStrengthDayMap() {
       const map = {};
@@ -2341,9 +2358,16 @@
           appendProtocolRow("caballero-subida-posicion-a");
           appendProtocolRow("caballero-tandem");
           appendSectionHead("Fuerza");
-          appendProtocolRow("fuerza-cuadriceps-bilateral");
-          appendProtocolRow("fuerza-cuadriceps-unilateral");
-          appendProtocolRow("fuerza-cuadriceps-salto-cajon");
+          if (ANTERIOR_FUERZA_V2.includes(key)) {
+            appendProtocolRow("fuerza-cuadriceps-unilateral");
+            appendProtocolRow("fuerza-cuadriceps-zancada-caballero-mancuernas");
+            appendProtocolRow("fuerza-cuadriceps-salto-cajon-carga");
+            appendProtocolRow("fuerza-cuadriceps-hop-jump-trx");
+          } else {
+            appendProtocolRow("fuerza-cuadriceps-bilateral");
+            appendProtocolRow("fuerza-cuadriceps-unilateral");
+            appendProtocolRow("fuerza-cuadriceps-salto-cajon");
+          }
         } else {
           if (blocks.specific && blocks.specific.length) {
             appendSectionHead("Específica");

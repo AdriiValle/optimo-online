@@ -61,6 +61,7 @@ export type ParsedPlan = {
   baseOnline: string[];
   mdOnlineBlocks: Record<string, { specific?: string[]; activation?: string[]; post?: string[] }>;
   strengthFrom: string;
+  anteriorFuerzaV2: string[];
 };
 
 const indexPath = () => resolve(process.cwd(), "index.html");
@@ -91,6 +92,7 @@ function parseHtml(html: string): ParsedPlan {
   const baseOnline = extractBinding(html, "BASE_ONLINE") as string[];
   const mdOnlineBlocks = extractBinding(html, "MD_ONLINE_BLOCKS") as ParsedPlan["mdOnlineBlocks"];
   const strengthFrom = extractString(html, "STRENGTH_FROM");
+  const anteriorFuerzaV2 = extractBinding(html, "ANTERIOR_FUERZA_V2") as string[];
 
   return {
     matches: matches.map((m) => ({
@@ -104,6 +106,7 @@ function parseHtml(html: string): ParsedPlan {
     protocols,
     baseOnline,
     mdOnlineBlocks,
-    strengthFrom
+    strengthFrom,
+    anteriorFuerzaV2
   };
 }
