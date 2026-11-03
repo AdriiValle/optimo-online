@@ -45,6 +45,7 @@ export function VideoEmbedModal({ videoUrl, blurb, onClose }: Props) {
             key={videoId}
             src={youtubeEmbedSrc(videoId)}
             title="Vídeo del ejercicio"
+            referrerPolicy="strict-origin-when-cross-origin"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
           />
