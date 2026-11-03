@@ -8,6 +8,7 @@
     "db:migrate": "tsx db/migrate.ts",
     "db:seed": "tsx db/seed.ts",
     "db:update-anterior": "tsx db/update-anterior-blocks.ts",
+    "db:update-posterior": "tsx db/update-posterior-blocks.ts",
     "db:reset-passwords": "tsx db/reset-dev-passwords.ts"
   },
   "dependencies": {

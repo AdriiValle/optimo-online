@@ -1396,6 +1396,31 @@
         qty: "Barra 6–7 reps · 1 serie\n40 kg · 2×8 reps",
         info: "Calienta con la barra sola: 6 o 7 repeticiones, 1 serie. Después hip thrust con 40 kg: 2 series de 8 repeticiones."
       },
+      "fuerza-isquios-mancuernas-bilateral": {
+        label: "Hip thrust con mancuernas y mini-band",
+        qty: "8 reps · 2 series",
+        info: "Dos mancuernas de 5 kg (10 kg en total) en la cadera, unidas por una mini-band. 8 reps, 2 series."
+      },
+      "fuerza-isquios-mancuernas-unilateral": {
+        label: "Hip thrust unilateral con mancuernas y mini-band",
+        qty: "8 reps / pierna · 2 series",
+        info: "Dos mancuernas de 5 kg (10 kg en total) en la cadera, unidas por una mini-band. 8 reps a una pierna y 8 a la otra, 2 series."
+      },
+      "hip-thrust-barra-50": {
+        label: "Hip thrust con barra",
+        qty: "50 kg · 2×8 reps",
+        info: "Hip thrust con 50 kg: 2 series de 8 repeticiones."
+      },
+      "fuerza-isquios-salida-cajon-sagital-medball": {
+        label: "Salida a cajón desde caballero (plano sagital) con pelota medicinal",
+        qty: "6 reps / pierna · 1 serie",
+        info: "Desde posición de caballero, salida al cajón en el plano sagital con pelota medicinal. 6 repeticiones por pierna, 1 serie."
+      },
+      "fuerza-isquios-salida-cajon-frontal-abierto-medball": {
+        label: "Salida a cajón desde caballero (plano frontal, lado abierto) con pelota medicinal",
+        qty: "6 reps / pierna · 1 serie",
+        info: "Desde posición de caballero, salida al cajón en el plano frontal por el lado abierto (el lado de la rodilla apoyada) con pelota medicinal. 6 repeticiones por pierna, 1 serie."
+      },
       "aceleracion-sled-push": { label: "Sled push (trineo empujando)", qty: "3×5 m · 1 serie · 45–50 kg" },
       "campo-reloj-arena": { label: "Reloj de arena", qty: "4 diagonales · 1 serie · ~90% Vmax" },
       "tren-superior-empujes-1": { label: "Tren superior empujes 1", qty: "" }
@@ -1508,6 +1533,8 @@
     const STRENGTH_FROM = "2026-10-19";
     /** Días de cadena anterior con bloque de Fuerza v2 (sin española a 2 piernas). El resto de días anterior no cambia. */
     const ANTERIOR_FUERZA_V2 = ["2026-11-03", "2026-11-16"];
+    /** Días de cadena posterior con bloque de Fuerza v2 (mancuernas → barra 50 kg → salidas a cajón). El resto de días posterior no cambia. */
+    const POSTERIOR_FUERZA_V2 = ["2026-11-05", "2026-11-18"];
 
     function buildStrengthDayMap() {
       const map = {};
@@ -2340,12 +2367,20 @@
           appendProtocolRow("activacion-basica-isquios-1");
           appendProtocolRow(isquioComplementariaForPosterior(md, microcycleHasMd5(key)));
           appendSectionHead("Fuerza");
-          appendProtocolRow("fuerza-isquios-bilateral");
-          appendProtocolRow("fuerza-isquios-isometrico-cuna");
-          appendNoteRow("2 series del bloque: hip thrust sin peso + isométrico de cuña.");
-          appendProtocolRow("fuerza-isquios-unilateral");
-          appendProtocolRow("fuerza-isquios-mancuernas-miniband");
-          appendProtocolRow("hip-thrust-barra");
+          if (POSTERIOR_FUERZA_V2.includes(key)) {
+            appendProtocolRow("fuerza-isquios-mancuernas-bilateral");
+            appendProtocolRow("fuerza-isquios-mancuernas-unilateral");
+            appendProtocolRow("hip-thrust-barra-50");
+            appendProtocolRow("fuerza-isquios-salida-cajon-sagital-medball");
+            appendProtocolRow("fuerza-isquios-salida-cajon-frontal-abierto-medball");
+          } else {
+            appendProtocolRow("fuerza-isquios-bilateral");
+            appendProtocolRow("fuerza-isquios-isometrico-cuna");
+            appendNoteRow("2 series del bloque: hip thrust sin peso + isométrico de cuña.");
+            appendProtocolRow("fuerza-isquios-unilateral");
+            appendProtocolRow("fuerza-isquios-mancuernas-miniband");
+            appendProtocolRow("hip-thrust-barra");
+          }
         } else if (strengthRole === "anterior") {
           appendSectionHead("Específica");
           appendProtocolRow("movilidad-cadera-lumbar-1");

@@ -208,15 +208,23 @@ function buildBlocks(
       pushProtocol(parsed, blocks, "activacion-basica-isquios-1");
       pushProtocol(parsed, blocks, isquioComplementariaForPosterior(md, microcycleHasMd5(parsed.matches, buildMdMap(parsed.matches), iso)));
       blocks.push({ kind: "section", title: "Fuerza" });
-      pushProtocol(parsed, blocks, "fuerza-isquios-bilateral");
-      pushProtocol(parsed, blocks, "fuerza-isquios-isometrico-cuna");
-      blocks.push({
-        kind: "note",
-        text: "2 series del bloque: hip thrust sin peso + isométrico de cuña."
-      });
-      pushProtocol(parsed, blocks, "fuerza-isquios-unilateral");
-      pushProtocol(parsed, blocks, "fuerza-isquios-mancuernas-miniband");
-      pushProtocol(parsed, blocks, "hip-thrust-barra");
+      if (parsed.posteriorFuerzaV2.includes(iso)) {
+        pushProtocol(parsed, blocks, "fuerza-isquios-mancuernas-bilateral");
+        pushProtocol(parsed, blocks, "fuerza-isquios-mancuernas-unilateral");
+        pushProtocol(parsed, blocks, "hip-thrust-barra-50");
+        pushProtocol(parsed, blocks, "fuerza-isquios-salida-cajon-sagital-medball");
+        pushProtocol(parsed, blocks, "fuerza-isquios-salida-cajon-frontal-abierto-medball");
+      } else {
+        pushProtocol(parsed, blocks, "fuerza-isquios-bilateral");
+        pushProtocol(parsed, blocks, "fuerza-isquios-isometrico-cuna");
+        blocks.push({
+          kind: "note",
+          text: "2 series del bloque: hip thrust sin peso + isométrico de cuña."
+        });
+        pushProtocol(parsed, blocks, "fuerza-isquios-unilateral");
+        pushProtocol(parsed, blocks, "fuerza-isquios-mancuernas-miniband");
+        pushProtocol(parsed, blocks, "hip-thrust-barra");
+      }
     } else if (strengthRole === "anterior") {
       blocks.push({ kind: "section", title: "Específica" });
       pushProtocol(parsed, blocks, "movilidad-cadera-lumbar-1");
