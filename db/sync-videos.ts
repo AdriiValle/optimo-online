@@ -20,11 +20,27 @@ async function main() {
       let dirty = false;
       const blocks = row.blocks.map((b) => {
         if (b.kind !== "protocol") return b;
-        const video = protocols[b.protocolId]?.video ?? null;
-        const blurb = protocols[b.protocolId]?.blurb ?? null;
-        if (video === b.video && blurb === (b.blurb ?? null)) return b;
+        const p = protocols[b.protocolId];
+        if (!p) return b;
+        const next = {
+          ...b,
+          label: p.label,
+          qty: p.qty ?? null,
+          info: p.info ?? null,
+          video: p.video ?? null,
+          blurb: p.blurb ?? null
+        };
+        if (
+          next.label === b.label &&
+          next.qty === (b.qty ?? null) &&
+          next.info === (b.info ?? null) &&
+          next.video === b.video &&
+          next.blurb === (b.blurb ?? null)
+        ) {
+          return b;
+        }
         dirty = true;
-        return { ...b, video, blurb };
+        return next;
       });
       if (!dirty) continue;
       const res = await tx`update day_plans set blocks = ${tx.json(blocks)} where id = ${row.id}`;
