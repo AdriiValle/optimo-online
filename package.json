@@ -9,6 +9,8 @@
     "db:seed": "tsx db/seed.ts",
     "db:update-anterior": "tsx db/update-anterior-blocks.ts",
     "db:update-posterior": "tsx db/update-posterior-blocks.ts",
+    "db:set-videos": "tsx db/set-protocol-videos.ts",
+    "db:sync-videos": "tsx db/sync-videos.ts",
     "db:reset-passwords": "tsx db/reset-dev-passwords.ts"
   },
   "dependencies": {

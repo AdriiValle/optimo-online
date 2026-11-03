@@ -458,7 +458,15 @@ function SessionTable({ plan }: { plan?: DayPlan }) {
               <tr key={i}>
                 <td>{row.label}</td>
                 <td className={row.qty ? "" : "empty"}>{row.qty || "—"}</td>
-                <td className="empty">—</td>
+                {row.video ? (
+                  <td>
+                    <a href={row.video} target="_blank" rel="noopener noreferrer">
+                      Vídeo
+                    </a>
+                  </td>
+                ) : (
+                  <td className="empty">—</td>
+                )}
               </tr>
             );
           })}
