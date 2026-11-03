@@ -6,6 +6,7 @@ import { LOAD_TINT_FROM, loadClassForMdTag } from "@/lib/plan";
 import type { Athlete, DayPlan, Diary, Injury } from "@/lib/types";
 import { Analisis, type AnalysisView } from "./analisis";
 import { NutritionPane } from "./nutrition-pane";
+import { VideoEmbedModal } from "./video-embed-modal";
 
 const VENUE_SVG = {
   casa: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1 1 7v7h5V9h4v5h5V7L8 1z"/></svg>',
@@ -427,6 +428,7 @@ export function HomeClient({
 }
 
 function SessionTable({ plan }: { plan?: DayPlan }) {
+  const [openVideoUrl, setOpenVideoUrl] = useState<string | null>(null);
   const rows = plan?.blocks ?? [{ kind: "note" as const, text: "Sin bloque asignado para este día." }];
   return (
     <div className="content-table-wrap">
@@ -460,9 +462,9 @@ function SessionTable({ plan }: { plan?: DayPlan }) {
                 <td className={row.qty ? "" : "empty"}>{row.qty || "—"}</td>
                 {row.video ? (
                   <td>
-                    <a href={row.video} target="_blank" rel="noopener noreferrer">
+                    <button type="button" className="video-link" onClick={() => setOpenVideoUrl(row.video!)}>
                       Vídeo
-                    </a>
+                    </button>
                   </td>
                 ) : (
                   <td className="empty">—</td>
@@ -472,6 +474,7 @@ function SessionTable({ plan }: { plan?: DayPlan }) {
           })}
         </tbody>
       </table>
+      <VideoEmbedModal videoUrl={openVideoUrl} onClose={() => setOpenVideoUrl(null)} />
     </div>
   );
 }
