@@ -1,9 +1,11 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseIndexHtml } from "../lib/html-parse";
+import { blurbForSlug } from "../lib/knowledge-blurb";
+import { setProtocolStringField } from "./protocol-html-field";
 
 // Uso: npm run db:set-videos -- [subidos.csv] [--dry-run]
-// Vuelca la URL de cada fila de subidos.csv en PROTOCOLS.video de index.html
+// Vuelca url (+ blurb desde Knowledge si hay slug) en PROTOCOLS de index.html
 // (y plan-visus.html, copia espejo). El id es protocolId; si falta, slug cuando
 // slug es una clave de PROTOCOLS; si no, la fila se ignora. Después: npm run db:sync-videos.
 
@@ -40,50 +42,7 @@ function parseCsv(text: string): string[][] {
   return rows;
 }
 
-function matchingBrace(text: string, open: number) {
-  let depth = 0;
-  let quote = "";
-  for (let i = open; i < text.length; i += 1) {
-    const c = text[i];
-    if (quote) {
-      if (c === "\\") i += 1;
-      else if (c === quote) quote = "";
-    } else if (c === '"' || c === "'" || c === "`") quote = c;
-    else if (c === "{") depth += 1;
-    else if (c === "}") {
-      depth -= 1;
-      if (depth === 0) return i;
-    }
-  }
-  throw new Error("set-protocol-videos: llave sin cerrar");
-}
-
-function setVideo(html: string, id: string, url: string) {
-  const start = html.indexOf("const PROTOCOLS = ");
-  if (start < 0) throw new Error("set-protocol-videos: falta PROTOCOLS");
-  const blockOpen = html.indexOf("{", start);
-  const blockClose = matchingBrace(html, blockOpen);
-
-  const key = `"${id}": {`;
-  const k = html.indexOf(key, blockOpen);
-  if (k < 0 || k > blockClose) throw new Error(`set-protocol-videos: ${id} no está en PROTOCOLS`);
-  const open = k + key.length - 1;
-  const close = matchingBrace(html, open);
-  const body = html.slice(open + 1, close);
-  const value = JSON.stringify(url);
-
-  let next: string;
-  if (/\bvideo:\s*"(?:[^"\\]|\\.)*"/.test(body)) {
-    next = body.replace(/(\bvideo:\s*)"(?:[^"\\]|\\.)*"/, (_m, p1: string) => `${p1}${value}`);
-  } else if (body.includes("\n")) {
-    const indent = body.match(/\n([ \t]+)\S/)?.[1] ?? "        ";
-    const tail = body.match(/\n([ \t]*)$/)?.[1] ?? "";
-    next = `${body.replace(/[\s,]+$/, "")},\n${indent}video: ${value}\n${tail}`;
-  } else {
-    next = ` ${body.trim().replace(/,$/, "")}, video: ${value} `;
-  }
-  return html.slice(0, open + 1) + next + html.slice(close);
-}
+type RowWanted = { url: string; slug: string };
 
 function main() {
   const args = process.argv.slice(2);
@@ -102,13 +61,12 @@ function main() {
   const iSlug = header.indexOf("slug");
   const known = parseIndexHtml().protocols;
 
-  // Última fila por protocolId gana (una re-subida reemplaza a la anterior).
-  const wanted = new Map<string, string>();
+  const wanted = new Map<string, RowWanted>();
   for (const r of data) {
     const slug = iSlug >= 0 ? r[iSlug]?.trim() : "";
     const id = r[iProtocol]?.trim() || (slug && known[slug] ? slug : "");
     const url = r[iUrl]?.trim();
-    if (id && url) wanted.set(id, url);
+    if (id && url) wanted.set(id, { url, slug });
   }
   if (wanted.size === 0) {
     console.log("set-protocol-videos: ninguna fila con protocolId ni slug de PROTOCOLS, nada que hacer");
@@ -116,21 +74,34 @@ function main() {
   }
 
   const errors: string[] = [];
-  for (const [id, url] of wanted) {
+  const blurbs: string[] = [];
+  for (const [id, { url, slug }] of wanted) {
     if (!known[id]) errors.push(`protocolId desconocido: ${id}`);
     if (!/^https:\/\//.test(url)) errors.push(`url no https para ${id}: ${url}`);
+    if (slug) {
+      const blurb = blurbForSlug(slug);
+      if (blurb) blurbs.push(`${id} ← ${slug}`);
+      else errors.push(`sin ## Descripción en Knowledge para slug ${slug} (${id})`);
+    }
   }
   if (errors.length) throw new Error(`set-protocol-videos: ${errors.join("; ")} (no se escribió nada)`);
 
   const outputs = HTML_FILES.filter(existsSync).map((file) => {
     let html = readFileSync(file, "utf8");
-    for (const [id, url] of wanted) html = setVideo(html, id, url);
+    for (const [id, { url, slug }] of wanted) {
+      html = setProtocolStringField(html, id, "video", url);
+      if (slug) {
+        const blurb = blurbForSlug(slug);
+        if (blurb) html = setProtocolStringField(html, id, "blurb", blurb);
+      }
+    }
     return { file, html };
   });
   if (!dryRun) for (const o of outputs) writeFileSync(o.file, o.html);
 
+  const blurbNote = blurbs.length ? ` · blurbs: ${blurbs.join(", ")}` : "";
   console.log(
-    `set-protocol-videos ${dryRun ? "(dry-run) " : ""}ok · ${[...wanted.keys()].join(", ")} → ${outputs.map((o) => o.file.split(/[\\/]/).pop()).join(", ")}`
+    `set-protocol-videos ${dryRun ? "(dry-run) " : ""}ok · ${[...wanted.keys()].join(", ")} → ${outputs.map((o) => o.file.split(/[\\/]/).pop()).join(", ")}${blurbNote}`
   );
 }
 

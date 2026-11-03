@@ -428,7 +428,7 @@ export function HomeClient({
 }
 
 function SessionTable({ plan }: { plan?: DayPlan }) {
-  const [openVideoUrl, setOpenVideoUrl] = useState<string | null>(null);
+  const [openVideo, setOpenVideo] = useState<{ url: string; blurb: string | null } | null>(null);
   const rows = plan?.blocks ?? [{ kind: "note" as const, text: "Sin bloque asignado para este día." }];
   return (
     <div className="content-table-wrap">
@@ -462,7 +462,11 @@ function SessionTable({ plan }: { plan?: DayPlan }) {
                 <td className={row.qty ? "" : "empty"}>{row.qty || "—"}</td>
                 {row.video ? (
                   <td>
-                    <button type="button" className="video-link" onClick={() => setOpenVideoUrl(row.video!)}>
+                    <button
+                      type="button"
+                      className="video-link"
+                      onClick={() => setOpenVideo({ url: row.video!, blurb: row.blurb ?? null })}
+                    >
                       Vídeo
                     </button>
                   </td>
@@ -474,7 +478,11 @@ function SessionTable({ plan }: { plan?: DayPlan }) {
           })}
         </tbody>
       </table>
-      <VideoEmbedModal videoUrl={openVideoUrl} onClose={() => setOpenVideoUrl(null)} />
+      <VideoEmbedModal
+        videoUrl={openVideo?.url ?? null}
+        blurb={openVideo?.blurb ?? null}
+        onClose={() => setOpenVideo(null)}
+      />
     </div>
   );
 }

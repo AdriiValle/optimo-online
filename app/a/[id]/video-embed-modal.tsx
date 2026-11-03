@@ -5,10 +5,11 @@ import { youtubeEmbedSrc, youtubeVideoId } from "@/lib/youtube-embed";
 
 type Props = {
   videoUrl: string | null;
+  blurb: string | null;
   onClose: () => void;
 };
 
-export function VideoEmbedModal({ videoUrl, onClose }: Props) {
+export function VideoEmbedModal({ videoUrl, blurb, onClose }: Props) {
   const videoId = videoUrl ? youtubeVideoId(videoUrl) : null;
 
   useEffect(() => {
@@ -48,6 +49,7 @@ export function VideoEmbedModal({ videoUrl, onClose }: Props) {
             allowFullScreen
           />
         </div>
+        {blurb?.trim() ? <p className="video-embed-blurb">{blurb.trim()}</p> : null}
       </div>
     </div>
   );

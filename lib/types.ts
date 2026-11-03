@@ -25,6 +25,8 @@ export type Protocol = {
   qty?: string;
   info?: string;
   video?: string;
+  /** Resumen de ## Descripción (Knowledge), volcado en sync. */
+  blurb?: string;
 };
 
 export type SessionRow =
@@ -38,6 +40,7 @@ export type SessionRow =
       qty: string | null;
       info: string | null;
       video: string | null;
+      blurb: string | null;
     };
 
 export type DayPlanBlock = SessionRow;
