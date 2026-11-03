@@ -33,3 +33,6 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
 - 2026-10-29: Adri�n OK ? merge dev a main (c45b041) y push. Producci�n = app Next.
 
 - 2026-10-29: Producto y URL = **�ptimo Online** (optimo-online). Repo GH + proyecto Vercel renombrados; Visus es piloto, no el nombre del producto.
+
+- 2026-11-03: Cadena anterior Visus 3 y 16 nov: bloque Fuerza v2 (española uni 45 → zancadas caballero+mancuernas → salto cajón con carga → CEA/TRX); sin española 2 piernas.
+  Gate por fecha (ANTERIOR_FUERZA_V2); resto de anteriores intactos. Knowledge: ficha zancada + apunte excéntrica a velocidades.
