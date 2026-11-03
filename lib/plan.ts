@@ -163,7 +163,8 @@ function pushProtocol(parsed: ParsedPlan, blocks: DayPlanBlock[], protocolId: st
     label: p.label,
     qty: p.qty ?? null,
     info: p.info ?? null,
-    video: p.video ?? null
+    video: p.video ?? null,
+    blurb: p.blurb ?? null
   });
 }
 

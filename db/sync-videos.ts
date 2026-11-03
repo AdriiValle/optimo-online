@@ -21,9 +21,10 @@ async function main() {
       const blocks = row.blocks.map((b) => {
         if (b.kind !== "protocol") return b;
         const video = protocols[b.protocolId]?.video ?? null;
-        if (video === b.video) return b;
+        const blurb = protocols[b.protocolId]?.blurb ?? null;
+        if (video === b.video && blurb === (b.blurb ?? null)) return b;
         dirty = true;
-        return { ...b, video };
+        return { ...b, video, blurb };
       });
       if (!dirty) continue;
       const res = await tx`update day_plans set blocks = ${tx.json(blocks)} where id = ${row.id}`;
