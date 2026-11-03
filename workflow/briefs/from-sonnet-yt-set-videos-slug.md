@@ -1,0 +1,6 @@
+- Hecho: si
+- Qué cambió (rutas): `db/set-protocol-videos.ts` (commit en `dev`). Ruta por defecto ahora `…\Optimo\YouTube\subidos\subidos.csv` (un `..` menos). Columna `slug` opcional: `id = protocolId || (slug ∈ PROTOCOLS ? slug : "")`; filas sin id se ignoran en silencio; `protocolId` explícito desconocido sigue abortando. Cabecera de comentario y mensaje de "nada que hacer" actualizados.
+- Verificación: `npm run db:set-videos -- --dry-run` → "no existe …\Optimo\YouTube\subidos\subidos.csv". Con CSV temporal de 8 columnas (slug=rutina-movilidad-1 sin protocolId, slug=dominada, protocolId=hip-thrust-barra-50) el dry-run lista solo `rutina-movilidad-1, hip-thrust-barra-50`. `tsc --noEmit` limpio. `git status`: HTML sin cambios.
+- Duda:
+- Recomendación:
+- Bloquea a Adrián: no (el merge a main de la app es de Adrián, no se ha tocado).
