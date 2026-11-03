@@ -6,5 +6,5 @@
   - `app/a/[id]/video-embed-modal.tsx` — overlay con scrim oscuro, iframe embebido, cierre con X, Escape y clic fuera; al cerrar se desmonta el iframe (para el vídeo).
   - `app/a/[id]/home-client.tsx` — columna Vídeo: botón en lugar de `<a target=_blank>`; estado local abre el modal.
   - `app/globals.css` — estilos `.video-embed-*` (glass/card coherente) y `.content-table .video-link`.
-- Duda: no probé embed con un vídeo unlisted real en el navegador (requiere login app + URL en DB). Si YouTube bloquea embed por política del vídeo, el iframe mostrará el error de YouTube (comportamiento estándar); no hay fallback a pestaña nueva salvo que Adrián lo pida.
+- Duda: ninguna relevante. Probado en local (`localhost:3001`): clic «Vídeo» abre modal con botón Cerrar; cierre OK. No validé reproducción completa del stream unlisted (iframe presente; política embed depende de YouTube).
 - Commit en `dev` + push `origin dev`.
