@@ -1,25 +1,25 @@
-# from-sonnet — plan-ok
+# from-sonnet — plan-ok (cadena posterior)
 
 - Hecho: sí
 
 - Qué cambió (rutas):
-  - `workflow/briefs/plan-cadena-anterior.md` reescrito con anclas archivo:línea, rutas Drive, fechas, IDs, paralelo cerrado y criterio por paso. Sin código, sin Neon, sin tocar Knowledge. Rama `dev` sin cambiar. Sin commit (los briefs de `workflow/briefs/` están sin trackear en este repo; no he cambiado esa convención).
+  - `workflow/briefs/plan-cadena-posterior.md` reescrito con anclas archivo:línea, IDs actuales del bloque, fechas, formato Knowledge, paralelo cerrado y criterio por paso. Sin código, sin Neon, sin tocar Knowledge. Rama `dev` sin cambiar, sin commit (los briefs están sin trackear).
+  - Sustituye el `from-sonnet-plan-ok.md` anterior (era de cadena anterior; ya ejecutado en `3ed82af`).
 
 - Hallazgos que cambian el plan original:
-  1. **Fechas:** los dos días son **2026-11-03 (MD-4)** y **2026-11-16 (MD-5)**. 16-nov confirmado ejecutando `buildDayPlans` en local (solo lectura). Siguientes anterior: 24-nov, 1-dic, 8-dic…
-  2. **Hoy no hay gate por fecha:** el bloque anterior es común a todos los días anterior. Hay que añadir una lista explícita de 2 fechas (HTML + parser + `lib/plan.ts`), si no cambiarían también 24-nov en adelante.
-  3. **Doble sitio + Neon:** `index.html` y `plan-visus.html` son idénticos (editar ambos; el parser lee `index.html`); `lib/plan.ts:220-234` construye el JSON; la app lee `day_plans.blocks` de Neon, que no se recalcula solo.
-  4. **No usar `db:seed`:** borra todos los `day_plans` del atleta y resetea contraseñas admin/atleta con `SEED_*`. El plan prevé un script mínimo `update` solo de esas dos fechas.
-  5. **Knowledge:** ya existen `sentadilla-espanola-unilateral-cajon-45`, `salto-cajon-desde-sentado` y `hop-jump-trx`; solo falta **crear** la ficha de zancadas ida/vuelta caballero+mancuernas y el apunte del porqué; el resto es actualizar. CEA no tiene ficha: se trata como alias de `hop-jump-trx` + concepto en el apunte.
+  1. **Fechas confirmadas:** los dos posteriores son **2026-11-05 (MD-2)** y **2026-11-18 (MD-3)** (`buildDayPlans` en local, solo lectura). Siguientes: 26-nov, 3-dic, 10-dic…
+  2. **Sin gate por fecha:** el bloque posterior es común a todos los posteriores → hace falta `POSTERIOR_FUERZA_V2` (2 fechas) en HTML ×2 + parser + `lib/plan.ts`, igual que `ANTERIOR_FUERZA_V2`. No reutilizar los IDs viejos (los usan 26-nov y siguientes): 5 IDs nuevos.
+  3. **Neon manual:** script nuevo `db/update-posterior-blocks.ts` (copia de `update-anterior-blocks.ts`). No usar `db:seed`.
+  4. **Knowledge:** ya existe la ficha unilateral (`hip-thrust-unilateral-mancuernas-mini-banda`, misma dosis 8+8·2) y `hip-thrust-barra`; falta crear la **bilateral con mancuernas** y el apunte; las dos salidas a cajón mapean a fichas existentes (`zancada-cajon-triple-extension`, `caballero-lanzamiento-cadera-cajon-cambio-plano` var. 1 lado abierto) como variante con pelota medicinal.
 
 - Duda:
-  1. Dosis de lo nuevo no dictada por Adrián (sobre todo zancadas: reps/series). El plan usa 8 reps/pierna · 2 series (misma dosis unilateral del bloque de posterior); salto cajón 6×2 y hop jump TRX 10×2 ya estaban documentados.
-  2. «CEA / saltos en TRX»: lo he leído como un solo ejercicio (= `hop-jump-trx`, CEA como alias). Si Adrián quería dos ejercicios distintos (p. ej. un CEA sin TRX), el paso 2/3 añade uno más.
-  3. Neon es una única base (dev y producción comparten datos según `handshake.md`): actualizar `day_plans` de 11-03/11-16 lo ve Visus en producción al instante, aunque no se haga merge a `main`. Es lo que se pidió, pero conviene que el worker del paso 2 lo sepa.
+  1. «Dejar hip thrust con mancuernas 2×8» + «añadir unilateral 2×8/pierna»: en disco solo existe un ejercicio con mancuernas, y ya es unilateral (8/pierna, 2×5 kg + mini-band). Lo he leído como que Adrián quiere una versión bilateral (8 reps) además de la unilateral.
+  2. «Salida a cajón desde caballero» (sagital / frontal lado abierto): no hay ficha con ese nombre; las he mapeado a `zancada-cajon-triple-extension` y `caballero-lanzamiento-cadera-cajon-cambio-plano` (var. 1). Podría ser otro gesto (p. ej. un sprint de salida, `caballero-sprint-salida-lado-abierto`, que no sube al cajón).
+  3. Carga/peso de mancuernas en la bilateral y peso de la med ball: no dictados (se mantiene 2×5 kg + mini-band; med ball «no especificado»). «6 / pierna» de la segunda salida se lee como 1×6.
 
 - Recomendación:
-  1. Ejecutar con las dosis propuestas; si Adrián corrige después, es un cambio de una línea en `PROTOCOLS` + re-ejecutar el script de update.
-  2. Un solo ejercicio (`hop-jump-trx` con alias CEA). Mínimo cambio y reversible.
-  3. Aplicar el update de Neon al final del paso 2, tras verificar en local con `tsx` que 24-nov y posteriores no cambian; solo esas dos fechas, sin `delete`.
+  1. Ejecutar con bilateral = misma carga que la unilateral; si Adrián corrige, es una línea en `PROTOCOLS` + re-ejecutar `db:update-posterior`.
+  2. Mapear a las dos fichas de cajón existentes (gesto con subida al cajón, que es lo que dice «salida a cajón»); mínimo cambio y reversible.
+  3. Dejar la carga como está en disco y sin peso de pelota hasta que Adrián lo dicte.
 
-- Bloquea a Adrián: no. (Ningún punto es decisión de producto nueva, dinero, legal, borrado de datos ni merge a `main`; el update de Neon es el cambio pedido y no borra datos.)
+- Bloquea a Adrián: no. (Ningún punto es producto nuevo, dinero, legal, borrado de datos ni merge a `main`; el update de Neon es el cambio pedido y no borra datos.)

@@ -1,12 +1,12 @@
 ﻿# Session
 
-Escrito: 2026-11-03 10:40
+Escrito: 2026-11-03 11:10
 
 Objetivo: app deportistas online (Óptimo). Visus piloto.
 
 Rama: `dev`
 
-Último slice: **cadena-anterior** cerrado (app + Knowledge).
+Último slice: **cadena-posterior** cerrado (app + Knowledge).
 
 Local: http://localhost:3001
 
@@ -17,13 +17,13 @@ Local: http://localhost:3001
 
 ## Hecho
 
-- 3 y 16 nov: Fuerza = española uni 45 → zancadas caballero+mancuernas → salto cajón carga → CEA TRX
-- Knowledge: ficha zancada + apunte progresión; salto cajón y hop-jump actualizados
+- 5 y 18 nov: Fuerza = HT mancuernas bi → uni → barra 50 kg → salidas cajón sagital/frontal + med ball
+- Knowledge: ficha HT mancuernas bi + apunte; variantes med ball en salidas
 
 ## Abierto
 
-- Dosis zancadas 8/pierna · 2 series (no dictada)
-- CEA = alias hop-jump-trx
+- Carga mancuernas bi = 2×5 kg + mini-band (no dictada de nuevo)
+- Peso med ball no especificado
 
 ## Siguiente
 

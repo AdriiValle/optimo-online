@@ -36,3 +36,6 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
 
 - 2026-11-03: Cadena anterior Visus 3 y 16 nov: bloque Fuerza v2 (española uni 45 → zancadas caballero+mancuernas → salto cajón con carga → CEA/TRX); sin española 2 piernas.
   Gate por fecha (ANTERIOR_FUERZA_V2); resto de anteriores intactos. Knowledge: ficha zancada + apunte excéntrica a velocidades.
+
+- 2026-11-03: Cadena posterior Visus 5 y 18 nov: Fuerza = HT mancuernas bi → uni → barra 50 kg 2×8 → salidas cajón sagital/frontal + med ball; sin HT sin peso ni isos de cuña.
+  Gate `POSTERIOR_FUERZA_V2`; 26-nov+ intactos. Knowledge: ficha HT mancuernas bi + apunte recorte.
