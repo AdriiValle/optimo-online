@@ -1,50 +1,43 @@
-# From Opus: plan-ok (Ajustes)
+# From Opus — plan-react-datos-look
 
 - Hecho: sí
 - Qué cambió (rutas):
-  - `workflow/briefs/plan-ajustes.md`: reescrito. El árbol ya tenía APIs/UI. Nombre canónico = `PATCH /api/athletes/[id]`. Oleadas = huecos (build roto, leer hash bajo RLS, headers, UI a la ruta canónica, repetir contraseña).
-  - `workflow/briefs/from-opus-plan-ok.md`: este archivo.
-  - No se ha tocado código.
+  - `workflow/briefs/plan-react-datos-look.md` (reescrito y anclado al código)
+  - `workflow/briefs/from-opus-plan-ok.md`
 - Duda:
 - Recomendación:
 - Bloquea a Adrián: no
 
 ## Visto bueno
 
-OK con estos cambios al ancla anterior:
+Sí, con ajustes. El plan iba bien encaminado; lo he anclado a lo que hay de verdad:
 
-1. **No partir de cero.** `/ajustes`, `/panel/ajustes`, `/api/me/password`, `/api/admin/accounts`, `set_own_password_hash`, `SESSION_MAX_AGE`, `PATCH /api/athletes/[id]` y el botón del panel ya están. No recrear. `/api/me/profile` y `/api/admin/athletes/[id]/profile` sobran: no cablear, no borrar.
-2. **Sesión:** 90 días JWT. El middleware `auth()` re-firma la cookie en cada request (`now + maxAge`). Eso es el rolling. `updateAge` solo vale con strategy `database`; no es el mecanismo. Si ya está en `lib/auth.ts`, se deja. `decisions.md` ya tiene las entradas: no duplicar.
-3. **Contraseña propia:** la función SQL y `setOwnPasswordHash` ya existen. El hueco es `POST /api/me/password`: `const ok` duplicado (no compila) y hay que leer el hash con `accountById` bajo RLS propia, sin escalate a admin y sin `lookup_account_by_email`.
-4. **Nombre:** canónico `PATCH /api/athletes/[id]` (atleta y admin). La UI de oleadas 2/3 apunta ahí.
-5. **Reset admin:** `PATCH` `{ password }`, no `POST` `{ newPassword }`. Código de error: `VALIDATION_ERROR`, no `INVALID_PASSWORD`.
-6. **UI:** extraer `PasswordForm` (actual + nueva + repetir). En las páginas de Ajustes, `HeaderBackButton` + `LogoutButton` (hoy `HeaderActions` apunta a sí mismo). Reset admin: un campo `type="text"` para que Adrián lea/copie. `dash-photo` y `home-client.tsx` no se tocan.
-7. **Paralelo:** no. Mismo checkout.
+- **Única dependencia del HTML en runtime:** `app/a/[id]/page.tsx:31` parsea `index.html` en cada request **solo para los escudos**. La oleada 1 la quita; eso es "sacar el HTML del camino crítico".
+- Paridad medida hoy: 235 días, 40 protocolos, 35 partidos, 18 escudos.
+- Protocolos en `lib/plan-data/protocols.json` (no TS) porque `db:set-videos` tiene que reescribirlos de forma mecánica. El resto del calendario va en `calendar.ts` tipado.
+- `db:set-videos` deja de escribir en los HTML → el HTML se congela como backup. `db/protocol-html-field.ts` se borra en ese mismo diff.
+- Neon es la base de prod: en este corte **no se escribe en Neon**. `sync-videos` gana `--dry-run`, y el criterio es que dé 0 cambios.
+- La "tabla HTML" de la ficha es `SessionTable` (`<table>` en `home-client.tsx`). El único `dangerouslySetInnerHTML` es un icono SVG, no contenido del plan. La oleada 2 cambia la tabla por `session-list.tsx`.
 
-## Oleadas
+## Trozos / oleadas (en serie, nada en paralelo)
 
-| Oleada | Worker | Archivos | Commits |
-|---|---|---|---|
-| 1 | 1 | `app/api/me/password/route.ts`, `workflow/context/decisions.md` (+ migrate; `lib/auth.ts` / `db/schema.sql` / `lib/queries.ts` solo si faltara lo ya listado) | 1 |
-| 2 | 1 | `app/components/password-form.tsx`, `app/ajustes/**`, `app/a/[id]/page.tsx` (no deshacer trailing), `app/globals.css` (solo añadir) | 1 |
-| 3 | 1 | `app/panel/ajustes/**`, `app/panel/deportistas-section.tsx` (Link ya está), `app/globals.css` (solo añadir) | 1 |
-| Cierre | orquestador | `workflow/session.md` + smoke + push `origin/dev` | 1 |
+1. **Datos** (sonnet): `lib/plan-data/{protocols.json,calendar.ts,index.ts}`, import en `lib/plan.ts`, `page.tsx` (escudos), 5 scripts `db/`, borrar `db/protocol-html-field.ts`, `scripts/plan-parity.ts` + `npm run plan:parity`.
+2. **UI estructura** (sonnet): `app/a/[id]/session-list.tsx` nuevo, `home-client.tsx` (usar la lista + SVG en JSX), CSS mínimo para la lista.
+3. **Look** (opus): `globals.css` + className/marcado de login, panel, ficha, modal y cabecera. Nada de `lib/`, `db/`, api ni auth.
+4. **Master**: push `dev` y preview. Sin merge.
 
-## Riesgos (resumen)
+2 y 3 tocan `home-client.tsx` y `globals.css` → no van en paralelo. 2 necesita el `page.tsx` limpio de 1.
 
-- Reset no echa sesiones abiertas (JWT sin revocación).
-- iOS PWA y previews de Vercel piden login otra vez; no es bug del slice.
-- Sin `npm run db:migrate` el cambio de contraseña propia da 500.
-- Hoy `next build` falla por `const ok` duplicado en `app/api/me/password/route.ts`.
-- Header a 375 px: plan B ⚙.
+## Riesgos
+
+- `seed` borra y vuelve a insertar `day_plans` en la base de prod → prohibido en este corte; solo `--dry-run`.
+- Desde la oleada 1 el HTML ya no se actualiza; `plan:parity` solo sirve el día del commit.
+- Escudos: hay que conservar la `/` inicial en `CRESTS`.
+- Editar `protocols.json` no se ve en la ficha hasta un `db:sync-videos` real. Ese sync escribe en prod, así que necesita el visto bueno de Adrián (fuera de este corte).
 
 ## Orden de commits
 
-1. `Ajustes API: sesión JWT 90 días y contraseña propia sin escalate.`
-2. `Ajustes jugador: página /ajustes y botón en la ficha.`
-3. `Ajustes admin: cuentas y reset en /panel/ajustes.`
-4. `Session: slice Ajustes cerrado.`
-
-Si el working tree ya mezcla 1–3, el worker parte en esos commits; no un wip único. Serie: 1 → 2 → 3 → cierre. No merge a `main`.
-
-(nota despachar: corte Pro detectado, relanzado con grok)
+1. `feat(plan): datos del plan en lib/plan-data (TS/JSON), HTML queda de backup`
+2. `feat(ficha): sesión del día como lista React, sin tabla`
+3. `feat(look): Óptimo + glass móvil en login, panel y ficha`
+4. (master) push `dev` → preview Vercel
