@@ -27,6 +27,39 @@ const BodySchema = z.object({
   freeNote: z.string().max(4000).nullable().optional()
 });
 
+type DiaryField =
+  | "sleepHours"
+  | "sleepQuality"
+  | "recovery"
+  | "hrv"
+  | "restingHr"
+  | "rpe"
+  | "km"
+  | "avgHr"
+  | "dietNote"
+  | "freeNote";
+
+const FIELD_TO_KEY: Record<DiaryField, string> = {
+  sleepHours: "sleepHours",
+  sleepQuality: "sleepQuality",
+  recovery: "recovery",
+  hrv: "hrv",
+  restingHr: "restingHr",
+  rpe: "rpe",
+  km: "km",
+  avgHr: "avgHr",
+  dietNote: "dietNote",
+  freeNote: "freeNote"
+};
+
+function touchedFields(raw: Record<string, unknown>): Set<DiaryField> {
+  const set = new Set<DiaryField>();
+  for (const field of Object.keys(FIELD_TO_KEY) as DiaryField[]) {
+    if (Object.prototype.hasOwnProperty.call(raw, field)) set.add(field);
+  }
+  return set;
+}
+
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return unauthenticated();
@@ -50,7 +83,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return unauthenticated();
-  const json = await req.json().catch(() => null);
+  const json = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const parsed = BodySchema.safeParse(json);
   if (!parsed.success) {
     return apiError(422, "VALIDATION_ERROR", "Invalid diary", parsed.error.flatten());
@@ -58,28 +91,60 @@ export async function POST(req: Request) {
   if (!canSeeAthlete(user, parsed.data.athleteId)) return notFound();
 
   const d = parsed.data;
+  const touch = touchedFields(json ?? {});
+
   const saved = await withRls(rlsFrom(user), async (tx) => {
+    const tSleep = touch.has("sleepHours");
+    const tQuality = touch.has("sleepQuality");
+    const tRecovery = touch.has("recovery");
+    const tHrv = touch.has("hrv");
+    const tRhr = touch.has("restingHr");
+    const tRpe = touch.has("rpe");
+    const tKm = touch.has("km");
+    const tAvg = touch.has("avgHr");
+    const tDiet = touch.has("dietNote");
+    const tFree = touch.has("freeNote");
+
+    const sleepHours = tSleep ? (d.sleepHours ?? null) : null;
+    const sleepQuality = tQuality ? (d.sleepQuality ?? null) : null;
+    const recovery = tRecovery ? (d.recovery ?? null) : null;
+    const hrv = tHrv ? (d.hrv ?? null) : null;
+    const restingHr = tRhr ? (d.restingHr ?? null) : null;
+    const rpe = tRpe ? (d.rpe ?? null) : null;
+    const km = tKm ? (d.km ?? null) : null;
+    const avgHr = tAvg ? (d.avgHr ?? null) : null;
+    const dietNote = tDiet ? (d.dietNote ?? null) : null;
+    const freeNote = tFree ? (d.freeNote ?? null) : null;
+
     await tx`
       insert into diaries (
         athlete_id, date, sleep_hours, sleep_quality, recovery, hrv, resting_hr,
         rpe, feeling, km, avg_hr, diet_note, free_note
       ) values (
-        ${d.athleteId}, ${d.date}::date, ${d.sleepHours ?? null}, ${d.sleepQuality ?? null},
-        ${d.recovery ?? null}, ${d.hrv ?? null}, ${d.restingHr ?? null}, ${d.rpe ?? null},
-        null, ${d.km ?? null}, ${d.avgHr ?? null}, ${d.dietNote ?? null},
-        ${d.freeNote ?? null}
+        ${d.athleteId}, ${d.date}::date,
+        ${tSleep ? sleepHours : null},
+        ${tQuality ? sleepQuality : null},
+        ${tRecovery ? recovery : null},
+        ${tHrv ? hrv : null},
+        ${tRhr ? restingHr : null},
+        ${tRpe ? rpe : null},
+        null,
+        ${tKm ? km : null},
+        ${tAvg ? avgHr : null},
+        ${tDiet ? dietNote : null},
+        ${tFree ? freeNote : null}
       )
       on conflict (athlete_id, date) do update set
-        sleep_hours = excluded.sleep_hours,
-        sleep_quality = excluded.sleep_quality,
-        recovery = excluded.recovery,
-        hrv = excluded.hrv,
-        resting_hr = excluded.resting_hr,
-        rpe = excluded.rpe,
-        km = excluded.km,
-        avg_hr = excluded.avg_hr,
-        diet_note = excluded.diet_note,
-        free_note = excluded.free_note
+        sleep_hours = case when ${tSleep} then excluded.sleep_hours else diaries.sleep_hours end,
+        sleep_quality = case when ${tQuality} then excluded.sleep_quality else diaries.sleep_quality end,
+        recovery = case when ${tRecovery} then excluded.recovery else diaries.recovery end,
+        hrv = case when ${tHrv} then excluded.hrv else diaries.hrv end,
+        resting_hr = case when ${tRhr} then excluded.resting_hr else diaries.resting_hr end,
+        rpe = case when ${tRpe} then excluded.rpe else diaries.rpe end,
+        km = case when ${tKm} then excluded.km else diaries.km end,
+        avg_hr = case when ${tAvg} then excluded.avg_hr else diaries.avg_hr end,
+        diet_note = case when ${tDiet} then excluded.diet_note else diaries.diet_note end,
+        free_note = case when ${tFree} then excluded.free_note else diaries.free_note end
     `;
     return diaryFor(tx, d.athleteId, d.date);
   });

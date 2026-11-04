@@ -827,6 +827,33 @@ textarea { min-height: 72px; resize: vertical; }
   box-shadow: none;
 }
 
+.device-card { margin-bottom: 10px; }
+.device-card-title { margin: 0 0 8px; font-size: 1rem; }
+.device-card-status.ok { color: var(--secondary); margin: 0 0 8px; }
+.device-card-status.error { color: var(--danger, #b42318); margin: 0 0 8px; }
+.device-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.device-readonly {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-row);
+  min-height: 42px;
+}
+.device-admin-chip {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-row);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn,
   .icon-btn,

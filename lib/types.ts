@@ -72,6 +72,17 @@ export type Diary = {
   /** Texto libre de molestias/dolor del día; persiste en columna `diaries.diet_note`. */
   dietNote: string | null;
   freeNote: string | null;
+  deviceSource?: "polar" | "amazfit" | "whoop" | null;
+  deviceSyncedAt?: string | null;
+};
+
+export type IntegrationProvider = "polar" | "amazfit" | "whoop";
+
+export type IntegrationInfo = {
+  provider: IntegrationProvider;
+  status: "disconnected" | "connected" | "error";
+  lastSyncAt: string | null;
+  lastError: string | null;
 };
 
 export type Injury = {

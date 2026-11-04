@@ -4,7 +4,9 @@ export type ErrorCode =
   | "NOT_FOUND"
   | "VALIDATION_ERROR"
   | "UNAUTHENTICATED"
-  | "PAYLOAD_TOO_LARGE";
+  | "PAYLOAD_TOO_LARGE"
+  | "INTEGRATION_NOT_CONFIGURED"
+  | "CONFLICT";
 
 export function apiError(status: number, code: ErrorCode, message: string, details?: unknown) {
   return NextResponse.json(

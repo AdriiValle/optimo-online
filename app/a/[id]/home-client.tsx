@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { dateKey, DOW_ES, formatLongDate, MONTHS_ES, parseDateLocal, todayKey } from "@/lib/dates";
 import { LOAD_TINT_FROM, loadClassForMdTag } from "@/lib/plan";
-import type { Athlete, DayPlan, Diary, Injury } from "@/lib/types";
+import type { Athlete, DayPlan, Diary, Injury, IntegrationInfo } from "@/lib/types";
+import { capabilitiesFor, isDeviceField } from "@/lib/integrations/capabilities";
 import { Analisis, type AnalysisView } from "./analisis";
 import { NutritionPane } from "./nutrition-pane";
 import { SessionList } from "./session-list";
+import { DeviceCard, IntegrationAdminChip } from "./device-card";
 
 const VENUE_SVG = {
   casa: (
@@ -32,6 +34,11 @@ type Props = {
   history: Diary[] | null;
   historyFrom: string;
   historyTo: string;
+  polarIntegration: IntegrationInfo;
+  polarConfigured: boolean;
+  adminIntegration: IntegrationInfo | null;
+  callbackDevice?: string | null;
+  callbackMsg?: string | null;
 };
 
 function emptyDiary(athleteId: string, date: string): Diary {
@@ -48,7 +55,9 @@ function emptyDiary(athleteId: string, date: string): Diary {
     km: null,
     avgHr: null,
     dietNote: null,
-    freeNote: null
+    freeNote: null,
+    deviceSource: null,
+    deviceSyncedAt: null
   };
 }
 
@@ -62,7 +71,12 @@ export function HomeClient({
   isAdmin,
   history,
   historyFrom,
-  historyTo
+  historyTo,
+  polarIntegration: initialPolar,
+  polarConfigured,
+  adminIntegration,
+  callbackDevice,
+  callbackMsg
 }: Props) {
   const [planRows, setPlanRows] = useState(plans);
   const byDate = useMemo(() => Object.fromEntries(planRows.map((p) => [p.date, p])), [planRows]);
@@ -80,6 +94,28 @@ export function HomeClient({
   const [pane, setPane] = useState<"train" | "food" | "log" | "stats">("train");
   const [analysisView, setAnalysisView] = useState<AnalysisView>("range");
   const [analysisRangeDays, setAnalysisRangeDays] = useState(30);
+  const [polarIntegration, setPolarIntegration] = useState(initialPolar);
+
+  const polarConnected = polarIntegration.status === "connected";
+  const deviceCaps = capabilitiesFor(polarConnected ? "polar" : null);
+
+  const deviceLabel = (field: "sleepHours" | "sleepQuality" | "recovery" | "hrv" | "restingHr") => {
+    if (polarConnected && isDeviceField("polar", field) && dayDiary.deviceSource === "polar") {
+      return " (Polar)";
+    }
+    return "";
+  };
+
+  function readonlyMetric(label: string, value: string | number | null) {
+    return (
+      <label>
+        {label}
+        <div className="device-readonly" aria-readonly="true">
+          {value ?? "—"}
+        </div>
+      </label>
+    );
+  }
 
   const serverDate = diary?.date ?? initial;
 
@@ -220,108 +256,143 @@ export function HomeClient({
   }
 
   const diaryForm = (
-    <section className="card">
-      <h2>Registro</h2>
-      {diaryMsg ? <p className={diaryMsg === "Guardado." ? "ok" : "error"}>{diaryMsg}</p> : null}
-      {dayDiary.date === center ? (
-      <form
-        key={center}
-        className="form-grid"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setDiaryMsg(null);
-          const fd = new FormData(e.currentTarget);
-          const num = (k: string) => {
-            const v = String(fd.get(k) ?? "").trim();
-            return v === "" ? null : Number(v);
-          };
-          const res = await fetch("/api/diaries", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+    <>
+      <DeviceCard
+        athleteId={athlete.id}
+        centerDate={center}
+        integration={polarIntegration}
+        configured={polarConfigured}
+        onIntegrationChange={setPolarIntegration}
+        onDiarySynced={(d) => setDayDiary(d as Diary)}
+        callbackDevice={callbackDevice}
+        callbackMsg={callbackMsg}
+      />
+      <section className="card">
+        <h2>Registro</h2>
+        {diaryMsg ? <p className={diaryMsg === "Guardado." ? "ok" : "error"}>{diaryMsg}</p> : null}
+        {dayDiary.date === center ? (
+        <form
+          key={center}
+          className="form-grid"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setDiaryMsg(null);
+            const fd = new FormData(e.currentTarget);
+            const num = (k: string) => {
+              const v = String(fd.get(k) ?? "").trim();
+              return v === "" ? null : Number(v);
+            };
+            const body: Record<string, unknown> = {
               athleteId: athlete.id,
               date: center,
-              sleepHours: num("sleepHours"),
-              sleepQuality: num("sleepQuality"),
-              recovery: num("recovery"),
-              hrv: num("hrv"),
-              restingHr: num("restingHr"),
               rpe: num("rpe"),
-              km: running ? num("km") : null,
-              avgHr: running ? num("avgHr") : null,
               dietNote: String(fd.get("molestias") ?? "").trim() || null,
               freeNote: String(fd.get("freeNote") ?? "") || null
-            })
-          });
-          if (!res.ok) {
-            setDiaryMsg("No se pudo guardar.");
-            return;
-          }
-          const json = await res.json();
-          setDayDiary(json.data);
-          setDiaryMsg("Guardado.");
-        }}
-      >
-        {running ? (
-          <>
-            <label className="span-2">
-              Km
-              <input name="km" type="number" step="0.1" defaultValue={dayDiary.km ?? ""} key={`km-${center}`} />
-            </label>
+            };
+            if (running) {
+              body.km = num("km");
+              body.avgHr = num("avgHr");
+            }
+            if (!polarConnected || !deviceCaps.sleepHours) body.sleepHours = num("sleepHours");
+            if (!polarConnected || !deviceCaps.sleepQuality) body.sleepQuality = num("sleepQuality");
+            if (!polarConnected || !deviceCaps.recovery) body.recovery = num("recovery");
+            if (!polarConnected || !deviceCaps.hrv) body.hrv = num("hrv");
+            if (!polarConnected || !deviceCaps.restingHr) body.restingHr = num("restingHr");
+            const res = await fetch("/api/diaries", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body)
+            });
+            if (!res.ok) {
+              setDiaryMsg("No se pudo guardar.");
+              return;
+            }
+            const json = await res.json();
+            setDayDiary(json.data);
+            setDiaryMsg("Guardado.");
+          }}
+        >
+          {running ? (
+            <>
+              <label className="span-2">
+                Km
+                <input name="km" type="number" step="0.1" defaultValue={dayDiary.km ?? ""} key={`km-${center}`} />
+              </label>
+              <label>
+                Pulso medio
+                <input name="avgHr" type="number" defaultValue={dayDiary.avgHr ?? ""} key={`avg-${center}`} />
+              </label>
+            </>
+          ) : null}
+          {polarConnected && deviceCaps.sleepHours ? (
+            readonlyMetric(`Sueño (h)${deviceLabel("sleepHours")}`, dayDiary.sleepHours)
+          ) : (
             <label>
-              Pulso medio
-              <input name="avgHr" type="number" defaultValue={dayDiary.avgHr ?? ""} key={`avg-${center}`} />
+              Sueño (h)
+              <input name="sleepHours" type="number" step="0.1" defaultValue={dayDiary.sleepHours ?? ""} key={`sh-${center}`} />
             </label>
-          </>
-        ) : null}
-        <label>
-          Sueño (h)
-          <input name="sleepHours" type="number" step="0.1" defaultValue={dayDiary.sleepHours ?? ""} key={`sh-${center}`} />
-        </label>
-        <label>
-          Calidad 1–100
-          <input name="sleepQuality" type="number" min={1} max={100} defaultValue={dayDiary.sleepQuality ?? ""} key={`sq-${center}`} />
-        </label>
-        <label>
-          Recuperación 0–100
-          <input name="recovery" type="number" min={0} max={100} defaultValue={dayDiary.recovery ?? ""} key={`rc-${center}`} />
-        </label>
-        <label>
-          HRV
-          <input name="hrv" type="number" defaultValue={dayDiary.hrv ?? ""} key={`hrv-${center}`} />
-        </label>
-        <label>
-          Pulso reposo
-          <input name="restingHr" type="number" defaultValue={dayDiary.restingHr ?? ""} key={`rhr-${center}`} />
-        </label>
-        <label>
-          RPE 1–10
-          <input name="rpe" type="number" min={1} max={10} defaultValue={dayDiary.rpe ?? ""} key={`rpe-${center}`} />
-        </label>
-        <label className="span-2">
-          Molestias
-          <textarea
-            name="molestias"
-            rows={3}
-            placeholder="Qué te duele o molesta…"
-            defaultValue={dayDiary.dietNote ?? ""}
-            key={`mol-${center}`}
-          />
-        </label>
-        <label className="span-2">
-          Nota
-          <textarea name="freeNote" defaultValue={dayDiary.freeNote ?? ""} key={`fn-${center}`} />
-        </label>
-        <div className="span-2">
-          <button className="btn" type="submit">
-            Guardar diario
-          </button>
-        </div>
-      </form>
-      ) : (
-        <p className="muted">Cargando el día…</p>
-      )}
-    </section>
+          )}
+          {polarConnected && deviceCaps.sleepQuality ? (
+            readonlyMetric(`Calidad 1–100${deviceLabel("sleepQuality")}`, dayDiary.sleepQuality)
+          ) : (
+            <label>
+              Calidad 1–100
+              <input name="sleepQuality" type="number" min={1} max={100} defaultValue={dayDiary.sleepQuality ?? ""} key={`sq-${center}`} />
+            </label>
+          )}
+          {polarConnected && deviceCaps.recovery ? (
+            readonlyMetric(`Recuperación 0–100${deviceLabel("recovery")}`, dayDiary.recovery)
+          ) : (
+            <label>
+              Recuperación 0–100
+              <input name="recovery" type="number" min={0} max={100} defaultValue={dayDiary.recovery ?? ""} key={`rc-${center}`} />
+            </label>
+          )}
+          {polarConnected && deviceCaps.hrv ? (
+            readonlyMetric(`HRV${deviceLabel("hrv")}`, dayDiary.hrv)
+          ) : (
+            <label>
+              HRV
+              <input name="hrv" type="number" defaultValue={dayDiary.hrv ?? ""} key={`hrv-${center}`} />
+            </label>
+          )}
+          {polarConnected && deviceCaps.restingHr ? (
+            readonlyMetric(`Pulso reposo${deviceLabel("restingHr")}`, dayDiary.restingHr)
+          ) : (
+            <label>
+              Pulso reposo
+              <input name="restingHr" type="number" defaultValue={dayDiary.restingHr ?? ""} key={`rhr-${center}`} />
+            </label>
+          )}
+          <label>
+            RPE 1–10
+            <input name="rpe" type="number" min={1} max={10} defaultValue={dayDiary.rpe ?? ""} key={`rpe-${center}`} />
+          </label>
+          <label className="span-2">
+            Molestias
+            <textarea
+              name="molestias"
+              rows={3}
+              placeholder="Qué te duele o molesta…"
+              defaultValue={dayDiary.dietNote ?? ""}
+              key={`mol-${center}`}
+            />
+          </label>
+          <label className="span-2">
+            Nota
+            <textarea name="freeNote" defaultValue={dayDiary.freeNote ?? ""} key={`fn-${center}`} />
+          </label>
+          <div className="span-2">
+            <button className="btn" type="submit">
+              Guardar diario
+            </button>
+          </div>
+        </form>
+        ) : (
+          <p className="muted">Cargando el día…</p>
+        )}
+      </section>
+    </>
   );
 
   const nutrition = (
@@ -364,6 +435,7 @@ export function HomeClient({
             {athlete.shirtNumber ? ` #${athlete.shirtNumber}` : ""}
           </span>
           {injuries[0] ? <span className="dash-injury">Lesión: {injuries[0].zone}</span> : null}
+          {isAdmin ? <IntegrationAdminChip integration={adminIntegration} /> : null}
         </div>
         <div className="recovery-value recovery-sm" title="Recuperación de hoy">
           {recoveryNow ?? "—"}

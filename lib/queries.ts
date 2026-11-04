@@ -1,5 +1,5 @@
 import type { Tx } from "@/lib/db";
-import type { Athlete, DayPlan, Diary, Injury, SessionUser, Sport, SupplementEntry } from "@/lib/types";
+import type { Athlete, DayPlan, Diary, Injury, IntegrationInfo, SessionUser, Sport, SupplementEntry } from "@/lib/types";
 import { isoDate } from "@/lib/dates";
 
 type AccountRow = { id: string; email: string; password_hash: string; role: SessionUser["role"] };
@@ -202,8 +202,10 @@ export async function diaryFor(tx: Tx, athleteId: string, date: string) {
     avg_hr: number | null;
     diet_note: string | null;
     free_note: string | null;
+    device_source: Diary["deviceSource"] | null;
+    device_synced_at: string | null;
   }[]>`
-    select athlete_id, date::text, sleep_hours, sleep_quality, recovery, hrv, resting_hr, rpe, feeling, km, avg_hr, diet_note, free_note
+    select athlete_id, date::text, sleep_hours, sleep_quality, recovery, hrv, resting_hr, rpe, feeling, km, avg_hr, diet_note, free_note, device_source, device_synced_at::text
     from diaries
     where athlete_id = ${athleteId} and date = ${date}::date
     limit 1
@@ -224,7 +226,9 @@ export async function diaryFor(tx: Tx, athleteId: string, date: string) {
     km: num(r.km),
     avgHr: r.avg_hr,
     dietNote: r.diet_note, // molestias (UI deportista); columna legacy diet_note
-    freeNote: r.free_note
+    freeNote: r.free_note,
+    deviceSource: r.device_source ?? null,
+    deviceSyncedAt: r.device_synced_at
   } satisfies Diary;
 }
 
@@ -243,8 +247,10 @@ export async function diaryHistory(tx: Tx, athleteId: string, from: string, to: 
     avg_hr: number | null;
     diet_note: string | null;
     free_note: string | null;
+    device_source: Diary["deviceSource"] | null;
+    device_synced_at: string | null;
   }[]>`
-    select athlete_id, date::text, sleep_hours, sleep_quality, recovery, hrv, resting_hr, rpe, feeling, km, avg_hr, diet_note, free_note
+    select athlete_id, date::text, sleep_hours, sleep_quality, recovery, hrv, resting_hr, rpe, feeling, km, avg_hr, diet_note, free_note, device_source, device_synced_at::text
     from diaries
     where athlete_id = ${athleteId} and date between ${from}::date and ${to}::date
     order by date asc
@@ -264,7 +270,9 @@ export async function diaryHistory(tx: Tx, athleteId: string, from: string, to: 
       km: num(r.km),
       avgHr: r.avg_hr,
       dietNote: r.diet_note,
-      freeNote: r.free_note
+      freeNote: r.free_note,
+      deviceSource: r.device_source ?? null,
+      deviceSyncedAt: r.device_synced_at
     })
   );
 }
@@ -330,6 +338,15 @@ type DiaryJson = {
   avg_hr: number | null;
   diet_note: string | null;
   free_note: string | null;
+  device_source?: Diary["deviceSource"] | null;
+  device_synced_at?: string | null;
+};
+
+type IntegrationJson = {
+  provider: IntegrationInfo["provider"];
+  status: IntegrationInfo["status"];
+  last_sync_at: string | null;
+  last_error: string | null;
 };
 
 type InjuryJson = {
@@ -370,7 +387,41 @@ function mapDiaryJson(r: DiaryJson): Diary {
     km: num(r.km),
     avgHr: r.avg_hr,
     dietNote: r.diet_note, // molestias (UI deportista); columna legacy diet_note
-    freeNote: r.free_note
+    freeNote: r.free_note,
+    deviceSource: r.device_source ?? null,
+    deviceSyncedAt: r.device_synced_at ?? null
+  };
+}
+
+function mapIntegrationJson(r: IntegrationJson | null): IntegrationInfo {
+  if (!r) {
+    return { provider: "polar", status: "disconnected", lastSyncAt: null, lastError: null };
+  }
+  return {
+    provider: r.provider,
+    status: r.status,
+    lastSyncAt: r.last_sync_at,
+    lastError: r.last_error
+  };
+}
+
+export async function integrationFor(tx: Tx, athleteId: string): Promise<IntegrationInfo | null> {
+  const rows = await tx<
+    { provider: IntegrationInfo["provider"]; status: IntegrationInfo["status"]; last_sync_at: string | null; last_error: string | null }[]
+  >`
+    select provider, status, last_sync_at::text, last_error
+    from integrations
+    where athlete_id = ${athleteId} and status <> 'disconnected'
+    order by updated_at desc nulls last
+    limit 1
+  `;
+  const r = rows[0];
+  if (!r) return null;
+  return {
+    provider: r.provider,
+    status: r.status,
+    lastSyncAt: r.last_sync_at,
+    lastError: r.last_error
   };
 }
 
@@ -393,6 +444,7 @@ export async function athleteHome(tx: Tx, athleteId: string, date: string) {
       focus_blocks: DayPlan["blocks"] | null;
       diary: DiaryJson | null;
       injuries: InjuryJson[] | null;
+      polar_integration: IntegrationJson | null;
     }[]
   >`
     select
@@ -448,11 +500,23 @@ export async function athleteHome(tx: Tx, athleteId: string, date: string) {
           'km', d.km,
           'avg_hr', d.avg_hr,
           'diet_note', d.diet_note,
-          'free_note', d.free_note
+          'free_note', d.free_note,
+          'device_source', d.device_source,
+          'device_synced_at', d.device_synced_at
         )
         from diaries d
         where d.athlete_id = ${athleteId} and d.date = ${date}::date
       ) as diary,
+      (
+        select jsonb_build_object(
+          'provider', i.provider,
+          'status', i.status,
+          'last_sync_at', i.last_sync_at::text,
+          'last_error', i.last_error
+        )
+        from integrations i
+        where i.athlete_id = ${athleteId} and i.provider = 'polar'
+      ) as polar_integration,
       (
         select coalesce(jsonb_agg(
           jsonb_build_object(
@@ -480,7 +544,8 @@ export async function athleteHome(tx: Tx, athleteId: string, date: string) {
       })
     ),
     diary: row.diary ? mapDiaryJson(row.diary) : null,
-    injuries: (row.injuries ?? []).map(mapInjuryJson)
+    injuries: (row.injuries ?? []).map(mapInjuryJson),
+    polarIntegration: mapIntegrationJson(row.polar_integration)
   };
 }
 

@@ -242,3 +242,67 @@ DROP POLICY IF EXISTS integrations_write ON integrations;
 CREATE POLICY integrations_write ON integrations FOR ALL
   USING (app_is_admin())
   WITH CHECK (app_is_admin());
+
+-- Wearable integrations (additive). Enum values added here must not be used in this same script run.
+ALTER TYPE integration_provider ADD VALUE IF NOT EXISTS 'amazfit';
+ALTER TYPE integration_provider ADD VALUE IF NOT EXISTS 'polar';
+ALTER TYPE integration_status ADD VALUE IF NOT EXISTS 'connected';
+ALTER TYPE integration_status ADD VALUE IF NOT EXISTS 'error';
+
+ALTER TABLE integrations ADD COLUMN IF NOT EXISTS last_sync_at timestamptz;
+ALTER TABLE integrations ADD COLUMN IF NOT EXISTS last_error text;
+ALTER TABLE integrations ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+
+CREATE TABLE IF NOT EXISTS integration_tokens (
+  athlete_id uuid NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
+  provider integration_provider NOT NULL,
+  access_token_enc text NOT NULL,
+  refresh_token_enc text NOT NULL DEFAULT '',
+  token_expires_at timestamptz,
+  external_user_id text,
+  PRIMARY KEY (athlete_id, provider),
+  FOREIGN KEY (athlete_id, provider) REFERENCES integrations (athlete_id, provider) ON DELETE CASCADE
+);
+
+ALTER TABLE diaries ADD COLUMN IF NOT EXISTS device_source integration_provider;
+ALTER TABLE diaries ADD COLUMN IF NOT EXISTS device_synced_at timestamptz;
+
+CREATE TABLE IF NOT EXISTS device_workouts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  athlete_id uuid NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  provider integration_provider NOT NULL,
+  external_id text NOT NULL,
+  sport text,
+  duration_seconds integer,
+  calories integer,
+  avg_hr integer,
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  synced_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (athlete_id, provider, external_id)
+);
+
+CREATE INDEX IF NOT EXISTS device_workouts_athlete_date_idx ON device_workouts (athlete_id, date);
+
+ALTER TABLE integration_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE integration_tokens FORCE ROW LEVEL SECURITY;
+ALTER TABLE device_workouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE device_workouts FORCE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS integrations_write_own ON integrations;
+CREATE POLICY integrations_write_own ON integrations FOR INSERT
+  WITH CHECK (athlete_id = app_athlete_id());
+DROP POLICY IF EXISTS integrations_update_own ON integrations;
+CREATE POLICY integrations_update_own ON integrations FOR UPDATE
+  USING (athlete_id = app_athlete_id())
+  WITH CHECK (athlete_id = app_athlete_id());
+
+DROP POLICY IF EXISTS integration_tokens_all ON integration_tokens;
+CREATE POLICY integration_tokens_all ON integration_tokens FOR ALL
+  USING (app_is_admin() OR athlete_id = app_athlete_id())
+  WITH CHECK (app_is_admin() OR athlete_id = app_athlete_id());
+
+DROP POLICY IF EXISTS device_workouts_all ON device_workouts;
+CREATE POLICY device_workouts_all ON device_workouts FOR ALL
+  USING (app_is_admin() OR athlete_id = app_athlete_id())
+  WITH CHECK (app_is_admin() OR athlete_id = app_athlete_id());
