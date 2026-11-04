@@ -3,7 +3,7 @@ import { currentUser, rlsFrom } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
 import { athleteHome, diaryHistory } from "@/lib/queries";
 import { addDays, dateKey, parseDateLocal, todayKey } from "@/lib/dates";
-import { parseIndexHtml } from "@/lib/html-parse";
+import { planData } from "@/lib/plan-data";
 import { LogoutButton } from "@/app/logout-button";
 import { HeaderActions } from "@/app/components/header-actions";
 import { BrandHeader } from "@/app/components/brand-header";
@@ -28,8 +28,6 @@ export default async function AthleteHome({ params }: { params: Promise<{ id: st
   });
   if (!data) notFound();
 
-  const parsed = parseIndexHtml();
-
   return (
     <>
       <BrandHeader
@@ -42,7 +40,7 @@ export default async function AthleteHome({ params }: { params: Promise<{ id: st
           plans={data.home.plans}
           diary={data.home.diary}
           injuries={data.home.injuries}
-          crests={parsed.crests}
+          crests={planData.crests}
           canEdit={isAdmin || user.athleteId === id}
           isAdmin={isAdmin}
           history={data.history}

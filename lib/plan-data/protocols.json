@@ -1,0 +1,197 @@
+{
+  "rutina-movilidad-1": {
+    "label": "Movilidad 1 (cadera)",
+    "qty": "6 reps / ejercicio · 1 serie"
+  },
+  "rutina-movilidad-2": {
+    "label": "Movilidad 2 (lumbar)",
+    "qty": "6 reps / ejercicio · 1 serie"
+  },
+  "rutina-movilidad-slider-1": {
+    "label": "Movilidad sliders",
+    "qty": "6 reps / ejercicio · 1 serie"
+  },
+  "rutina-movilidad-4": {
+    "label": "Movilidad isquio",
+    "qty": "6 reps / ejercicio · 1 serie"
+  },
+  "movilidad-cadera-lumbar-1": {
+    "label": "Movilidad cadera",
+    "qty": "6 reps / ejercicio · 1 serie"
+  },
+  "movilidad-lumbar-especifica": {
+    "label": "Movilidad lumbar (específica)",
+    "qty": "6 reps / ejercicio · 1 serie"
+  },
+  "rutina-movilidad-3": {
+    "label": "Movilidad tobillo",
+    "qty": "6 reps / ejercicio · 1 serie"
+  },
+  "activacion-basica-isquios-1": {
+    "label": "Activación básica isquios",
+    "qty": "6–8 reps · 1 serie"
+  },
+  "activacion-complementaria-isquios-1": {
+    "label": "Activación complementaria isquios 1",
+    "qty": "6–8 reps · 1 serie"
+  },
+  "activacion-complementaria-isquios-2": {
+    "label": "Activación complementaria isquios 2",
+    "qty": "6–8 reps · 1 serie"
+  },
+  "activacion-basica-aductores": {
+    "label": "Activación básica aductores",
+    "qty": "6–8 reps · 1 serie"
+  },
+  "activacion-adicional-aductores-1": {
+    "label": "Activación adicional aductores (complementaria 1)",
+    "qty": "6–8 reps · 1 serie"
+  },
+  "activacion-complementaria-aductores-2": {
+    "label": "Activación complementaria aductores 2",
+    "qty": "6–8 reps · 1 serie"
+  },
+  "activacion-basica-lumbar-1": {
+    "label": "Activación básica lumbar",
+    "qty": "6–8 reps · 1 serie"
+  },
+  "oso-isometrico": {
+    "label": "Oso isométrico",
+    "qty": "15 s · 2 series",
+    "info": "Mantén la posición de oso 15 segundos. Haz 2 series."
+  },
+  "oso-pierna-atras-rodilla-pecho": {
+    "label": "Oso: pierna atrás + rodilla al pecho (sin apoyar)",
+    "qty": "10 reps seguidas / pierna",
+    "info": "Desde oso, extiende la pierna atrás y lleva la rodilla al pecho sin apoyar. Haz 10 seguidas y cambia de pierna."
+  },
+  "oso-pierna-extendida-mano-contraria": {
+    "label": "Oso: pierna extendida + mano contraria",
+    "qty": "15 s · 2 series / pierna",
+    "info": "En oso, extiende pierna y mano contrarias y mantén 15 segundos. Haz 2 series por pierna."
+  },
+  "bicho-muerto-elastico-empeines": {
+    "label": "Bicho muerto (elástico corto en empeines)",
+    "qty": "10 reps / pierna",
+    "info": "Tumbado boca arriba, bicho muerto con elástico corto en los empeines; las manos no hacen nada. Extiende una pierna 10 veces. Trabajas la cara anterior y superior del cuádriceps y los flexores de cadera."
+  },
+  "caballero-isometrico-rodilla-cerca-suelo": {
+    "label": "Caballero isométrico (rodilla 1–2 cm del suelo)",
+    "qty": "15 s / pierna",
+    "info": "En caballero, deja la rodilla de atrás a 1–2 cm del suelo y mantén 15 segundos. Cambia de pierna."
+  },
+  "caballero-subida-posicion-a": {
+    "label": "Caballero a posición de A",
+    "qty": "8 reps",
+    "info": "Desde caballero sube a la posición de A, baja lento hasta tocar el suelo y sube rápido. Carga el cuádriceps de atrás."
+  },
+  "caballero-tandem": {
+    "label": "Caballero a tándem",
+    "qty": "8 reps",
+    "info": "Desde caballero levántate a tándem."
+  },
+  "fuerza-cuadriceps-bilateral": {
+    "label": "Sentadilla española (2 piernas, cajón 30 cm, elástico tenso)",
+    "qty": "10 reps · 1 serie",
+    "info": "Elástico tenso. Siéntate en el cajón de 30 cm a dos piernas: 10 repeticiones, 1 serie. Controla la bajada (excéntrica) y que cueste subir (concéntrica). Foco en vasto interno; tras la activación notarás mucho trabajo metabólico y acidez."
+  },
+  "fuerza-cuadriceps-unilateral": {
+    "label": "Sentadilla española (1 pierna, cajón 45 cm, elástico tenso)",
+    "qty": "10 reps · 2 series / pierna",
+    "info": "Igual que a dos piernas, pero cajón de 45 cm (más alto porque a una pierna es más duro e incómodo): 10 repeticiones, 2 series por pierna. Mismo foco en vasto interno y en excéntrica–concéntrica."
+  },
+  "fuerza-cuadriceps-salto-cajon": {
+    "label": "Salto al cajón desde sentado (30 cm → cajón 60 cm, 2 piernas)",
+    "qty": "6 saltos · 2 series",
+    "info": "Squat jump al cajón: quitas la excéntrica y dejas el concéntrico rápido; menos riesgo de fatiga y trabajas velocidades en extensión (triple extensión). Aún no es plyo: es la primera piedra, muy progresivo. El cajón de 60 cm es alto (difícil; aún no saltarás con calma). Sales del cajón de 30 cm: 6 saltos × 2 series. Entre series: plancha o tren superior."
+  },
+  "fuerza-cuadriceps-zancada-caballero-mancuernas": {
+    "label": "Zancadas ida y vuelta desde caballero con mancuernas",
+    "qty": "8 reps / pierna · 2 series",
+    "info": "Desde caballero, zancada con mancuernas: vas y vuelves a la posición de partida. 8 repeticiones por pierna, 2 series.",
+    "video": "https://youtu.be/GF7wQbGn-tM",
+    "blurb": "Zancadas ida y vuelta desde caballero, con dos mancuernas : brazos extendidos, pesas debajo de la cadera. Cómo se hace: zancada hacia delante buscando que la rodilla de atrás roce el suelo al llegar a la zancada. A la vez, balancear las pesas hacia arriba en curl de bíceps. Freno adelante y, sin demasiada espera, volver del tirón a la posición de caballero."
+  },
+  "fuerza-cuadriceps-salto-cajon-carga": {
+    "label": "Salto al cajón desde sentado con carga (2×2,5 kg o disco 5 kg)",
+    "qty": "6 saltos · 2 series",
+    "info": "Mismo salto al cajón desde sentado (sin excéntrica, concéntrico rápido) pero con carga: 2 mancuernas de 2,5 kg o un disco de 5 kg (5 kg en total). 6 saltos × 2 series. Entre series: plancha o tren superior."
+  },
+  "fuerza-cuadriceps-hop-jump-trx": {
+    "label": "Salto + TRX",
+    "qty": "10 reps · 2 series",
+    "info": "Salto vertical muy alto con TRX: triple extensión al subir y triple flexión amortiguando al máximo al caer, saliendo otra vez a máxima velocidad. 10 repeticiones, 2 series.",
+    "video": "https://youtu.be/g1jEO-z8vRU",
+    "blurb": "Salto + TRX: salto vertical muy alto con asistencia de TRX en las manos (el TRX quita peso y permite velocidades supramáximas). Subida: triple extensión de tobillo, rodilla y cadera buscando la máxima altura. Caída: triple flexión amortiguando al máximo para salir otra vez a máxima velocidad. Por la altura con el TRX, el pico excéntrico al aterrizar suele ser mayor que en un salto libre."
+  },
+  "fuerza-isquios-bilateral": {
+    "label": "Hip thrust sin peso (pies en cuña)",
+    "qty": "8 reps 2 piernas + 8 + 8 por pierna · 2 series",
+    "info": "Pies en la cuña (o plano inclinado). 8 reps a dos piernas, luego 8 a una pierna y 8 a la otra. Va en superset con el isométrico de cuña: 2 series del bloque completo (este ejercicio + el isométrico)."
+  },
+  "fuerza-isquios-isometrico-cuna": {
+    "label": "Isométrico cuña (gemelo y sóleo activos)",
+    "qty": "15 s / pierna · 2 series",
+    "info": "Punta del pie en la cuña, gemelo y sóleo muy activos. Mantén 15 segundos con una pierna y 15 con la otra. Va en superset con el hip thrust sin peso: 2 series del bloque completo."
+  },
+  "fuerza-isquios-unilateral": {
+    "label": "Hip thrust cuña, solo punta del pie",
+    "qty": "8 reps / pierna · 2 series",
+    "info": "Misma cuña, pero solo la punta del pie apoyada, gemelo activo. 8 reps por pierna, 2 series consecutivas. Sigue siendo hip thrust / cadena posterior, no cambia el patrón."
+  },
+  "fuerza-isquios-mancuernas-miniband": {
+    "label": "Hip thrust con mancuernas y mini-band",
+    "qty": "8 reps / pierna · 2 series",
+    "info": "Dos mancuernas de 5 kg (10 kg en total) en la cadera, unidas por una mini-band. 8 reps a una pierna y 8 a la otra, 2 series."
+  },
+  "hip-thrust-barra": {
+    "label": "Hip thrust con barra",
+    "qty": "Barra 6–7 reps · 1 serie\n40 kg · 2×8 reps",
+    "info": "Calienta con la barra sola: 6 o 7 repeticiones, 1 serie. Después hip thrust con 40 kg: 2 series de 8 repeticiones."
+  },
+  "fuerza-isquios-mancuernas-bilateral": {
+    "label": "Hip thrust con mancuernas y mini-band",
+    "qty": "8 reps · 2 series",
+    "info": "Dos mancuernas de 5 kg (10 kg en total) en la cadera, unidas por una mini-band. 8 reps, 2 series.",
+    "video": "https://youtu.be/Hmsh7MOtRJE",
+    "blurb": "Posición hip-thrust a dos piernas. Dos mancuernas de 5 kg (10 kg en total) sobre la cadera, unidas por una mini-band (elástico). 8 repeticiones. Adrián pide 2 series."
+  },
+  "fuerza-isquios-mancuernas-unilateral": {
+    "label": "Hip thrust unilateral con mancuernas y mini-band",
+    "qty": "8 reps / pierna · 2 series",
+    "info": "Dos mancuernas de 5 kg (10 kg en total) en la cadera, unidas por una mini-band. 8 reps a una pierna y 8 a la otra, 2 series.",
+    "video": "https://youtu.be/SqkGNg8OlnQ",
+    "blurb": "Posición hip-thrust a una pierna. Dos mancuernas de 5 kg (10 kg en total) sobre la cadera, unidas por una mini-band (elástico). 8 repeticiones a una pierna y 8 a la otra. Adrián pide 2 series."
+  },
+  "hip-thrust-barra-50": {
+    "label": "Hip thrust con barra",
+    "qty": "50 kg · 2×8 reps",
+    "info": "Hip thrust con 50 kg: 2 series de 8 repeticiones."
+  },
+  "fuerza-isquios-salida-cajon-sagital-medball": {
+    "label": "Salida a cajón desde caballero (plano sagital) con pelota medicinal",
+    "qty": "6 reps / pierna · 1 serie",
+    "info": "Desde posición de caballero, salida al cajón en el plano sagital con pelota medicinal. 6 repeticiones por pierna, 1 serie.",
+    "video": "https://youtu.be/_FhaccyHGOU",
+    "blurb": "Desde caballero, zancada hacia delante terminando con el pie delantero encima del cajón. Al llegar arriba, triple extensión lanzando la cadera y terminando de puntillas con la pierna trasera. Mantener estabilidad sobre la pierna delantera."
+  },
+  "fuerza-isquios-salida-cajon-frontal-abierto-medball": {
+    "label": "Salida a cajón desde caballero (plano frontal, lado abierto) con pelota medicinal",
+    "qty": "6 reps / pierna · 1 serie",
+    "info": "Desde posición de caballero, salida al cajón en el plano frontal por el lado abierto (el lado de la rodilla apoyada) con pelota medicinal. 6 repeticiones por pierna, 1 serie.",
+    "video": "https://youtu.be/yfBsDB-zfBU",
+    "blurb": "Desde caballero mirando al frente, el cajón está al lado (no delante). Se lanza la pierna al cajón con patrón de triple extensión (cadera + rodilla + tobillo) mientras se cambia de plano (salida hacia el lado)."
+  },
+  "aceleracion-sled-push": {
+    "label": "Sled push (trineo empujando)",
+    "qty": "3×5 m · 1 serie · 45–50 kg"
+  },
+  "campo-reloj-arena": {
+    "label": "Reloj de arena",
+    "qty": "4 diagonales · 1 serie · ~90% Vmax"
+  },
+  "tren-superior-empujes-1": {
+    "label": "Tren superior empujes 1",
+    "qty": ""
+  }
+}

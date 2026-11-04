@@ -1,5 +1,5 @@
 import { addDays, dateKey, daysBetween, parseDateLocal } from "@/lib/dates";
-import type { ParsedPlan } from "@/lib/html-parse";
+import type { ParsedPlan } from "@/lib/plan-data";
 import type { DayPlan, DayPlanBlock, HtmlMatch, MatchVenue } from "@/lib/types";
 
 function sortedMatches(matches: HtmlMatch[]) {

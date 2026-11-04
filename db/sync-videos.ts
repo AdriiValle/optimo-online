@@ -1,12 +1,13 @@
 import { loadLocalEnv } from "./env";
 import { unpooledSql } from "../lib/db";
-import { parseIndexHtml } from "../lib/html-parse";
+import { planData } from "../lib/plan-data";
 import type { DayPlanBlock } from "../lib/types";
 
 loadLocalEnv();
 
 async function main() {
-  const protocols = parseIndexHtml().protocols;
+  const dryRun = process.argv.includes("--dry-run");
+  const protocols = planData.protocols;
 
   const client = unpooledSql();
   let changed = 0;
@@ -43,14 +44,20 @@ async function main() {
         return next;
       });
       if (!dirty) continue;
-      const res = await tx`update day_plans set blocks = ${tx.json(blocks)} where id = ${row.id}`;
-      if (res.count !== 1) throw new Error(`sync-videos: ${row.id} actualizó ${res.count} filas`);
+      if (!dryRun) {
+        const res = await tx`update day_plans set blocks = ${tx.json(blocks)} where id = ${row.id}`;
+        if (res.count !== 1) throw new Error(`sync-videos: ${row.id} actualizó ${res.count} filas`);
+      }
       changed += 1;
     }
   });
 
   await client.end();
-  console.log(`sync-videos ok · ${changed} de ${total} filas cambiadas`);
+  console.log(
+    dryRun
+      ? `sync-videos (dry-run) · ${changed} de ${total} filas cambiarían`
+      : `sync-videos ok · ${changed} de ${total} filas cambiadas`
+  );
 }
 
 main().catch((err) => {

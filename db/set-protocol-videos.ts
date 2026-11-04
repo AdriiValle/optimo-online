@@ -1,16 +1,14 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { parseIndexHtml } from "../lib/html-parse";
 import { blurbForSlug } from "../lib/knowledge-blurb";
-import { setProtocolStringField } from "./protocol-html-field";
+import type { Protocol } from "../lib/types";
 
 // Uso: npm run db:set-videos -- [subidos.csv] [--dry-run]
-// Vuelca url (+ blurb desde Knowledge si hay slug) en PROTOCOLS de index.html
-// (y plan-visus.html, copia espejo). El id es protocolId; si falta, slug cuando
-// slug es una clave de PROTOCOLS; si no, la fila se ignora. Después: npm run db:sync-videos.
+// Vuelca url (+ blurb desde Knowledge si hay slug) en lib/plan-data/protocols.json. El id es protocolId; si falta,
+// slug cuando slug es una clave de PROTOCOLS; si no, la fila se ignora. Después: npm run db:sync-videos.
 
 const DEFAULT_CSV = resolve(process.cwd(), "..", "..", "YouTube", "subidos", "subidos.csv");
-const HTML_FILES = ["index.html", "plan-visus.html"].map((f) => resolve(process.cwd(), f));
+const PROTOCOLS_JSON = resolve(process.cwd(), "lib", "plan-data", "protocols.json");
 
 function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
@@ -59,7 +57,7 @@ function main() {
   const iUrl = col("url");
   const iProtocol = col("protocolId");
   const iSlug = header.indexOf("slug");
-  const known = parseIndexHtml().protocols;
+  const known = JSON.parse(readFileSync(PROTOCOLS_JSON, "utf8")) as Record<string, Protocol>;
 
   const wanted = new Map<string, RowWanted>();
   for (const r of data) {
@@ -86,22 +84,18 @@ function main() {
   }
   if (errors.length) throw new Error(`set-protocol-videos: ${errors.join("; ")} (no se escribió nada)`);
 
-  const outputs = HTML_FILES.filter(existsSync).map((file) => {
-    let html = readFileSync(file, "utf8");
-    for (const [id, { url, slug }] of wanted) {
-      html = setProtocolStringField(html, id, "video", url);
-      if (slug) {
-        const blurb = blurbForSlug(slug);
-        if (blurb) html = setProtocolStringField(html, id, "blurb", blurb);
-      }
+  for (const [id, { url, slug }] of wanted) {
+    known[id].video = url;
+    if (slug) {
+      const blurb = blurbForSlug(slug);
+      if (blurb) known[id].blurb = blurb;
     }
-    return { file, html };
-  });
-  if (!dryRun) for (const o of outputs) writeFileSync(o.file, o.html);
+  }
+  if (!dryRun) writeFileSync(PROTOCOLS_JSON, `${JSON.stringify(known, null, 2)}\n`);
 
   const blurbNote = blurbs.length ? ` · blurbs: ${blurbs.join(", ")}` : "";
   console.log(
-    `set-protocol-videos ${dryRun ? "(dry-run) " : ""}ok · ${[...wanted.keys()].join(", ")} → ${outputs.map((o) => o.file.split(/[\\/]/).pop()).join(", ")}${blurbNote}`
+    `set-protocol-videos ${dryRun ? "(dry-run) " : ""}ok · ${[...wanted.keys()].join(", ")} → protocols.json${blurbNote}`
   );
 }
 

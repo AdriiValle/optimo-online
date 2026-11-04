@@ -1,6 +1,7 @@
 import { readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import type { HtmlMatch, MatchVenue, Protocol } from "@/lib/types";
+import type { ParsedPlan } from "@/lib/plan-data";
 
 function extractBinding(html: string, name: string): unknown {
   const needle = `const ${name} = `;
@@ -52,18 +53,6 @@ function extractString(html: string, name: string) {
   if (!m) throw new Error(`index.html: missing string ${name}`);
   return m[1];
 }
-
-export type ParsedPlan = {
-  matches: HtmlMatch[];
-  crests: Record<string, string>;
-  shortNames: Record<string, string>;
-  protocols: Record<string, Protocol>;
-  baseOnline: string[];
-  mdOnlineBlocks: Record<string, { specific?: string[]; activation?: string[]; post?: string[] }>;
-  strengthFrom: string;
-  anteriorFuerzaV2: string[];
-  posteriorFuerzaV2: string[];
-};
 
 const indexPath = () => resolve(process.cwd(), "index.html");
 

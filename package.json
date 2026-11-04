@@ -11,7 +11,8 @@
     "db:update-posterior": "tsx db/update-posterior-blocks.ts",
     "db:set-videos": "tsx db/set-protocol-videos.ts",
     "db:sync-videos": "tsx db/sync-videos.ts",
-    "db:reset-passwords": "tsx db/reset-dev-passwords.ts"
+    "db:reset-passwords": "tsx db/reset-dev-passwords.ts",
+    "plan:parity": "tsx scripts/plan-parity.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

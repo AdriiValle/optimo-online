@@ -1,12 +1,12 @@
 import { loadLocalEnv } from "./env";
 import { unpooledSql } from "../lib/db";
-import { parseIndexHtml } from "../lib/html-parse";
+import { planData } from "../lib/plan-data";
 import { buildDayPlans } from "../lib/plan";
 
 loadLocalEnv();
 
 async function main() {
-  const parsed = parseIndexHtml();
+  const parsed = planData;
   const dates = parsed.anteriorFuerzaV2;
   const plans = buildDayPlans(parsed).filter((p) => dates.includes(p.date));
   if (plans.length !== dates.length) {

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { loadLocalEnv } from "./env";
 import { unpooledSql } from "../lib/db";
-import { parseIndexHtml } from "../lib/html-parse";
+import { planData } from "../lib/plan-data";
 import { buildDayPlans } from "../lib/plan";
 
 loadLocalEnv();
@@ -17,9 +17,9 @@ async function main() {
   const athleteEmail = need("SEED_ATHLETE_EMAIL").trim().toLowerCase();
   const adminPassword = need("SEED_ADMIN_PASSWORD");
   const athletePassword = need("SEED_ATHLETE_PASSWORD");
-  const parsed = parseIndexHtml();
+  const parsed = planData;
   const plans = buildDayPlans(parsed);
-  if (!plans.length) throw new Error("seed: no day plans from index.html");
+  if (!plans.length) throw new Error("seed: no day plans from plan-data");
 
   const client = unpooledSql();
   const adminHash = await bcrypt.hash(adminPassword, 12);
@@ -84,7 +84,7 @@ async function main() {
   });
 
   await client.end();
-  console.log(`seed ok · ${plans.length} day plans from index.html`);
+  console.log(`seed ok · ${plans.length} day plans from plan-data`);
 }
 
 main().catch((err) => {
