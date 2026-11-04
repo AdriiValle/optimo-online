@@ -134,7 +134,9 @@ SET row_security = off
 AS $$
   SELECT a.id, a.email, a.password_hash, a.role
   FROM accounts a
-  WHERE a.email = lower(trim(p_email))
+  WHERE a.email = trim(p_email)
+     OR a.email = lower(trim(p_email))
+  ORDER BY CASE WHEN a.email = trim(p_email) THEN 0 ELSE 1 END
   LIMIT 1
 $$;
 
