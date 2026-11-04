@@ -6,11 +6,19 @@ import { LOAD_TINT_FROM, loadClassForMdTag } from "@/lib/plan";
 import type { Athlete, DayPlan, Diary, Injury } from "@/lib/types";
 import { Analisis, type AnalysisView } from "./analisis";
 import { NutritionPane } from "./nutrition-pane";
-import { VideoEmbedModal } from "./video-embed-modal";
+import { SessionList } from "./session-list";
 
 const VENUE_SVG = {
-  casa: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1 1 7v7h5V9h4v5h5V7L8 1z"/></svg>',
-  fuera: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M14.8 8.1 11 7.8 9.6 5.2H7.4L6 7.8 2.2 8.1 1 9.4l1.6.7 2.3-.2.7 2.4H6l.6-1.8h2.8l.6 1.8h1.4l.7-2.4 2.3.2 1.6-.7-1.2-1.3z"/></svg>'
+  casa: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M8 1 1 7v7h5V9h4v5h5V7L8 1z" />
+    </svg>
+  ),
+  fuera: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M14.8 8.1 11 7.8 9.6 5.2H7.4L6 7.8 2.2 8.1 1 9.4l1.6.7 2.3-.2.7 2.4H6l.6-1.8h2.8l.6 1.8h1.4l.7-2.4 2.3.2 1.6-.7-1.2-1.3z" />
+    </svg>
+  )
 };
 
 type Props = {
@@ -178,10 +186,7 @@ export function HomeClient({
                 {p?.mdTag ? <span className="md-tag">{p.mdTag}</span> : null}
                 <span className="day-num">{cell.getDate()}</span>
                 {p?.matchVenue ? (
-                  <span
-                    className="venue-icon"
-                    dangerouslySetInnerHTML={{ __html: VENUE_SVG[p.matchVenue] }}
-                  />
+                  <span className="venue-icon">{VENUE_SVG[p.matchVenue]}</span>
                 ) : null}
                 {crest ? (
                   <span className="crest-wrap">
@@ -403,7 +408,7 @@ export function HomeClient({
 
       {pane === "train" ? (
         <section className="card dash-pane">
-          <SessionTable plan={plan} />
+          <SessionList plan={plan} />
         </section>
       ) : null}
       {pane === "food" ? nutrition : null}
@@ -423,66 +428,6 @@ export function HomeClient({
           />
         </section>
       ) : null}
-    </div>
-  );
-}
-
-function SessionTable({ plan }: { plan?: DayPlan }) {
-  const [openVideo, setOpenVideo] = useState<{ url: string; blurb: string | null } | null>(null);
-  const rows = plan?.blocks ?? [{ kind: "note" as const, text: "Sin bloque asignado para este día." }];
-  return (
-    <div className="content-table-wrap">
-      <table className="content-table">
-        <thead>
-          <tr>
-            <th>Ejercicio</th>
-            <th>Cantidad</th>
-            <th>Vídeo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => {
-            if (row.kind === "section") {
-              return (
-                <tr key={i} className="section-head">
-                  <td colSpan={3}>{row.title}</td>
-                </tr>
-              );
-            }
-            if (row.kind === "note" || row.kind === "match") {
-              return (
-                <tr key={i} className="day-note">
-                  <td colSpan={3}>{row.text}</td>
-                </tr>
-              );
-            }
-            return (
-              <tr key={i}>
-                <td>{row.label}</td>
-                <td className={row.qty ? "" : "empty"}>{row.qty || "—"}</td>
-                {row.video ? (
-                  <td>
-                    <button
-                      type="button"
-                      className="video-link"
-                      onClick={() => setOpenVideo({ url: row.video!, blurb: row.blurb ?? null })}
-                    >
-                      Vídeo
-                    </button>
-                  </td>
-                ) : (
-                  <td className="empty">—</td>
-                )}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <VideoEmbedModal
-        videoUrl={openVideo?.url ?? null}
-        blurb={openVideo?.blurb ?? null}
-        onClose={() => setOpenVideo(null)}
-      />
     </div>
   );
 }
