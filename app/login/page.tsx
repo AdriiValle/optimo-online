@@ -28,8 +28,8 @@ export default async function LoginPage({
   return (
     <>
       <BrandHeader meta="Entrenamientos online" />
-      <main className="page">
-        <section className="card">
+      <main className="page login-page">
+        <section className="card login-card">
         <h1>Entrar</h1>
         {q.error ? <p className="error">Nombre de usuario o contraseña incorrectos.</p> : null}
         <form action={login}>
@@ -37,7 +37,7 @@ export default async function LoginPage({
           <input id="email" name="email" type="text" autoComplete="username" required />
           <label htmlFor="password">Contraseña</label>
           <input id="password" name="password" type="password" autoComplete="current-password" required />
-          <button className="btn" type="submit">
+          <button className="btn login-submit" type="submit">
             Entrar
           </button>
         </form>
