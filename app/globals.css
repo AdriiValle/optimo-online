@@ -852,7 +852,10 @@ header.doc-header--wide {
 .nut-details summary {
   font-size: 0.875rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  min-height: 44px;
   padding: 12px 14px;
+  border-radius: var(--radius);
   list-style: none;
   cursor: pointer;
   display: flex;
@@ -860,7 +863,10 @@ header.doc-header--wide {
   justify-content: space-between;
   gap: 12px;
   -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--dur) var(--ease);
 }
+.nut-details summary:active { opacity: 0.6; transition-duration: var(--dur-press); }
+.nut-details summary:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
 .nut-details summary::-webkit-details-marker,
 .nut-details summary::marker { display: none; content: ""; }
 .nut-details summary::after {
@@ -871,7 +877,7 @@ header.doc-header--wide {
   border-right: 2px solid var(--secondary);
   border-bottom: 2px solid var(--secondary);
   transform: rotate(45deg);
-  transition: transform 0.2s ease;
+  transition: transform var(--dur) var(--ease);
 }
 .nut-details[open] summary::after {
   transform: rotate(-135deg);
@@ -888,19 +894,21 @@ header.doc-header--wide {
 }
 .nut-supp-list li {
   display: grid;
-  grid-template-columns: 4.5rem 1fr;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
   gap: 10px;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 .nut-supp-time {
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--secondary);
+  font-variant-numeric: tabular-nums;
 }
 .nut-supp-edit { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
 .nut-supp-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
   align-items: end;
   padding-bottom: 10px;
@@ -910,13 +918,14 @@ header.doc-header--wide {
 .nut-supp-rm { justify-self: end; color: var(--secondary); }
 .nut-diet-label { display: block; }
 .nut-diet-label textarea { width: 100%; min-height: 140px; }
-.nut-diet-text { margin: 0; white-space: pre-wrap; line-height: 1.45; }
-.nut-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
-.nut-menu h3 { font-size: 0.875rem; margin: 0 0 6px; }
+.nut-diet-text { margin: 0; white-space: pre-wrap; line-height: 1.45; overflow-wrap: anywhere; }
+.nut-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.nut-actions .ok, .nut-actions .error { margin: 2px 0 0; }
+.nut-menu h3 { font-size: 0.875rem; letter-spacing: -0.01em; margin: 0 0 6px; }
 .nut-menu-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .nut-menu-item {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
   align-items: start;
   padding: 10px 12px;
@@ -927,15 +936,17 @@ header.doc-header--wide {
   font-size: 0.8125rem;
 }
 .nut-menu-item > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.nut-menu-slot { font-size: 0.6875rem; font-weight: 600; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.04em; }
-.nut-menu-photo { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; display: block; }
+.nut-menu-item strong { letter-spacing: -0.01em; }
+/* Misma voz que .dash-kicker: jerarquía por peso y tamaño, sin mayúsculas. */
+.nut-menu-slot { font-size: 0.6875rem; font-weight: 600; color: var(--secondary); }
+.nut-menu-photo { width: 72px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); display: block; }
 .meal-form { display: flex; flex-direction: column; gap: 4px; }
 .meal-form .nut-menu-photo { width: 100%; height: auto; max-height: 220px; margin-bottom: 6px; }
 .meal-form input, .meal-form textarea { width: 100%; margin-bottom: 8px; }
 .meal-form input[type="file"] { font-size: 0.8125rem; }
 .nut-assign { border: 0; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .nut-assign legend { padding: 0; margin-bottom: 4px; font-size: 0.8125rem; }
-.nut-assign-item { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 500; }
+.nut-assign-item { display: flex; align-items: center; gap: 8px; min-height: 36px; margin: 0; font-weight: 500; }
 .nut-assign-item input { width: auto; margin: 0; }
 
 /* —— Nutricionista: workspace clínico desktop (≥1280px); debajo, flujo v1 apilado —— */
@@ -943,45 +954,73 @@ header.doc-header--wide {
 .nut-ws-cal, .nut-ws-main, .nut-ws-mobile-menu { display: flex; flex-direction: column; gap: 8px; }
 .nut-ws-mobile-menu { gap: 12px; }
 
+/* Modal de comida / cuenta: sheet clínico (superficie opaca). Móvil anclado abajo; ≥720 centrado. */
 .nut-modal-root {
   position: fixed;
   inset: 0;
   z-index: 1100;
-  background: rgba(0, 0, 0, 0.28);
+  background: var(--scrim);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 20px 16px;
+  padding: max(24px, env(safe-area-inset-top, 0px)) 0 0;
+  animation: scrim-in var(--dur-sheet) ease;
 }
 .nut-modal {
-  width: min(480px, 100%);
-  max-height: min(88vh, 640px);
+  width: 100%;
+  max-width: 640px;
+  max-height: min(92vh, 720px);
+  max-height: min(92svh, 720px);
   margin: 0;
-  border-radius: var(--radius);
+  border-radius: var(--radius) var(--radius) 0 0;
   border: 1px solid var(--line);
+  border-bottom: 0;
   display: flex;
   flex-direction: column;
   padding: 0;
   overflow: hidden;
   background: var(--surface);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--shadow-md);
+  animation: sheet-up var(--dur-sheet) var(--ease);
 }
 .nut-modal-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 14px 10px;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
 }
-.nut-modal-head h2 { font-size: 0.95rem; line-height: 1.3; margin: 0; }
+.nut-modal-head h2 { font-size: 1rem; line-height: 1.3; letter-spacing: -0.02em; margin: 0; min-width: 0; }
+.nut-modal-head .icon-btn { flex-shrink: 0; }
 .nut-modal-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 12px 14px 20px;
+  overscroll-behavior: contain;
+  padding:
+    14px
+    max(16px, env(safe-area-inset-right, 0px))
+    calc(20px + env(safe-area-inset-bottom, 0px))
+    max(16px, env(safe-area-inset-left, 0px));
+  scroll-padding-block: 16px;
   -webkit-overflow-scrolling: touch;
+}
+.nut-modal-body > .nut-body { padding: 0; }
+.nut-modal .nut-actions .btn { width: 100%; min-height: 50px; }
+@media (min-width: 720px) {
+  .nut-modal-root { align-items: center; padding: 24px; }
+  .nut-modal {
+    max-width: 480px;
+    max-height: min(88vh, 640px);
+    border-bottom: 1px solid var(--line);
+    border-radius: var(--radius);
+    animation-name: sheet-pop;
+  }
+  .nut-modal-body { padding: 14px 16px 20px; }
 }
 body.nut-modal-open { overflow: hidden; }
 .nut-account-settings { display: flex; flex-direction: column; gap: 20px; }
@@ -1063,7 +1102,7 @@ body.nut-modal-open { overflow: hidden; }
     min-height: 40px;
     padding: 8px 12px;
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     background: var(--surface);
     font: inherit;
     font-size: 0.8125rem;
@@ -1071,8 +1110,11 @@ body.nut-modal-open { overflow: hidden; }
     color: inherit;
     cursor: pointer;
     text-decoration: none;
+    transition: transform var(--dur) var(--ease), background var(--dur) ease;
   }
   .nut-rail-btn:hover { background: var(--bg); }
+  .nut-rail-btn:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+  .nut-rail-btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
   .nut-rail-btn--muted { color: var(--secondary); font-weight: 500; border-style: dashed; }
   .nut-rail-logout { margin: 0; }
 
@@ -1081,8 +1123,6 @@ body.nut-modal-open { overflow: hidden; }
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
   }
   .nut-ws-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
   .nut-ws-list a {
@@ -1092,15 +1132,17 @@ body.nut-modal-open { overflow: hidden; }
     align-items: center;
     min-height: 44px;
     padding: 6px 8px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     color: inherit;
     text-decoration: none;
     font-size: 0.8125rem;
     line-height: 1.3;
+    transition: transform var(--dur) var(--ease), background var(--dur) ease;
   }
   .nut-ws-list a:hover { background: var(--bg); }
+  .nut-ws-list a:active { transform: scale(var(--press-scale-lg)); transition-duration: var(--dur-press); }
   .nut-ws-list a.on { background: var(--surface); box-shadow: var(--shadow-sm); }
-  .nut-ws-list a:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; }
+  .nut-ws-list a:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
   .nut-ws-list .avatar { width: 32px; height: 32px; }
   .nut-ws-list a > span { display: flex; flex-direction: column; min-width: 0; }
   .nut-ws-list a strong, .nut-ws-list a .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1120,11 +1162,10 @@ body.nut-modal-open { overflow: hidden; }
 
   .nut-week { display: flex; flex-direction: column; min-height: 0; }
   .nut-week .cal-nav { margin-bottom: 8px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
-  .nut-week .cal-nav h2 { font-size: 0.95rem; flex: 1; text-align: center; min-width: 8rem; }
+  .nut-week .cal-nav h2 { font-size: 0.95rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; flex: 1; text-align: center; min-width: 8rem; }
   .nut-week .cal-nav .nut-menu-import { margin-left: auto; font-size: 0.75rem; padding: 6px 10px; white-space: nowrap; }
   .nut-import-dialog { margin-top: 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; width: 100%; flex-basis: 100%; }
   .nut-import-dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; }
-  .nut-week .cal-nav h2 { font-size: 0.95rem; }
   .nut-week-grid {
     display: grid;
     grid-template-columns: 84px repeat(7, minmax(0, 1fr));
@@ -1138,8 +1179,11 @@ body.nut-modal-open { overflow: hidden; }
     text-align: left;
     cursor: pointer;
     min-width: 0;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur) var(--ease), background var(--dur) ease, border-color var(--dur) ease;
   }
+  .nut-week-day:active, .nut-week-cell:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
   .nut-week-day {
     display: flex;
     flex-direction: column;
@@ -1150,7 +1194,7 @@ body.nut-modal-open { overflow: hidden; }
     border: 1px solid transparent;
     background: transparent;
   }
-  .nut-week-day strong { font-size: 0.8125rem; text-transform: capitalize; }
+  .nut-week-day strong { font-size: 0.8125rem; text-transform: capitalize; font-variant-numeric: tabular-nums; }
   .nut-week-day .md-tag { font-size: 0.6875rem; font-weight: 600; color: var(--secondary); }
   .nut-week-day .muted { max-width: 100%; font-size: 0.6875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nut-week-day.on { background: var(--fill-secondary); }
@@ -1161,8 +1205,6 @@ body.nut-modal-open { overflow: hidden; }
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
   }
   .nut-week-cell {
     display: flex;
@@ -1177,7 +1219,7 @@ body.nut-modal-open { overflow: hidden; }
   .nut-week-cell:hover { border-color: var(--secondary); }
   .nut-week-cell.col-on { background: var(--bg); }
   .nut-week-cell.on { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
-  .nut-week-day:focus-visible, .nut-week-cell:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; }
+  .nut-week-day:focus-visible, .nut-week-cell:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
   .nut-week-cell img { width: 40px; height: 40px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
   .nut-week-cell span {
     min-width: 0;
@@ -1204,7 +1246,7 @@ body.nut-modal-open { overflow: hidden; }
   .nut-week-cell--snack img { width: 28px; height: 28px; }
 
   .nut-modal .nut-details { background: transparent; border: 0; box-shadow: none; }
-  .nut-modal .meal-form .nut-menu-photo { max-height: 260px; border-radius: 8px; }
+  .nut-modal .meal-form .nut-menu-photo { max-height: 260px; border-radius: var(--radius-sm); }
 }
 .btn-ghost {
   background: transparent;
