@@ -22,6 +22,18 @@
   --header-offset: env(safe-area-inset-top, 0px);
   --header-block: 58px;
   --header-gap: 12px;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --dur-press: 100ms;
+  --dur: 200ms;
+  --dur-sheet: 320ms;
+  --press-scale: 0.97;
+  --press-scale-lg: 0.985;
+  --focus-ring: 2px solid var(--text);
+  --focus-offset: 2px;
+  --radius-sm: 10px;
+  --scrim: rgba(0, 0, 0, 0.28);
+  --danger: #c41e3a;
+  --ok: #248a3d;
 }
 
 html {
@@ -47,8 +59,15 @@ body {
   padding-top: calc(var(--header-offset) + var(--header-block) + var(--header-gap));
 }
 
-button, a, input, select, textarea {
+button, a, input, select, textarea, summary {
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+a:focus-visible,
+summary:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-sm);
 }
 
 .page {
@@ -88,6 +107,15 @@ button, a, input, select, textarea {
   box-shadow: var(--shadow-md), var(--glass-highlight);
   padding: 16px;
   margin-bottom: 16px;
+}
+a.card,
+button.card {
+  transition: transform var(--dur) var(--ease), background var(--dur) ease;
+}
+a.card:active,
+button.card:active {
+  transform: scale(var(--press-scale-lg));
+  transition-duration: var(--dur-press);
 }
 
 /* Barra de app: fija al viewport (no al scroll). Portal en BrandHeader → document.body. */
@@ -173,18 +201,20 @@ textarea { min-height: 72px; resize: vertical; }
   background: var(--accent);
   color: #fff;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
-  transition: transform 100ms ease-out, background 150ms ease;
+  transition: transform var(--dur) var(--ease), background var(--dur) ease;
 }
 .btn:hover { background: var(--accent-hover); }
-.btn:active { transform: scale(0.97); }
+.btn:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
 .btn.secondary {
   background: var(--fill-secondary);
   color: var(--text);
 }
 .btn.secondary:hover { background: #DCDCE0; }
-.btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 .btn:disabled { opacity: 0.5; cursor: default; }
+.btn:disabled:active { transform: none; }
 
 .icon-btn {
   display: inline-flex;
@@ -199,14 +229,15 @@ textarea { min-height: 72px; resize: vertical; }
   font-size: 1.125rem;
   cursor: pointer;
   color: var(--text);
-  transition: transform 100ms ease-out, background 150ms ease;
+  text-decoration: none;
+  transition: transform var(--dur) var(--ease), background var(--dur) ease;
 }
 .icon-btn:hover { background: #DCDCE0; }
-.icon-btn:active { transform: scale(0.96); }
-.icon-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.icon-btn:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.icon-btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
-.error { color: #c41e3a; font-size: 0.875rem; margin: 0 0 12px; }
-.ok { color: #248a3d; font-size: 0.875rem; }
+.error { color: var(--danger); font-size: 0.875rem; margin: 0 0 12px; }
+.ok { color: var(--ok); font-size: 0.875rem; }
 
 .stack { margin-bottom: 16px; }
 .stack > h1 { padding: 0 4px; }
@@ -665,31 +696,6 @@ header.doc-header--wide {
   display: contents;
 }
 
-@media (prefers-reduced-transparency: reduce) {
-  body { background-image: none; }
-  .card,
-  header.doc-header {
-    background: var(--surface);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    border-color: var(--line);
-    box-shadow: var(--shadow-sm);
-  }
-}
-
-@media (prefers-contrast: more) {
-  .card,
-  header.doc-header {
-    background: var(--surface);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    border: 1px solid var(--text);
-  }
-  input, select, textarea {
-    border: 1px solid var(--text);
-  }
-}
-
 .dash { display: flex; flex-direction: column; gap: 8px; }
 .dash .card { margin-bottom: 0; padding: 10px 12px; }
 .dash-head {
@@ -1140,6 +1146,7 @@ body.nut-modal-open { overflow: hidden; }
   color: var(--text);
   box-shadow: none;
 }
+.btn-ghost:hover { background: var(--glass-row); border-color: var(--secondary); }
 
 .device-card { margin-bottom: 10px; }
 .device-card-title { margin: 0 0 8px; font-size: 1rem; }
@@ -1166,19 +1173,6 @@ body.nut-modal-open { overflow: hidden; }
   font-size: 0.75rem;
   border: 1px solid var(--glass-border);
   background: var(--glass-row);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .btn,
-  .icon-btn,
-  .athlete-card {
-    transition: none;
-  }
-  .btn:active,
-  .icon-btn:active,
-  .athlete-card:active {
-    transform: none;
-  }
 }
 
 /* —— Análisis (admin) —— */
@@ -1417,8 +1411,16 @@ body.nut-modal-open { overflow: hidden; }
 .login-card h1 { font-size: 1.75rem; letter-spacing: -0.03em; margin-bottom: 16px; }
 .login-submit { width: 100%; margin-top: 4px; }
 
-/* Cristal nuevo: mismas salidas que .card en reduced-transparency / more-contrast. */
+/* —— Accesibilidad: una sola salida por preferencia (compartido) —— */
 @media (prefers-reduced-transparency: reduce) {
+  body { background-image: none; }
+  .card {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--line);
+    box-shadow: var(--shadow-sm);
+  }
   .doc-header-viewport {
     background: var(--bg);
     -webkit-backdrop-filter: none;
@@ -1438,6 +1440,15 @@ body.nut-modal-open { overflow: hidden; }
 }
 
 @media (prefers-contrast: more) {
+  .card {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 1px solid var(--text);
+  }
+  input, select, textarea {
+    border: 1px solid var(--text);
+  }
   .doc-header-viewport {
     background: var(--bg);
     border-bottom-color: var(--text);
@@ -1455,7 +1466,21 @@ body.nut-modal-open { overflow: hidden; }
   .muted { color: var(--accent-hover); }
 }
 
+/* Press y sheets leen los tokens: a 1 / 0ms no hay movimiento. Las animaciones quedan en fundido instantáneo. */
 @media (prefers-reduced-motion: reduce) {
-  .session-video { transition: none; }
+  :root {
+    --press-scale: 1;
+    --press-scale-lg: 1;
+    --dur-press: 0ms;
+    --dur: 0ms;
+    --dur-sheet: 0ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .athlete-card:active,
   .session-video:active { transform: none; }
 }
