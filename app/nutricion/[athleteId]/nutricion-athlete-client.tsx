@@ -153,15 +153,6 @@ export function NutricionAthleteClient({
         />
       </div>
 
-      <aside className="nut-ws-side card dash-pane" aria-label="Suplementación">
-        <NutritionPane
-          athleteId={athleteId}
-          initialDietNotes={dietNotes}
-          initialSupplements={supplements}
-          canEdit
-        />
-      </aside>
-
       {/* Móvil: menú del día apilado (sin drawer obligatorio en pantallas estrechas). */}
       <div className="nut-ws-mobile-menu">
         <section className="card dash-pane nut-wrap">
