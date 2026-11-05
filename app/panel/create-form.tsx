@@ -50,7 +50,7 @@ export function CreateAthleteForm({ onClose, titleId }: Props) {
       {msg ? <p className="ok">{msg}</p> : null}
       <form onSubmit={onSubmit}>
         <label htmlFor="name">Nombre</label>
-        <input id="name" name="name" required />
+        <input id="name" name="name" autoComplete="off" autoCapitalize="words" enterKeyHint="next" required />
         <label htmlFor="sport">Deporte</label>
         <select id="sport" name="sport" defaultValue="football">
           <option value="football">Fútbol</option>
@@ -58,9 +58,29 @@ export function CreateAthleteForm({ onClose, titleId }: Props) {
           <option value="other">Otro</option>
         </select>
         <label htmlFor="email">Email</label>
-        <input id="email" name="email" type="email" required />
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          enterKeyHint="next"
+          required
+        />
         <label htmlFor="password">Contraseña temporal</label>
-        <input id="password" name="password" type="text" minLength={8} required />
+        <input
+          id="password"
+          name="password"
+          type="text"
+          autoComplete="off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="done"
+          minLength={8}
+          required
+        />
         <button className="btn" type="submit">
           Crear
         </button>

@@ -272,6 +272,13 @@ textarea { min-height: 72px; resize: vertical; }
 .settings-stack .card form label + button {
   margin-top: 8px;
 }
+.settings-stack .btn + label:not(.btn),
+.settings-stack .btn + h2,
+.settings-stack .btn + h3,
+.settings-stack .btn + fieldset {
+  margin-top: 20px;
+}
+.settings-stack .btn + .btn { margin-left: 8px; }
 .settings-account-list {
   list-style: none;
   margin: 0;
@@ -282,6 +289,15 @@ textarea { min-height: 72px; resize: vertical; }
 }
 .settings-account-item {
   margin: 0;
+}
+/* Fila dentro de una card de cristal: opaca, sin cristal sobre cristal. :where() deja ganar a prefers-contrast. */
+.card:where(.settings-account-item) {
+  padding: 14px;
+  background: var(--surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: var(--line);
+  box-shadow: none;
 }
 .settings-account-head {
   display: flex;
@@ -296,27 +312,51 @@ textarea { min-height: 72px; resize: vertical; }
   object-fit: cover;
 }
 
+/* Sheet: móvil anclado abajo y sube; ≥720 centrado. Keyframes reutilizados por otros modales. */
+@keyframes scrim-in { from { opacity: 0; } }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+@keyframes sheet-pop { from { opacity: 0; transform: scale(0.96); } }
 .create-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 1050;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 16px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
-  background: rgba(0, 0, 0, 0.22);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  padding: max(24px, env(safe-area-inset-top, 0px)) 0 0;
+  background: var(--scrim);
+  animation: scrim-in var(--dur-sheet) ease;
 }
 .create-sheet {
   width: 100%;
-  max-width: 608px;
-  max-height: min(85vh, 560px);
+  max-width: 640px;
+  max-height: min(92vh, 720px);
+  max-height: min(92svh, 720px);
   overflow-y: auto;
-  margin-bottom: 0;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding:
+    20px
+    max(16px, env(safe-area-inset-right, 0px))
+    calc(20px + env(safe-area-inset-bottom, 0px))
+    max(16px, env(safe-area-inset-left, 0px));
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
   background: var(--glass-strong);
   -webkit-overflow-scrolling: touch;
+  scroll-padding-block: 16px;
+  animation: sheet-up var(--dur-sheet) var(--ease);
+}
+.create-sheet form .btn { width: 100%; min-height: 50px; margin-top: 4px; }
+@media (min-width: 720px) {
+  .create-overlay { align-items: center; padding: 24px; }
+  .create-sheet {
+    max-width: 520px;
+    padding: 20px;
+    border-bottom: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    animation-name: sheet-pop;
+  }
 }
 .create-form-head {
   display: flex;
@@ -338,10 +378,10 @@ textarea { min-height: 72px; resize: vertical; }
   text-decoration: none;
   color: inherit;
   margin-bottom: 0;
-  transition: transform 100ms ease-out, background 150ms ease;
 }
-.athlete-card:active { transform: scale(0.98); }
-.athlete-card:hover { background: rgba(255, 255, 255, 0.78); }
+@media (hover: hover) {
+  .athlete-card:hover { background: var(--glass-strong); }
+}
 .athlete-card strong { font-size: 1rem; letter-spacing: -0.02em; }
 .athlete-card .muted { font-size: 0.8125rem; line-height: 1.35; }
 .athlete-card::after {
@@ -1493,6 +1533,5 @@ body.nut-modal-open { overflow: hidden; }
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .athlete-card:active,
   .session-video:active { transform: none; }
 }

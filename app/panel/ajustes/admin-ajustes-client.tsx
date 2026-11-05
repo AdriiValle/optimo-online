@@ -182,12 +182,19 @@ function NutritionistsSection({ athletes }: { athletes: Row[] }) {
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         autoComplete="off"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
         maxLength={200}
       />
       <label htmlFor="nut-new-pwd">Contraseña</label>
       <input
         id="nut-new-pwd"
         type="text"
+        autoComplete="off"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
         minLength={8}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
@@ -285,6 +292,9 @@ function AthleteAccountRow({
         value={loginUser}
         onChange={(e) => setLoginUser(e.target.value)}
         autoComplete="username"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
         maxLength={200}
       />
       <button
@@ -342,6 +352,10 @@ function AthleteAccountRow({
       <input
         id={`pwd-${row.accountId}`}
         type="text"
+        autoComplete="off"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
         minLength={8}
         value={newPwd}
         onChange={(e) => setNewPwd(e.target.value)}
