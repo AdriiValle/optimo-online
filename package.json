@@ -8,6 +8,7 @@
     "db:migrate": "tsx db/migrate.ts",
     "db:seed": "tsx db/seed.ts",
     "db:update-anterior": "tsx db/update-anterior-blocks.ts",
+    "db:upsert-semana-paron": "tsx db/upsert-semana-paron.ts",
     "db:update-posterior": "tsx db/update-posterior-blocks.ts",
     "db:set-videos": "tsx db/set-protocol-videos.ts",
     "db:sync-videos": "tsx db/sync-videos.ts",

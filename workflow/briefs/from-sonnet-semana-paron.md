@@ -1,0 +1,9 @@
+- Hecho: sí
+- Qué cambió (rutas): `db/upsert-semana-paron.ts` (nuevo), `package.json` (`npm run db:upsert-semana-paron`). Neon ejecutado (Ricardo Visus, 8–15 nov), tsc limpio.
+  - Primera corrida: 8 y 9 → update; 10–15 → insert (6 insert, 2 update).
+  - Segunda corrida (comprobación de idempotencia): 8 updates, exit 0.
+  - Ids de protocolo del 12 == los del 3 (comprobado en el script, aborta si difieren). El 12 tiene una nota extra final «Primer gym si ganan.» (del override), no es protocolo.
+  - 16 nov no tocado.
+- Duda:
+- Recomendación:
+- Bloquea a Adrián: no
