@@ -39,3 +39,9 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
 
 - 2026-11-03: Cadena posterior Visus 5 y 18 nov: Fuerza = HT mancuernas bi → uni → barra 50 kg 2×8 → salidas cajón sagital/frontal + med ball; sin HT sin peso ni isos de cuña.
   Gate `POSTERIOR_FUERZA_V2`; 26-nov+ intactos. Knowledge: ficha HT mancuernas bi + apunte recorte.
+- 2026-11-04: fuente del plan = `lib/plan-data/` (JSON protocolos + TS calendario); HTML seed backup, no runtime.
+  Ficha sin tabla (`SessionList`). Look glass encima de tokens Óptimo. Neon no se escribió.
+- 2026-11-04: OK → merge `dev` a `main` (`314ac1b`) y push. Producción = Next con plan-data.
+- 2026-11-05: semana parón Visus 7–15 nov; trabajo Óptimo solo el 12 (anterior V2 = 3 nov).
+  Amistoso 14 como nota, no en `MATCHES`. Ficha via Neon `day_plans` (`DAY_OVERRIDES`).
+

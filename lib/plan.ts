@@ -155,14 +155,14 @@ function sessionDurationMinutes(
   return Math.round((min + max) / 2);
 }
 
-function pushProtocol(parsed: ParsedPlan, blocks: DayPlanBlock[], protocolId: string) {
+function pushProtocol(parsed: ParsedPlan, blocks: DayPlanBlock[], protocolId: string, qtyOverride?: string) {
   const p = parsed.protocols[protocolId];
   if (!p) return;
   blocks.push({
     kind: "protocol",
     protocolId,
     label: p.label,
-    qty: p.qty ?? null,
+    qty: qtyOverride ?? p.qty ?? null,
     info: p.info ?? null,
     video: p.video ?? null,
     blurb: p.blurb ?? null
@@ -304,6 +304,19 @@ function buildOverridePlan(
       blocks: [...buildBlocks(parsed, iso, o.mdTag, undefined, sm, fm), { kind: "note", text: o.note }],
       ...empty
     };
+  }
+  if (o.kind === "isquio-sled") {
+    const blocks: DayPlanBlock[] = [{ kind: "section", title: "Activación" }];
+    pushProtocol(parsed, blocks, "activacion-basica-isquios-1");
+    pushProtocol(parsed, blocks, "activacion-complementaria-isquios-2");
+    blocks.push({ kind: "section", title: "Aceleración" });
+    pushProtocol(parsed, blocks, "aceleracion-sled-push", parsed.protocols["aceleracion-sled-push"]?.qty?.replace("1 serie", "2 series"));
+    blocks.push({
+      kind: "note",
+      text: "5 m por salida, lo más rápido/fuerte posible (trineo ≥45–50 kg). Sin plyo de momento."
+    });
+    blocks.push({ kind: "note", text: o.note });
+    return { date: iso, mdTag: o.mdTag, title: "Isquios + trineo", minutes: 20, blocks, ...empty };
   }
   const titles: Record<string, string> = {
     libre: "Libre",

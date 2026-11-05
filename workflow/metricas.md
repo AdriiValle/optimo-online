@@ -12,6 +12,9 @@ Formato: `YYYY-MM-DD HH:MM | repo | tarea | arranque | preguntas | repitió | pu
 
 ## Registro
 
+2026-11-05 11:36 | Ricardo Visus | semana parón + anterior 12 nov | más rápido | 0 | no | no | no
+2026-11-04 11:45 | Ricardo Visus | plan-data + session-list + look | más rápido | 0 | no | no | no
+
 2026-10-28 15:02 | Ricardo Visus | base multi-atleta en dev | más lento | 0 | no | no | no
 2026-10-20 13:58 | Ricardo Visus | plan 21 oct + 29 oct + ship | más rápido | 0 | no | no | no
 - 2026-11-03: cadena-anterior (Visus 3+16 nov + Knowledge)
