@@ -1,20 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import type { Athlete, SupplementEntry } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { MEAL_SLOTS, type MealSlot, type SupplementEntry } from "@/lib/types";
 
 type Props = {
   athleteId: string;
   initialDietNotes: string | null;
   initialSupplements: SupplementEntry[];
-  isAdmin: boolean;
+  /** Admin o nutricionista asignada: edita suplementos y dieta. */
+  canEdit: boolean;
+  /** Si llega, muestra el menú (platos) de ese día en solo lectura. */
+  menuDate?: string;
 };
 
 function emptySupplement(): SupplementEntry {
   return { name: "", time: "", notes: null };
 }
 
-export function NutritionPane({ athleteId, initialDietNotes, initialSupplements, isAdmin }: Props) {
+export function NutritionPane({ athleteId, initialDietNotes, initialSupplements, canEdit, menuDate }: Props) {
   const [dietNotes, setDietNotes] = useState(initialDietNotes ?? "");
   const [supplements, setSupplements] = useState<SupplementEntry[]>(
     initialSupplements.length ? initialSupplements : []
@@ -72,10 +75,12 @@ export function NutritionPane({ athleteId, initialDietNotes, initialSupplements,
     <section className="card dash-pane nut-wrap">
       <h2>Nutrición</h2>
 
+      {menuDate ? <DayMenu athleteId={athleteId} date={menuDate} /> : null}
+
       <details className="nut-details">
         <summary>Suplementación</summary>
         <div className="nut-body">
-          {isAdmin ? (
+          {canEdit ? (
             <>
               <div className="nut-supp-edit">
                 {supplements.map((row, i) => (
@@ -140,7 +145,7 @@ export function NutritionPane({ athleteId, initialDietNotes, initialSupplements,
       <details className="nut-details">
         <summary>Dieta</summary>
         <div className="nut-body">
-          {isAdmin ? (
+          {canEdit ? (
             <label className="nut-diet-label">
               Plan diario
               <textarea
@@ -158,7 +163,7 @@ export function NutritionPane({ athleteId, initialDietNotes, initialSupplements,
         </div>
       </details>
 
-      {isAdmin ? (
+      {canEdit ? (
         <div className="nut-actions">
           <button type="button" className="btn" disabled={busy} onClick={() => void save()}>
             {busy ? "Guardando…" : "Guardar nutrición"}
@@ -167,5 +172,57 @@ export function NutritionPane({ athleteId, initialDietNotes, initialSupplements,
         </div>
       ) : null}
     </section>
+  );
+}
+
+function DayMenu({ athleteId, date }: { athleteId: string; date: string }) {
+  const [meals, setMeals] = useState<MealSlot[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setMeals(null);
+    (async () => {
+      const res = await fetch(`/api/meals?athleteId=${athleteId}&from=${date}&to=${date}`);
+      if (cancelled) return;
+      if (!res.ok) {
+        setMeals([]);
+        return;
+      }
+      const json = await res.json();
+      if (!cancelled) setMeals(json.data ?? []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [athleteId, date]);
+
+  return (
+    <div className="nut-menu">
+      <h3>Menú del día</h3>
+      {meals === null ? (
+        <p className="muted">Cargando menú…</p>
+      ) : meals.length === 0 ? (
+        <p className="muted">Sin platos para este día.</p>
+      ) : (
+        <ul className="nut-menu-list">
+          {MEAL_SLOTS.map(({ slot, label }) => {
+            const meal = meals.find((m) => m.slot === slot);
+            if (!meal) return null;
+            return (
+              <li key={slot} className="nut-menu-item">
+                {meal.hasPhoto ? (
+                  <img className="nut-menu-photo" src={`/api/meals/${meal.id}/photo?v=${encodeURIComponent(meal.updatedAt)}`} alt="" />
+                ) : null}
+                <div>
+                  <span className="nut-menu-slot">{label}</span>
+                  <strong>{meal.title}</strong>
+                  {meal.preparation ? <p className="nut-diet-text">{meal.preparation}</p> : null}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }

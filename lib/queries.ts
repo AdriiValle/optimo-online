@@ -1,5 +1,16 @@
 import type { Tx } from "@/lib/db";
-import type { Athlete, DayPlan, Diary, Injury, IntegrationInfo, SessionUser, Sport, SupplementEntry } from "@/lib/types";
+import type {
+  Athlete,
+  DayPlan,
+  Diary,
+  Injury,
+  IntegrationInfo,
+  MealSlot,
+  MealSlotKind,
+  SessionUser,
+  Sport,
+  SupplementEntry
+} from "@/lib/types";
 import { isoDate } from "@/lib/dates";
 
 type AccountRow = { id: string; email: string; password_hash: string; role: SessionUser["role"] };
@@ -626,4 +637,199 @@ export async function photoFor(tx: Tx, athleteId: string) {
   const row = rows[0];
   if (!row?.photo_bytes || !row.photo_bytes.length) return null;
   return { bytes: Buffer.from(row.photo_bytes), mime: row.photo_mime || "image/jpeg" };
+}
+
+export async function setAthleteNutritionAsNutritionist(
+  tx: Tx,
+  athleteId: string,
+  dietNotes: string | null,
+  supplements: SupplementEntry[]
+) {
+  const rows = await tx<{ ok: boolean }[]>`
+    select nutritionist_set_athlete_nutrition(${athleteId}, ${dietNotes}, ${tx.json(supplements)}) as ok
+  `;
+  return rows[0]?.ok ?? false;
+}
+
+export type NutritionistAccount = {
+  accountId: string;
+  email: string;
+  athleteIds: string[];
+};
+
+export async function nutritionistsList(tx: Tx): Promise<NutritionistAccount[]> {
+  const rows = await tx<{ id: string; email: string; athlete_ids: string[] | null }[]>`
+    select c.id, c.email,
+      coalesce(array_agg(na.athlete_id) filter (where na.athlete_id is not null), '{}') as athlete_ids
+    from accounts c
+    left join nutritionist_athletes na on na.nutritionist_account_id = c.id
+    where c.role::text = 'nutritionist'
+    group by c.id, c.email
+    order by c.email
+  `;
+  return rows.map((r) => ({ accountId: r.id, email: r.email, athleteIds: r.athlete_ids ?? [] }));
+}
+
+export async function createNutritionistAccount(tx: Tx, email: string, passwordHash: string) {
+  const rows = await tx<{ id: string; email: string }[]>`
+    insert into accounts (email, password_hash, role)
+    values (${email}, ${passwordHash}, 'nutritionist')
+    returning id, email
+  `;
+  return rows[0];
+}
+
+export async function setNutritionistAssignments(tx: Tx, accountId: string, athleteIds: string[]) {
+  const found = await tx<{ id: string }[]>`
+    select id from accounts where id = ${accountId} and role::text = 'nutritionist' limit 1
+  `;
+  if (!found[0]) return false;
+  await tx`delete from nutritionist_athletes where nutritionist_account_id = ${accountId}`;
+  if (athleteIds.length) {
+    await tx`
+      insert into nutritionist_athletes (nutritionist_account_id, athlete_id)
+      select ${accountId}, a.id from athletes a where a.id = any(${athleteIds}::uuid[])
+    `;
+  }
+  return true;
+}
+
+export type NutritionistAthleteCard = {
+  id: string;
+  name: string;
+  sport: Sport;
+  hasPhoto: boolean;
+  team: string | null;
+  shirtNumber: string | null;
+};
+
+/** Con RLS de nutricionista, `athletes` solo devuelve los asignados. */
+export async function assignedAthletesForNutritionist(tx: Tx, accountId: string): Promise<NutritionistAthleteCard[]> {
+  const rows = await tx<
+    { id: string; name: string; sport: Sport; has_photo: boolean; team: string | null; shirt_number: string | null }[]
+  >`
+    select a.id, a.name, a.sport,
+      (a.photo_bytes is not null and octet_length(a.photo_bytes) > 0) as has_photo,
+      a.team, a.shirt_number
+    from athletes a
+    inner join nutritionist_athletes na on na.athlete_id = a.id
+    where na.nutritionist_account_id = ${accountId}
+    order by a.name
+  `;
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    sport: r.sport,
+    hasPhoto: r.has_photo,
+    team: r.team,
+    shirtNumber: r.shirt_number
+  }));
+}
+
+export async function isNutritionistAssigned(tx: Tx, athleteId: string) {
+  const rows = await tx<{ ok: boolean }[]>`select app_nutritionist_assigned(${athleteId}) as ok`;
+  return rows[0]?.ok ?? false;
+}
+
+/** Calendario sin bloques de sesión (vista nutricionista; RLS filtra asignados). */
+export async function calendarPlansForAthlete(tx: Tx, athleteId: string): Promise<DayPlan[]> {
+  const rows = await tx<PlanJson[]>`
+    select date::text, md_tag, title, minutes, '[]'::jsonb as blocks,
+      match_opponent, match_venue, match_time, match_competition
+    from day_plans
+    where athlete_id = ${athleteId}
+    order by date
+  `;
+  return rows.map(mapPlan);
+}
+
+type MealRow = {
+  id: string;
+  athlete_id: string;
+  date: string;
+  slot: MealSlotKind;
+  title: string;
+  preparation: string | null;
+  has_photo: boolean;
+  updated_at: string;
+};
+
+function mapMeal(r: MealRow): MealSlot {
+  return {
+    id: r.id,
+    athleteId: r.athlete_id,
+    date: isoDate(r.date),
+    slot: r.slot,
+    title: r.title,
+    preparation: r.preparation,
+    hasPhoto: r.has_photo,
+    updatedAt: r.updated_at
+  };
+}
+
+export async function mealsForAthleteRange(tx: Tx, athleteId: string, from: string, to: string) {
+  const rows = await tx<MealRow[]>`
+    select id, athlete_id, date::text, slot, title, preparation,
+      (photo_bytes is not null and octet_length(photo_bytes) > 0) as has_photo,
+      updated_at::text
+    from meal_slots
+    where athlete_id = ${athleteId} and date between ${from}::date and ${to}::date
+    order by date, slot
+  `;
+  return rows.map(mapMeal);
+}
+
+export async function upsertMealSlot(
+  tx: Tx,
+  athleteId: string,
+  date: string,
+  slot: MealSlotKind,
+  title: string,
+  preparation: string | null
+) {
+  const rows = await tx<MealRow[]>`
+    insert into meal_slots (athlete_id, date, slot, title, preparation)
+    values (${athleteId}, ${date}::date, ${slot}, ${title}, ${preparation})
+    on conflict (athlete_id, date, slot) do update set
+      title = excluded.title, preparation = excluded.preparation, updated_at = now()
+    returning id, athlete_id, date::text, slot, title, preparation,
+      (photo_bytes is not null and octet_length(photo_bytes) > 0) as has_photo,
+      updated_at::text
+  `;
+  return rows[0] ? mapMeal(rows[0]) : null;
+}
+
+export async function mealById(tx: Tx, mealId: string) {
+  const rows = await tx<MealRow[]>`
+    select id, athlete_id, date::text, slot, title, preparation,
+      (photo_bytes is not null and octet_length(photo_bytes) > 0) as has_photo,
+      updated_at::text
+    from meal_slots
+    where id = ${mealId}
+    limit 1
+  `;
+  return rows[0] ? mapMeal(rows[0]) : null;
+}
+
+export async function deleteMealSlot(tx: Tx, mealId: string) {
+  const rows = await tx<{ id: string }[]>`delete from meal_slots where id = ${mealId} returning id`;
+  return Boolean(rows[0]);
+}
+
+export async function mealPhotoFor(tx: Tx, mealId: string) {
+  const rows = await tx<{ photo_bytes: Buffer | Uint8Array | null; photo_mime: string | null }[]>`
+    select photo_bytes, photo_mime from meal_slots where id = ${mealId} limit 1
+  `;
+  const row = rows[0];
+  if (!row?.photo_bytes || !row.photo_bytes.length) return null;
+  return { bytes: Buffer.from(row.photo_bytes), mime: row.photo_mime || "image/jpeg" };
+}
+
+export async function setMealPhoto(tx: Tx, mealId: string, bytes: Buffer, mime: string) {
+  const rows = await tx<{ id: string }[]>`
+    update meal_slots set photo_bytes = ${bytes}, photo_mime = ${mime}, updated_at = now()
+    where id = ${mealId}
+    returning id
+  `;
+  return Boolean(rows[0]);
 }

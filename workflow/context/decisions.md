@@ -44,4 +44,8 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
 - 2026-11-04: OK → merge `dev` a `main` (`314ac1b`) y push. Producción = Next con plan-data.
 - 2026-11-05: semana parón Visus 7–15 nov; trabajo Óptimo solo el 12 (anterior V2 = 3 nov).
   Amistoso 14 como nota, no en `MATCHES`. Ficha via Neon `day_plans` (`DAY_OVERRIDES`).
+- 2026-11-05: rol `nutritionist` + menú en `meal_slots` (desayuno/comida/cena, prep, foto bytea).
+  Amanda solo ve atletas en `nutritionist_athletes`; rutas `/nutricion/**`, no ficha entrenamiento. Chequeo app por BYPASSRLS.
+- 2026-11-05: seed `amanda`/`123456789` asignada a Ricardo Visus; admin gestiona más nutricionistas en ajustes.
+  Suplementos y `diet_notes` siguen; PATCH nutrition también nutricionista asignada vía `nutritionist_set_athlete_nutrition`.
 

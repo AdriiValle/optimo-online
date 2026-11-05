@@ -24,6 +24,7 @@ export default async function AthleteHome({
   const callbackMsg = typeof sp.deviceMsg === "string" ? sp.deviceMsg : null;
   const user = await currentUser();
   if (!user) notFound();
+  if (user.role === "nutritionist") notFound();
   if (user.role === "athlete" && user.athleteId !== id) notFound();
 
   const isAdmin = user.role === "admin";

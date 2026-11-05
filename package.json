@@ -13,6 +13,7 @@
     "db:set-videos": "tsx db/set-protocol-videos.ts",
     "db:sync-videos": "tsx db/sync-videos.ts",
     "db:reset-passwords": "tsx db/reset-dev-passwords.ts",
+    "db:seed-nutritionist": "tsx db/seed-nutritionist.ts",
     "plan:parity": "tsx scripts/plan-parity.ts"
   },
   "dependencies": {

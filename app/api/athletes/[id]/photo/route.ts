@@ -1,6 +1,6 @@
 import { currentUser, rlsFrom } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
-import { canSeeAthlete } from "@/lib/access";
+import { canSeeAthlete, canSeeAthleteNutrition } from "@/lib/access";
 import { apiError, notFound, unauthenticated } from "@/lib/errors";
 import { athleteById, photoFor } from "@/lib/queries";
 import { PHOTO_MAX_BYTES, PHOTO_MIME } from "@/lib/constants";
@@ -11,7 +11,7 @@ export async function GET(_req: Request, { params }: Params) {
   const user = await currentUser();
   if (!user) return unauthenticated();
   const { id } = await params;
-  if (!canSeeAthlete(user, id)) return notFound();
+  if (!(await canSeeAthleteNutrition(user, id))) return notFound();
 
   const photo = await withRls(rlsFrom(user), (tx) => photoFor(tx, id));
   if (!photo) return notFound();

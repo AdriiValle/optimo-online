@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import type { UserRole } from "@/lib/types";
+
+function homeFor(role: UserRole, athleteId: string | null) {
+  if (role === "admin") return "/panel";
+  if (role === "nutritionist") return "/nutricion";
+  return `/a/${athleteId}`;
+}
+
+const NUTRITIONIST_BLOCKED = ["/a/", "/ajustes", "/api/me", "/api/diaries", "/api/integrations"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -15,8 +24,7 @@ export default auth((req) => {
   const session = req.auth;
   if (isPublic) {
     if (pathname.startsWith("/login") && session?.user) {
-      const dest = session.user.role === "admin" ? "/panel" : `/a/${session.user.athleteId}`;
-      return NextResponse.redirect(new URL(dest, req.url));
+      return NextResponse.redirect(new URL(homeFor(session.user.role, session.user.athleteId), req.url));
     }
     return NextResponse.next();
   }
@@ -25,6 +33,15 @@ export default auth((req) => {
     const login = new URL("/login", req.url);
     login.searchParams.set("from", pathname);
     return NextResponse.redirect(login);
+  }
+
+  const isNutritionArea = pathname === "/nutricion" || pathname.startsWith("/nutricion/") || pathname.startsWith("/api/nutrition");
+  if (isNutritionArea && session.user.role !== "nutritionist") {
+    return NextResponse.rewrite(new URL("/__not_found", req.url));
+  }
+
+  if (session.user.role === "nutritionist" && NUTRITIONIST_BLOCKED.some((p) => pathname.startsWith(p))) {
+    return NextResponse.rewrite(new URL("/__not_found", req.url));
   }
 
   if (pathname.startsWith("/panel") && session.user.role !== "admin") {

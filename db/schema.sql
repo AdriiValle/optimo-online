@@ -308,3 +308,102 @@ DROP POLICY IF EXISTS device_workouts_all ON device_workouts;
 CREATE POLICY device_workouts_all ON device_workouts FOR ALL
   USING (app_is_admin() OR athlete_id = app_athlete_id())
   WITH CHECK (app_is_admin() OR athlete_id = app_athlete_id());
+
+-- Nutricionista (additive). 'nutritionist' must not be used as user_role literal in this same script run.
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'nutritionist';
+
+CREATE TABLE IF NOT EXISTS nutritionist_athletes (
+  nutritionist_account_id uuid NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  athlete_id uuid NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
+  PRIMARY KEY (nutritionist_account_id, athlete_id)
+);
+
+DO $$ BEGIN
+  CREATE TYPE meal_slot_kind AS ENUM ('breakfast', 'lunch', 'dinner');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+CREATE TABLE IF NOT EXISTS meal_slots (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  athlete_id uuid NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  slot meal_slot_kind NOT NULL,
+  title text NOT NULL DEFAULT '',
+  preparation text,
+  photo_bytes bytea,
+  photo_mime text,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (athlete_id, date, slot)
+);
+
+CREATE INDEX IF NOT EXISTS meal_slots_athlete_date_idx ON meal_slots (athlete_id, date);
+
+CREATE OR REPLACE FUNCTION app_is_nutritionist() RETURNS boolean
+LANGUAGE sql STABLE AS $$
+  SELECT current_setting('app.current_role', true) = 'nutritionist'
+$$;
+
+CREATE OR REPLACE FUNCTION app_nutritionist_assigned(p_athlete_id uuid) RETURNS boolean
+LANGUAGE sql STABLE AS $$
+  SELECT app_is_nutritionist() AND EXISTS (
+    SELECT 1 FROM nutritionist_athletes na
+    WHERE na.nutritionist_account_id = app_account_id()
+      AND na.athlete_id = p_athlete_id
+  )
+$$;
+
+ALTER TABLE nutritionist_athletes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE nutritionist_athletes FORCE ROW LEVEL SECURITY;
+ALTER TABLE meal_slots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meal_slots FORCE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS nutritionist_athletes_select ON nutritionist_athletes;
+CREATE POLICY nutritionist_athletes_select ON nutritionist_athletes FOR SELECT
+  USING (app_is_admin() OR (app_is_nutritionist() AND nutritionist_account_id = app_account_id()));
+
+DROP POLICY IF EXISTS nutritionist_athletes_write ON nutritionist_athletes;
+CREATE POLICY nutritionist_athletes_write ON nutritionist_athletes FOR ALL
+  USING (app_is_admin())
+  WITH CHECK (app_is_admin());
+
+DROP POLICY IF EXISTS athletes_select ON athletes;
+CREATE POLICY athletes_select ON athletes FOR SELECT
+  USING (app_is_admin() OR id = app_athlete_id() OR app_nutritionist_assigned(id));
+
+DROP POLICY IF EXISTS day_plans_select ON day_plans;
+CREATE POLICY day_plans_select ON day_plans FOR SELECT
+  USING (app_is_admin() OR athlete_id = app_athlete_id() OR app_nutritionist_assigned(athlete_id));
+
+DROP POLICY IF EXISTS meal_slots_select ON meal_slots;
+CREATE POLICY meal_slots_select ON meal_slots FOR SELECT
+  USING (app_is_admin() OR athlete_id = app_athlete_id() OR app_nutritionist_assigned(athlete_id));
+
+DROP POLICY IF EXISTS meal_slots_insert ON meal_slots;
+CREATE POLICY meal_slots_insert ON meal_slots FOR INSERT
+  WITH CHECK (app_is_admin() OR app_nutritionist_assigned(athlete_id));
+
+DROP POLICY IF EXISTS meal_slots_update ON meal_slots;
+CREATE POLICY meal_slots_update ON meal_slots FOR UPDATE
+  USING (app_is_admin() OR app_nutritionist_assigned(athlete_id))
+  WITH CHECK (app_is_admin() OR app_nutritionist_assigned(athlete_id));
+
+DROP POLICY IF EXISTS meal_slots_delete ON meal_slots;
+CREATE POLICY meal_slots_delete ON meal_slots FOR DELETE
+  USING (app_is_admin() OR app_nutritionist_assigned(athlete_id));
+
+-- Nutricionista asignada edita solo diet_notes/supplements (athletes_update no se amplía).
+CREATE OR REPLACE FUNCTION nutritionist_set_athlete_nutrition(p_athlete_id uuid, p_diet_notes text, p_supplements jsonb)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+SET row_security = off
+AS $$
+BEGIN
+  IF NOT app_nutritionist_assigned(p_athlete_id) THEN
+    RETURN false;
+  END IF;
+  UPDATE athletes SET diet_notes = p_diet_notes, supplements = p_supplements WHERE id = p_athlete_id;
+  RETURN FOUND;
+END;
+$$;

@@ -1,27 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { dateKey, DOW_ES, formatLongDate, MONTHS_ES, parseDateLocal, todayKey } from "@/lib/dates";
-import { LOAD_TINT_FROM, loadClassForMdTag } from "@/lib/plan";
+import { formatLongDate, parseDateLocal, todayKey } from "@/lib/dates";
 import type { Athlete, DayPlan, Diary, Injury, IntegrationInfo } from "@/lib/types";
 import { capabilitiesFor, isDeviceField } from "@/lib/integrations/capabilities";
 import { Analisis, type AnalysisView } from "./analisis";
 import { NutritionPane } from "./nutrition-pane";
 import { SessionList } from "./session-list";
 import { DeviceCard, IntegrationAdminChip } from "./device-card";
-
-const VENUE_SVG = {
-  casa: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-      <path d="M8 1 1 7v7h5V9h4v5h5V7L8 1z" />
-    </svg>
-  ),
-  fuera: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-      <path d="M14.8 8.1 11 7.8 9.6 5.2H7.4L6 7.8 2.2 8.1 1 9.4l1.6.7 2.3-.2.7 2.4H6l.6-1.8h2.8l.6 1.8h1.4l.7-2.4 2.3.2 1.6-.7-1.2-1.3z" />
-    </svg>
-  )
-};
+import { PlanCalendar } from "@/app/components/plan-calendar";
 
 type Props = {
   athlete: Athlete;
@@ -161,80 +148,19 @@ export function HomeClient({
   const running = athlete.sport === "running";
 
   const calendar = (
-    <>
-      <section className="card cal-compact" aria-label="Calendario">
-        <div className="cal-nav">
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Mes anterior"
-            onClick={() => {
-              const next = month - 1;
-              if (next < 0) {
-                setMonth(11);
-                setYear(year - 1);
-              } else setMonth(next);
-            }}
-          >
-            ‹
-          </button>
-          <h2>
-            {MONTHS_ES[month]} {year}
-          </h2>
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Mes siguiente"
-            onClick={() => {
-              const next = month + 1;
-              if (next > 11) {
-                setMonth(0);
-                setYear(year + 1);
-              } else setMonth(next);
-            }}
-          >
-            ›
-          </button>
-        </div>
-        <div className="cal-grid">
-          {DOW_ES.map((d) => (
-            <div key={d} className="cal-dow">
-              {d}
-            </div>
-          ))}
-        </div>
-        <div className="cal-grid">
-          {monthCells(year, month).map((cell, i) => {
-            if (!cell) return <div key={`e-${i}`} className="cal-day empty" />;
-            const iso = dateKey(cell);
-            const p = byDate[iso];
-            const cls = ["cal-day"];
-            if (iso === today) cls.push("today");
-            if (iso === center) cls.push("cal-highlight");
-            if (p?.matchOpponent) cls.push("match");
-            if (iso >= LOAD_TINT_FROM) {
-              const load = loadClassForMdTag(p?.mdTag ?? null);
-              if (load) cls.push(load);
-            }
-            const crest = p?.matchOpponent ? crests[p.matchOpponent] : null;
-            return (
-              <button key={iso} type="button" className={cls.join(" ")} onClick={() => selectDate(iso)}>
-                {p?.mdTag ? <span className="md-tag">{p.mdTag}</span> : null}
-                <span className="day-num">{cell.getDate()}</span>
-                {p?.matchVenue ? (
-                  <span className="venue-icon">{VENUE_SVG[p.matchVenue]}</span>
-                ) : null}
-                {crest ? (
-                  <span className="crest-wrap">
-                    <img className="crest" src={crest} alt={p?.matchOpponent ?? ""} />
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-    </>
+    <PlanCalendar
+      byDate={byDate}
+      crests={crests}
+      year={year}
+      month={month}
+      center={center}
+      today={today}
+      onMonthChange={(y, m) => {
+        setYear(y);
+        setMonth(m);
+      }}
+      onSelect={selectDate}
+    />
   );
 
   async function uploadPhoto(file: File) {
@@ -400,7 +326,8 @@ export function HomeClient({
       athleteId={athlete.id}
       initialDietNotes={athlete.dietNotes}
       initialSupplements={athlete.supplements}
-      isAdmin={isAdmin}
+      canEdit={isAdmin}
+      menuDate={center}
     />
   );
 
@@ -503,15 +430,3 @@ export function HomeClient({
     </div>
   );
 }
-
-function monthCells(year: number, month: number) {
-  const first = new Date(year, month, 1);
-  let startPad = first.getDay() - 1;
-  if (startPad < 0) startPad = 6;
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const cells: (Date | null)[] = [];
-  for (let i = 0; i < startPad; i += 1) cells.push(null);
-  for (let day = 1; day <= daysInMonth; day += 1) cells.push(new Date(year, month, day));
-  return cells;
-}
-

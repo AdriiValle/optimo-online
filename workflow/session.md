@@ -1,33 +1,27 @@
 # Session
 
-Escrito: 2026-11-05 11:42
+Escrito: 2026-11-05 12:20
 
-Objetivo: app deportistas online (Óptimo). Visus piloto.
+Objetivo: v1 rol nutricionista (Amanda) + menú diario para atletas asignados.
 
-Rama: `dev` (hay cambios sin commit: semana parón)
+Rama: `dev`
 
-Local: http://localhost:3001 · Prod: https://optimo-online.vercel.app
+Local: http://localhost:3001 · Prod: https://optimo-online.vercel.app · Neon: noisy-meadow-03777185
 
 ## Acceso
 
-- Admin: `adriivalle` / `admin` (jefe, pass `123456`) → `/panel`
-- Ricardo: `ricardovisus` → `/a/...`
+- Admin: `adriivalle` / `123456789` → `/panel` (ajustes: nutricionistas + asignación)
+- Nutricionista: `amanda` / `123456789` → `/nutricion` (solo Visus asignado)
+- Ricardo: `ricardovisus` / `123456789` → pestaña Nutrición (menú del día)
 
-## Hecho (hoy)
+## Hecho
 
-- Semana parón liga (7–15 nov) en calendario de Visus. Trabajo Óptimo solo jueves 12: cadena anterior V2 = 3 nov.
-- Fuente: `DAY_OVERRIDES` en `calendar.ts` + `buildDayPlans`. Ficha = Neon `day_plans` (`npm run db:upsert-semana-paron`).
-- Amistoso 14: casilla MD gris, casa, escudo blanco. No está en `MATCHES` (el 16 sigue MD-5).
-- Domingo 15: MD+1 verde, igual que 1/8/22. Sin trabajo Óptimo.
+- Rol `nutritionist`, tablas `nutritionist_athletes` + `meal_slots`, RLS + chequeos app (`canSeeAthleteNutrition`).
+- Dashboard `/nutricion`, ficha `/nutricion/[athleteId]` (calendario MD/partidos + editor platos + suplementos).
+- Admin alta/asignación en `/panel/ajustes`. Seed: `npm run db:seed-nutritionist`.
+- Migración aplicada en noisy-meadow; `tsc` limpio.
 
-## Abierto / Siguiente ocasión
+## Siguiente
 
-- Miércoles 11: según ganen o pierdan. Domingo 15: Ricardo avisa.
-- Viernes 13: club, sin trabajo Óptimo aún.
-- Commit/push de esta semana cuando Adrián lo pida.
-- No borrar `index.html` / `plan-visus.html`.
-- `db:sync-videos` real solo con visto bueno.
-
-## No hacer aún
-
-- No borrar el HTML seed. No `db:seed` / update-* / sync sin dry-run (y sin OK si escribe Neon).
+- Push `dev` → preview Vercel; OK Adrián antes de merge `main`.
+- v2: pulir vista jugador Nutrición, copiar menú entre días, macros.

@@ -109,7 +109,139 @@ export function AdminAjustesClient() {
           ))}
         </ul>
       </section>
+
+      <NutritionistsSection athletes={rows} />
     </div>
+  );
+}
+
+type Nutritionist = { accountId: string; email: string; athleteIds: string[] };
+
+function NutritionistsSection({ athletes }: { athletes: Row[] }) {
+  const [list, setList] = useState<Nutritionist[]>([]);
+  const [loadErr, setLoadErr] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [createMsg, setCreateMsg] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoadErr(null);
+    const res = await fetch("/api/admin/nutritionists");
+    if (!res.ok) {
+      setLoadErr("No se pudo cargar las nutricionistas.");
+      return;
+    }
+    const json = await res.json();
+    setList(json.data ?? []);
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function create() {
+    setCreateMsg(null);
+    if (!username.trim() || password.length < 8) {
+      setCreateMsg("Usuario obligatorio y contraseña de al menos 8 caracteres.");
+      return;
+    }
+    const res = await fetch("/api/admin/nutritionists", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: username.trim(), password })
+    });
+    if (res.status === 409) {
+      setCreateMsg("Ese usuario ya existe.");
+      return;
+    }
+    if (!res.ok) {
+      setCreateMsg("No se pudo crear la cuenta.");
+      return;
+    }
+    const json = await res.json();
+    setList((prev) => [...prev, json.data].sort((a, b) => a.email.localeCompare(b.email)));
+    setUsername("");
+    setPassword("");
+    setCreateMsg("Cuenta creada.");
+  }
+
+  return (
+    <section className="card">
+      <h2>Nutricionistas</h2>
+      {loadErr ? <p className="error">{loadErr}</p> : null}
+      <ul className="settings-account-list">
+        {list.map((n) => (
+          <NutritionistRow key={n.accountId} nutritionist={n} athletes={athletes} />
+        ))}
+      </ul>
+      <h3>Nueva nutricionista</h3>
+      {createMsg ? <p className={createMsg === "Cuenta creada." ? "ok" : "error"}>{createMsg}</p> : null}
+      <label htmlFor="nut-new-user">Nombre de usuario (login)</label>
+      <input
+        id="nut-new-user"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        autoComplete="off"
+        maxLength={200}
+      />
+      <label htmlFor="nut-new-pwd">Contraseña</label>
+      <input
+        id="nut-new-pwd"
+        type="text"
+        minLength={8}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Mín. 8 caracteres"
+      />
+      <button type="button" className="btn" onClick={() => void create()}>
+        Crear nutricionista
+      </button>
+    </section>
+  );
+}
+
+function NutritionistRow({ nutritionist, athletes }: { nutritionist: Nutritionist; athletes: Row[] }) {
+  const [selected, setSelected] = useState<string[]>(nutritionist.athleteIds);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    setBusy(true);
+    setMsg(null);
+    const res = await fetch(`/api/admin/nutritionists/${nutritionist.accountId}/athletes`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ athleteIds: selected })
+    });
+    setBusy(false);
+    setMsg(res.ok ? "Asignaciones guardadas." : "No se pudo guardar.");
+  }
+
+  return (
+    <li className="settings-account-item card">
+      <strong>{nutritionist.email}</strong>
+      {msg ? <p className={msg.startsWith("No") ? "error" : "ok"}>{msg}</p> : null}
+      <fieldset className="nut-assign">
+        <legend className="muted">Deportistas que ve</legend>
+        {athletes.map((a) => (
+          <label key={a.athleteId} className="nut-assign-item">
+            <input
+              type="checkbox"
+              checked={selected.includes(a.athleteId)}
+              onChange={(e) =>
+                setSelected((prev) =>
+                  e.target.checked ? [...prev, a.athleteId] : prev.filter((id) => id !== a.athleteId)
+                )
+              }
+            />
+            {a.name}
+          </label>
+        ))}
+      </fieldset>
+      <button type="button" className="btn secondary" disabled={busy} onClick={() => void save()}>
+        {busy ? "Guardando…" : "Guardar asignaciones"}
+      </button>
+    </li>
   );
 }
 

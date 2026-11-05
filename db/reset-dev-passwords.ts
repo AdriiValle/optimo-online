@@ -5,7 +5,7 @@ import { unpooledSql } from "../lib/db";
 loadLocalEnv();
 
 const TARGET = "123456789";
-const LOGINS = ["adriivalle", "ricardovisus"];
+const LOGINS = ["adriivalle", "ricardovisus", "amanda"];
 
 async function main() {
   const hash = await bcrypt.hash(TARGET, 12);

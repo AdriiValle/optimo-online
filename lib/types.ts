@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "athlete";
+export type UserRole = "admin" | "athlete" | "nutritionist";
 export type Sport = "football" | "running" | "other";
 export type MatchVenue = "casa" | "fuera";
 
@@ -113,4 +113,24 @@ export type Athlete = {
   dietNotes: string | null;
   supplements: SupplementEntry[];
   sleepRoutine: string | null;
+};
+
+export type MealSlotKind = "breakfast" | "lunch" | "dinner";
+
+export const MEAL_SLOTS: { slot: MealSlotKind; label: string }[] = [
+  { slot: "breakfast", label: "Desayuno" },
+  { slot: "lunch", label: "Comida" },
+  { slot: "dinner", label: "Cena" }
+];
+
+/** Plato de un día y comida (tabla `meal_slots`); foto vía `/api/meals/[id]/photo`. */
+export type MealSlot = {
+  id: string;
+  athleteId: string;
+  date: string;
+  slot: MealSlotKind;
+  title: string;
+  preparation: string | null;
+  hasPhoto: boolean;
+  updatedAt: string;
 };

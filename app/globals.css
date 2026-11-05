@@ -820,6 +820,31 @@ textarea { min-height: 72px; resize: vertical; }
 .nut-diet-label textarea { width: 100%; min-height: 140px; }
 .nut-diet-text { margin: 0; white-space: pre-wrap; line-height: 1.45; }
 .nut-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.nut-menu h3 { font-size: 0.875rem; margin: 0 0 6px; }
+.nut-menu-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.nut-menu-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  background: var(--glass-row);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.8125rem;
+}
+.nut-menu-item > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nut-menu-slot { font-size: 0.6875rem; font-weight: 600; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+.nut-menu-photo { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; display: block; }
+.meal-form { display: flex; flex-direction: column; gap: 4px; }
+.meal-form .nut-menu-photo { width: 100%; height: auto; max-height: 220px; margin-bottom: 6px; }
+.meal-form input, .meal-form textarea { width: 100%; margin-bottom: 8px; }
+.meal-form input[type="file"] { font-size: 0.8125rem; }
+.nut-assign { border: 0; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.nut-assign legend { padding: 0; margin-bottom: 4px; font-size: 0.8125rem; }
+.nut-assign-item { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 500; }
+.nut-assign-item input { width: auto; margin: 0; }
 .btn-ghost {
   background: transparent;
   border: 1px dashed var(--line);

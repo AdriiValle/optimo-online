@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { currentUser, rlsFrom } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
 import { apiError, notFound, unauthenticated } from "@/lib/errors";
-import { athleteById, updateAthleteNutrition } from "@/lib/queries";
+import { canSeeAthleteNutrition } from "@/lib/access";
+import { athleteById, setAthleteNutritionAsNutritionist, updateAthleteNutrition } from "@/lib/queries";
 
 const SupplementSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -21,9 +22,10 @@ type RouteCtx = { params: Promise<{ id: string }> };
 export async function PATCH(req: Request, ctx: RouteCtx) {
   const user = await currentUser();
   if (!user) return unauthenticated();
-  if (user.role !== "admin") return notFound();
+  if (user.role !== "admin" && user.role !== "nutritionist") return notFound();
 
   const { id: athleteId } = await ctx.params;
+  if (!(await canSeeAthleteNutrition(user, athleteId))) return notFound();
   const json = await req.json().catch(() => null);
   const parsed = PatchSchema.safeParse(json);
   if (!parsed.success) {
@@ -40,7 +42,9 @@ export async function PATCH(req: Request, ctx: RouteCtx) {
   const updated = await withRls(rlsFrom(user), async (tx) => {
     const exists = await athleteById(tx, athleteId);
     if (!exists) return null;
-    return updateAthleteNutrition(tx, athleteId, dietNotes, supplements);
+    if (user.role === "admin") return updateAthleteNutrition(tx, athleteId, dietNotes, supplements);
+    const ok = await setAthleteNutritionAsNutritionist(tx, athleteId, dietNotes, supplements);
+    return ok ? athleteById(tx, athleteId) : null;
   });
 
   if (!updated) return notFound();
