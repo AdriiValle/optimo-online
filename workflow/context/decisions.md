@@ -57,3 +57,5 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
   PDF rechazado v1; lunes ISO manual si el doc no trae fechas. Jugador `/a/**` solo lee slots ya guardados.
 - 2026-11-05: look = **Óptimo + Apple** (tokens Óptimo, acabado glass/clarity Apple); no se adopta ningún Design.md ajeno.
   `workflow/context/design-system.md` es el patrón de familia para otras apps Óptimo.
+- 2026-11-05: OK → merge `dev` a `main` (`5402204`) y push. Producción = look Óptimo + Apple.
+  Trabajo sigue en `dev`.
