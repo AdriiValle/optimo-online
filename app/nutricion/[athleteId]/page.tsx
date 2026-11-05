@@ -3,11 +3,12 @@ import { z } from "zod";
 import { currentUser, rlsFrom } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
 import { canSeeAthleteNutrition } from "@/lib/access";
-import { athleteById, calendarPlansForAthlete } from "@/lib/queries";
+import { assignedAthletesForNutritionist, athleteById, calendarPlansForAthlete } from "@/lib/queries";
 import { planData } from "@/lib/plan-data";
 import { BrandHeader } from "@/app/components/brand-header";
 import { HeaderBackButton } from "@/app/components/header-back-button";
 import { LogoutButton } from "@/app/logout-button";
+import { NutAthleteNav } from "../athlete-nav";
 import { NutricionAthleteClient } from "./nutricion-athlete-client";
 
 export default async function NutricionAthletePage({ params }: { params: Promise<{ athleteId: string }> }) {
@@ -22,7 +23,8 @@ export default async function NutricionAthletePage({ params }: { params: Promise
     const athlete = await athleteById(tx, athleteId);
     if (!athlete) return null;
     const plans = await calendarPlansForAthlete(tx, athleteId);
-    return { athlete, plans };
+    const athletes = await assignedAthletesForNutritionist(tx, user.id);
+    return { athlete, plans, athletes };
   });
   if (!data) notFound();
 
@@ -33,13 +35,14 @@ export default async function NutricionAthletePage({ params }: { params: Promise
         leading={<HeaderBackButton href="/nutricion" />}
         trailing={<LogoutButton />}
       />
-      <main className="page">
+      <main className="page nut-page">
         <NutricionAthleteClient
           athleteId={data.athlete.id}
           dietNotes={data.athlete.dietNotes}
           supplements={data.athlete.supplements}
           plans={data.plans}
           crests={planData.crests}
+          nav={<NutAthleteNav athletes={data.athletes} activeId={data.athlete.id} />}
         />
       </main>
     </>

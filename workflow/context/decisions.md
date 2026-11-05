@@ -48,4 +48,6 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
   Amanda solo ve atletas en `nutritionist_athletes`; rutas `/nutricion/**`, no ficha entrenamiento. Chequeo app por BYPASSRLS.
 - 2026-11-05: seed `amanda`/`123456789` asignada a Ricardo Visus; admin gestiona más nutricionistas en ajustes.
   Suplementos y `diet_notes` siguen; PATCH nutrition también nutricionista asignada vía `nutritionist_set_athlete_nutrition`.
+- 2026-11-05: workspace desktop nutricionista solo en `/nutricion/**` desde 1280px (sidebar, calendario MD, grid semanal, panel plato).
+  Look clínico con tokens Óptimo y surface sólida; ficha jugador `/a/**` Nutrición no rediseñada. APIs meal_slots sin cambios.
 

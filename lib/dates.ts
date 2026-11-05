@@ -41,6 +41,12 @@ export function addDays(d: Date, n: number) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 }
 
+/** Lunes (YYYY-MM-DD) de la semana lunes–domingo que contiene `iso`. */
+export function startOfWeekMonday(iso: string) {
+  const d = parseDateLocal(iso);
+  return dateKey(addDays(d, -((d.getDay() + 6) % 7)));
+}
+
 export function daysBetween(a: Date, b: Date) {
   return Math.round((startOfDay(b).getTime() - startOfDay(a).getTime()) / 86400000);
 }

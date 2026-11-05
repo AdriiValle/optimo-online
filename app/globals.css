@@ -845,6 +845,172 @@ textarea { min-height: 72px; resize: vertical; }
 .nut-assign legend { padding: 0; margin-bottom: 4px; font-size: 0.8125rem; }
 .nut-assign-item { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 500; }
 .nut-assign-item input { width: auto; margin: 0; }
+
+/* —— Nutricionista: workspace clínico desktop (≥1280px); debajo, flujo v1 apilado —— */
+.nut-ws-list, .nut-week, .nut-side-date { display: none; }
+.nut-ws-cal, .nut-ws-side { display: flex; flex-direction: column; gap: 8px; }
+
+@media (min-width: 1280px) {
+  .page.nut-page { max-width: 1680px; padding-left: 24px; padding-right: 24px; }
+  .nut-desktop {
+    --nut-top: calc(var(--header-offset) + var(--header-block) + var(--header-gap));
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 340px;
+    grid-template-areas: "list cal side" "list week side";
+    grid-template-rows: auto 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .nut-desktop-index { grid-template-columns: 240px minmax(0, 1fr); grid-template-areas: "list main"; grid-template-rows: auto; }
+  .nut-ws-index { grid-area: main; }
+  .nut-ws-index .athlete-list { display: none; }
+
+  .nut-desktop .card {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-sm);
+    padding: 12px 14px;
+    margin-bottom: 0;
+  }
+
+  .nut-ws-list {
+    grid-area: list;
+    display: block;
+    position: sticky;
+    top: var(--nut-top);
+    max-height: calc(100vh - var(--nut-top) - 16px);
+    overflow-y: auto;
+    padding: 12px 8px;
+    background: var(--fill-secondary);
+    border-radius: var(--radius);
+  }
+  .nut-ws-list h2 {
+    padding: 0 8px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .nut-ws-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  .nut-ws-list a {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-height: 44px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    color: inherit;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+  }
+  .nut-ws-list a:hover { background: var(--bg); }
+  .nut-ws-list a.on { background: var(--surface); box-shadow: var(--shadow-sm); }
+  .nut-ws-list a:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; }
+  .nut-ws-list .avatar { width: 32px; height: 32px; }
+  .nut-ws-list a > span { display: flex; flex-direction: column; min-width: 0; }
+  .nut-ws-list a strong, .nut-ws-list a .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nut-ws-list a .muted { font-size: 0.75rem; }
+  .nut-ws-list > p { margin: 0; padding: 0 8px; font-size: 0.8125rem; }
+
+  .nut-ws-cal {
+    grid-area: cal;
+    display: grid;
+    grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+    column-gap: 16px;
+    row-gap: 4px;
+    align-content: start;
+  }
+  .nut-ws-cal > .cal-compact { grid-row: span 3; }
+  .nut-ws-cal .day-line { padding-top: 12px; font-size: 0.875rem; }
+  .nut-ws-cal > p { margin: 0; padding: 0 2px; font-size: 0.8125rem; }
+
+  .nut-week { grid-area: week; display: block; }
+  .nut-week .cal-nav { margin-bottom: 8px; }
+  .nut-week .cal-nav h2 { font-size: 0.95rem; }
+  .nut-week-grid {
+    display: grid;
+    grid-template-columns: 84px repeat(7, minmax(0, 1fr));
+    gap: 4px;
+    font-size: 0.8125rem;
+  }
+  .nut-week-row { display: contents; }
+  .nut-week-day, .nut-week-cell {
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    min-width: 0;
+    border-radius: 8px;
+  }
+  .nut-week-day {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    min-height: 36px;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    background: transparent;
+  }
+  .nut-week-day strong { font-size: 0.8125rem; text-transform: capitalize; }
+  .nut-week-day .md-tag { font-size: 0.6875rem; font-weight: 600; color: var(--secondary); }
+  .nut-week-day .muted { max-width: 100%; font-size: 0.6875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nut-week-day.on { background: var(--fill-secondary); }
+  .nut-week-day.today strong { text-decoration: underline; text-underline-offset: 3px; }
+  .nut-week-slot {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .nut-week-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 56px;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    line-height: 1.3;
+  }
+  .nut-week-cell:hover { border-color: var(--secondary); }
+  .nut-week-cell.col-on { background: var(--bg); }
+  .nut-week-cell.on { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+  .nut-week-day:focus-visible, .nut-week-cell:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; }
+  .nut-week-cell img { width: 40px; height: 40px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
+  .nut-week-cell span {
+    min-width: 0;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .nut-week-cell span.muted { margin: auto; }
+
+  .nut-ws-side {
+    grid-area: side;
+    position: sticky;
+    top: var(--nut-top);
+    max-height: calc(100vh - var(--nut-top) - 16px);
+    overflow-y: auto;
+    gap: 12px;
+  }
+  .nut-side-date { display: block; margin: -4px 0 0; font-size: 0.8125rem; }
+  .nut-desktop .nut-details { background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+  .nut-desktop .nut-details summary { padding: 8px 0 6px; font-size: 0.8125rem; pointer-events: none; }
+  .nut-desktop .nut-details summary::after { display: none; }
+  .nut-desktop .nut-body { padding: 0; }
+  .nut-desktop .meal-slot:not(.on) { display: none; }
+  .nut-desktop .meal-form .nut-menu-photo { max-height: 260px; border-radius: 8px; }
+}
 .btn-ghost {
   background: transparent;
   border: 1px dashed var(--line);
