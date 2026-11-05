@@ -8,6 +8,12 @@ import type { SessionUser } from "@/lib/types";
 /** 90 días: la PWA/móvil no pide login en el día a día (cookie JWT persistente). */
 export const SESSION_MAX_AGE = 90 * 24 * 60 * 60;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function validAthleteId(v: unknown): string | null {
+  return typeof v === "string" && UUID_RE.test(v) ? v : null;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   session: { strategy: "jwt", maxAge: SESSION_MAX_AGE, updateAge: 24 * 60 * 60 },
@@ -52,14 +58,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        token.athleteId = user.athleteId;
+        token.athleteId = validAthleteId(user.athleteId);
       }
       return token;
     },
     session({ session, token }) {
       session.user.id = String(token.id ?? "");
       session.user.role = token.role as SessionUser["role"];
-      session.user.athleteId = typeof token.athleteId === "string" ? token.athleteId : null;
+      session.user.athleteId = validAthleteId(token.athleteId);
       return session;
     }
   }

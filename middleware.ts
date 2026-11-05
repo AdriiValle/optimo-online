@@ -5,7 +5,8 @@ import type { UserRole } from "@/lib/types";
 function homeFor(role: UserRole, athleteId: string | null) {
   if (role === "admin") return "/panel";
   if (role === "nutritionist") return "/nutricion";
-  return `/a/${athleteId}`;
+  if (athleteId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(athleteId)) return `/a/${athleteId}`;
+  return "/login";
 }
 
 const NUTRITIONIST_BLOCKED = ["/a/", "/ajustes", "/api/diaries", "/api/integrations"];
@@ -32,7 +33,8 @@ export default auth((req) => {
   const session = req.auth;
   if (isPublic) {
     if (pathname.startsWith("/login") && session?.user) {
-      return NextResponse.redirect(new URL(homeFor(session.user.role, session.user.athleteId), req.url));
+      const home = homeFor(session.user.role, session.user.athleteId);
+      if (home !== "/login") return NextResponse.redirect(new URL(home, req.url));
     }
     return NextResponse.next();
   }

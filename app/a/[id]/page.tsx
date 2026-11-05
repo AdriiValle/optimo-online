@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { currentUser, rlsFrom } from "@/lib/auth";
+import { currentUser, rlsFrom, validAthleteId } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
 import { athleteHome, diaryHistory, integrationFor } from "@/lib/queries";
 import { polarConfigured } from "@/lib/integrations/config";
@@ -19,6 +19,7 @@ export default async function AthleteHome({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
+  if (!validAthleteId(id)) notFound();
   const sp = await searchParams;
   const callbackDevice = typeof sp.device === "string" ? sp.device : null;
   const callbackMsg = typeof sp.deviceMsg === "string" ? sp.deviceMsg : null;
