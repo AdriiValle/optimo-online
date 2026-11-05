@@ -8,7 +8,7 @@ import { planData } from "@/lib/plan-data";
 import { BrandHeader } from "@/app/components/brand-header";
 import { HeaderBackButton } from "@/app/components/header-back-button";
 import { LogoutButton } from "@/app/logout-button";
-import { NutAthleteNav } from "../athlete-nav";
+import { NutRailLogout } from "../nut-rail-logout";
 import { NutricionAthleteClient } from "./nutricion-athlete-client";
 
 export default async function NutricionAthletePage({ params }: { params: Promise<{ athleteId: string }> }) {
@@ -31,6 +31,7 @@ export default async function NutricionAthletePage({ params }: { params: Promise
   return (
     <>
       <BrandHeader
+        wide
         player={data.athlete.name}
         leading={<HeaderBackButton href="/nutricion" />}
         trailing={<LogoutButton />}
@@ -42,7 +43,8 @@ export default async function NutricionAthletePage({ params }: { params: Promise
           supplements={data.athlete.supplements}
           plans={data.plans}
           crests={planData.crests}
-          nav={<NutAthleteNav athletes={data.athletes} activeId={data.athlete.id} />}
+          athletes={data.athletes}
+          railFoot={<NutRailLogout />}
         />
       </main>
     </>

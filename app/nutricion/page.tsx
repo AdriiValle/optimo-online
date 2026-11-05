@@ -5,7 +5,9 @@ import { withRls } from "@/lib/rls";
 import { assignedAthletesForNutritionist } from "@/lib/queries";
 import { BrandHeader } from "@/app/components/brand-header";
 import { LogoutButton } from "@/app/logout-button";
-import { athletePhoto, NutAthleteNav, sportLine } from "./athlete-nav";
+import { NutAthleteNav } from "./athlete-nav";
+import { athletePhoto, sportLine } from "./athlete-nav-shared";
+import { NutRailLogout } from "./nut-rail-logout";
 
 export default async function NutricionPage() {
   const user = await currentUser();
@@ -16,10 +18,10 @@ export default async function NutricionPage() {
 
   return (
     <>
-      <BrandHeader meta="Nutrición" trailing={<LogoutButton />} />
+      <BrandHeader wide meta="Nutrición" trailing={<LogoutButton />} />
       <main className="page nut-page">
         <div className="nut-desktop nut-desktop-index">
-          <NutAthleteNav athletes={athletes} />
+          <NutAthleteNav athletes={athletes} footActions={<NutRailLogout />} />
           <div className="nut-ws-index">
             <section className="card">
               <h1>Deportistas</h1>

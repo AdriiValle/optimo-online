@@ -8,12 +8,16 @@ type Props = {
   meta?: string;
   leading?: ReactNode;
   trailing?: ReactNode;
+  /** Cabecera al ancho del workspace (nutricionista desktop). */
+  wide?: boolean;
 };
 
-function HeaderMarkup({ player, meta, leading, trailing }: Props) {
+function HeaderMarkup({ player, meta, leading, trailing, wide }: Props) {
+  const viewportCls = wide ? "doc-header-viewport doc-header-viewport--wide" : "doc-header-viewport";
+  const headerCls = wide ? "doc-header doc-header--wide" : "doc-header";
   return (
-    <div className="doc-header-viewport">
-      <header className="doc-header">
+    <div className={viewportCls}>
+      <header className={headerCls}>
         {leading ?? <span className="header-leading" aria-hidden="true" />}
         <div className="brand-row">
           <img className="brand-logo" src="/logo-optimo.png" width={32} height={32} alt="" />

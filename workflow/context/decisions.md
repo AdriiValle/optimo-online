@@ -50,4 +50,5 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
   Suplementos y `diet_notes` siguen; PATCH nutrition también nutricionista asignada vía `nutritionist_set_athlete_nutrition`.
 - 2026-11-05: workspace desktop nutricionista solo en `/nutricion/**` desde 1280px (sidebar, calendario MD, grid semanal, panel plato).
   Look clínico con tokens Óptimo y surface sólida; ficha jugador `/a/**` Nutrición no rediseñada. APIs meal_slots sin cambios.
-
+- 2026-11-05: layout2 nutricionista — grid 2 columnas, drawer al clicar celda; suplementos/dieta en Ajustes (rail), no columna fija.
+  Header `wide` alineado al workspace; Salir en rail desktop. Sin tocar `/a/**` ni admin `/panel`.

@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { addDays, dateKey, DOW_SHORT, formatLongDate, MONTHS_ES, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
 import { MEAL_SLOTS, type DayPlan, type MealSlot, type MealSlotKind, type SupplementEntry } from "@/lib/types";
+import type { NutritionistAthleteCard } from "@/lib/queries";
 import { PlanCalendar } from "@/app/components/plan-calendar";
 import { NutritionPane } from "@/app/a/[id]/nutrition-pane";
-
-/** Mismo corte que el workspace `.nut-desktop` en globals.css. */
-const DESKTOP_MQ = "(min-width: 1280px)";
+import { NutAthleteNav } from "../athlete-nav";
 
 type Props = {
   athleteId: string;
@@ -15,19 +15,29 @@ type Props = {
   supplements: SupplementEntry[];
   plans: DayPlan[];
   crests: Record<string, string>;
-  /** Lista de deportistas asignados (solo visible en desktop). */
-  nav: ReactNode;
+  athletes: NutritionistAthleteCard[];
+  railFoot?: ReactNode;
 };
 
-export function NutricionAthleteClient({ athleteId, dietNotes, supplements, plans, crests, nav }: Props) {
+type EditorTarget = { date: string; slot: MealSlotKind };
+
+export function NutricionAthleteClient({
+  athleteId,
+  dietNotes,
+  supplements,
+  plans,
+  crests,
+  athletes,
+  railFoot
+}: Props) {
   const byDate = useMemo(() => Object.fromEntries(plans.map((p) => [p.date, p])), [plans]);
   const today = todayKey();
   const seed = parseDateLocal(today);
   const [year, setYear] = useState(seed.getFullYear());
   const [month, setMonth] = useState(seed.getMonth());
   const [center, setCenter] = useState(today);
-  const [slot, setSlot] = useState<MealSlotKind>(MEAL_SLOTS[0].slot);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const [editor, setEditor] = useState<EditorTarget | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const weekStart = startOfWeekMonday(center);
   const weekDays = useMemo(() => {
@@ -36,25 +46,26 @@ export function NutricionAthleteClient({ athleteId, dietNotes, supplements, plan
   }, [weekStart]);
   const [meals, setMeals] = useWeekMeals(athleteId, weekDays[0], weekDays[6]);
 
-  // Desktop: ficha del plato, suplementos y dieta como bloques fijos (sin acordeón).
+  const closeEditor = useCallback(() => setEditor(null), []);
+  const closeSettings = useCallback(() => setSettingsOpen(false), []);
+
   useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    const mq = window.matchMedia(DESKTOP_MQ);
-    const openAll = () => {
-      if (mq.matches) root.querySelectorAll("details").forEach((d) => (d.open = true));
-    };
-    const keepOpen = (e: Event) => {
-      if (mq.matches && e.target instanceof HTMLDetailsElement && !e.target.open) e.target.open = true;
-    };
-    openAll();
-    mq.addEventListener("change", openAll);
-    root.addEventListener("toggle", keepOpen, true);
-    return () => {
-      mq.removeEventListener("change", openAll);
-      root.removeEventListener("toggle", keepOpen, true);
-    };
-  }, []);
+    if (!editor && !settingsOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        if (editor) closeEditor();
+        else closeSettings();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editor, settingsOpen, closeEditor, closeSettings]);
+
+  useEffect(() => {
+    if (!editor && !settingsOpen) return;
+    document.body.classList.add("nut-drawer-open");
+    return () => document.body.classList.remove("nut-drawer-open");
+  }, [editor, settingsOpen]);
 
   function selectDate(iso: string) {
     const d = parseDateLocal(iso);
@@ -70,64 +81,80 @@ export function NutricionAthleteClient({ athleteId, dietNotes, supplements, plan
     ]);
   }
 
+  function openCell(iso: string, kind: MealSlotKind) {
+    if (iso !== center) selectDate(iso);
+    setSettingsOpen(false);
+    setEditor({ date: iso, slot: kind });
+  }
+
   const plan = byDate[center];
-  const dayMeals = meals?.filter((m) => m.date === center) ?? null;
+  const editorMeal =
+    editor && meals ? (meals.find((m) => m.date === editor.date && m.slot === editor.slot) ?? null) : null;
+  const editorLabel = editor ? (MEAL_SLOTS.find((s) => s.slot === editor.slot)?.label ?? "") : "";
 
   return (
-    <div className="dash nut-desktop" ref={rootRef}>
-      {nav}
-
-      <div className="nut-ws-cal">
-        <PlanCalendar
-          byDate={byDate}
-          crests={crests}
-          year={year}
-          month={month}
-          center={center}
-          today={today}
-          onMonthChange={(y, m) => {
-            setYear(y);
-            setMonth(m);
-          }}
-          onSelect={selectDate}
-        />
-
-        <div className="day-line">
-          <strong>{formatLongDate(parseDateLocal(center))}</strong>
-          {plan?.mdTag ? <span className="day-focus-md">{plan.mdTag}</span> : null}
-          {plan?.minutes ? <span className="muted">~{plan.minutes} min</span> : null}
-        </div>
-        {plan?.matchOpponent ? (
-          <p className="muted">
-            Partido vs {plan.matchOpponent}
-            {plan.matchTime ? ` · ${plan.matchTime}` : ""}
-            {plan.matchVenue ? ` · ${plan.matchVenue === "casa" ? "en casa" : "fuera"}` : ""}
-          </p>
-        ) : plan?.title ? (
-          <p className="muted">{plan.title}</p>
-        ) : null}
-      </div>
-
-      <WeekGrid
-        days={weekDays}
-        byDate={byDate}
-        meals={meals}
-        center={center}
-        today={today}
-        slot={slot}
-        onWeek={(delta) => selectDate(dateKey(addDays(parseDateLocal(center), delta * 7)))}
-        onDay={selectDate}
-        onCell={(iso, kind) => {
-          setSlot(kind);
-          if (iso !== center) selectDate(iso);
+    <div className="dash nut-desktop">
+      <NutAthleteNav
+        athletes={athletes}
+        activeId={athleteId}
+        onOpenSettings={() => {
+          closeEditor();
+          setSettingsOpen(true);
         }}
+        footActions={railFoot}
       />
 
-      <div className="nut-ws-side">
+      <div className="nut-ws-main">
+        <div className="nut-ws-cal">
+          <PlanCalendar
+            byDate={byDate}
+            crests={crests}
+            year={year}
+            month={month}
+            center={center}
+            today={today}
+            onMonthChange={(y, m) => {
+              setYear(y);
+              setMonth(m);
+            }}
+            onSelect={selectDate}
+          />
+
+          <div className="day-line">
+            <strong>{formatLongDate(parseDateLocal(center))}</strong>
+            {plan?.mdTag ? <span className="day-focus-md">{plan.mdTag}</span> : null}
+            {plan?.minutes ? <span className="muted">~{plan.minutes} min</span> : null}
+          </div>
+          {plan?.matchOpponent ? (
+            <p className="muted">
+              Partido vs {plan.matchOpponent}
+              {plan.matchTime ? ` · ${plan.matchTime}` : ""}
+              {plan.matchVenue ? ` · ${plan.matchVenue === "casa" ? "en casa" : "fuera"}` : ""}
+            </p>
+          ) : plan?.title ? (
+            <p className="muted">{plan.title}</p>
+          ) : null}
+        </div>
+
+        <WeekGrid
+          days={weekDays}
+          byDate={byDate}
+          meals={meals}
+          center={center}
+          today={today}
+          editor={editor}
+          onWeek={(delta) => selectDate(dateKey(addDays(parseDateLocal(center), delta * 7)))}
+          onDay={selectDate}
+          onCell={openCell}
+        />
+      </div>
+
+      {/* Móvil: menú del día apilado (sin drawer obligatorio en pantallas estrechas). */}
+      <div className="nut-ws-mobile-menu">
         <section className="card dash-pane nut-wrap">
           <h2>Menú del día</h2>
-          <p className="muted nut-side-date">{formatLongDate(parseDateLocal(center))}</p>
-          {dayMeals === null ? (
+          <p className="muted">{formatLongDate(parseDateLocal(center))}</p>
+          {meals === null ? (
             <p className="muted">Cargando menú…</p>
           ) : (
             MEAL_SLOTS.map(({ slot: kind, label }) => (
@@ -137,16 +164,43 @@ export function NutricionAthleteClient({ athleteId, dietNotes, supplements, plan
                 date={center}
                 slot={kind}
                 label={label}
-                active={kind === slot}
-                meal={dayMeals.find((m) => m.slot === kind) ?? null}
+                meal={meals.find((m) => m.date === center && m.slot === kind) ?? null}
                 onChange={(next) => updateMeal(center, kind, next)}
               />
             ))
           )}
         </section>
-
         <NutritionPane athleteId={athleteId} initialDietNotes={dietNotes} initialSupplements={supplements} canEdit />
       </div>
+
+      {editor ? (
+        <NutDrawer
+          title={`${editorLabel} · ${formatLongDate(parseDateLocal(editor.date))}`}
+          onClose={closeEditor}
+        >
+          {meals === null ? (
+            <p className="muted">Cargando…</p>
+          ) : (
+            <MealSlotForm
+              athleteId={athleteId}
+              date={editor.date}
+              slot={editor.slot}
+              label={editorLabel}
+              meal={editorMeal}
+              bare
+              onChange={(next) => {
+                updateMeal(editor.date, editor.slot, next);
+              }}
+            />
+          )}
+        </NutDrawer>
+      ) : null}
+
+      {settingsOpen ? (
+        <NutDrawer title="Ajustes del deportista" onClose={closeSettings}>
+          <NutritionPane athleteId={athleteId} initialDietNotes={dietNotes} initialSupplements={supplements} canEdit />
+        </NutDrawer>
+      ) : null}
     </div>
   );
 }
@@ -182,7 +236,7 @@ function WeekGrid({
   meals,
   center,
   today,
-  slot,
+  editor,
   onWeek,
   onDay,
   onCell
@@ -192,7 +246,7 @@ function WeekGrid({
   meals: MealSlot[] | null;
   center: string;
   today: string;
-  slot: MealSlotKind;
+  editor: EditorTarget | null;
   onWeek: (delta: number) => void;
   onDay: (iso: string) => void;
   onCell: (iso: string, slot: MealSlotKind) => void;
@@ -242,13 +296,14 @@ function WeekGrid({
               const meal = meals?.find((m) => m.date === iso && m.slot === kind);
               const cls = ["nut-week-cell"];
               if (iso === center) cls.push("col-on");
-              if (iso === center && kind === slot) cls.push("on");
+              if (editor?.date === iso && editor.slot === kind) cls.push("on");
               return (
                 <button
                   key={iso}
                   type="button"
                   className={cls.join(" ")}
                   aria-label={`${label} ${iso}${meal ? `: ${meal.title}` : ""}`}
+                  aria-pressed={editor?.date === iso && editor.slot === kind}
                   onClick={() => onCell(iso, kind)}
                 >
                   {meals === null ? null : meal ? (
@@ -271,22 +326,48 @@ function WeekGrid({
   );
 }
 
+function NutDrawer({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="nut-drawer-root" role="presentation" onClick={onClose}>
+      <aside
+        className="nut-drawer card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="nut-drawer-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="nut-drawer-head">
+          <h2 id="nut-drawer-title">{title}</h2>
+          <button type="button" className="icon-btn" aria-label="Cerrar" onClick={onClose}>
+            ×
+          </button>
+        </div>
+        <div className="nut-drawer-body">{children}</div>
+      </aside>
+    </div>,
+    document.body
+  );
+}
+
 function MealSlotForm({
   athleteId,
   date,
   slot,
   label,
-  active,
   meal,
+  bare,
   onChange
 }: {
   athleteId: string;
   date: string;
   slot: MealSlotKind;
   label: string;
-  /** Slot elegido en el grid semanal: en desktop es la única ficha visible. */
-  active: boolean;
   meal: MealSlot | null;
+  bare?: boolean;
   onChange: (meal: MealSlot | null) => void;
 }) {
   const [title, setTitle] = useState(meal?.title ?? "");
@@ -357,50 +438,56 @@ function MealSlotForm({
     onChange(null);
   }
 
+  const form = (
+    <div className="nut-body meal-form">
+      {meal?.hasPhoto ? (
+        <img className="nut-menu-photo" src={`/api/meals/${meal.id}/photo?v=${encodeURIComponent(meal.updatedAt)}`} alt="" />
+      ) : null}
+      <label>
+        Plato
+        <input value={title} maxLength={200} placeholder="Ej. Arroz con pollo" onChange={(e) => setTitle(e.target.value)} />
+      </label>
+      <label>
+        Preparación
+        <textarea
+          rows={4}
+          value={preparation}
+          placeholder="Ingredientes, cantidades, cómo cocinarlo…"
+          onChange={(e) => setPreparation(e.target.value)}
+        />
+      </label>
+      <label>
+        Foto
+        <input
+          key={fileKey}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        />
+      </label>
+      <div className="nut-actions">
+        <button type="button" className="btn" disabled={busy} onClick={() => void save()}>
+          {busy ? "Guardando…" : "Guardar plato"}
+        </button>
+        {meal ? (
+          <button type="button" className="btn secondary" disabled={busy} onClick={() => void remove()}>
+            Quitar
+          </button>
+        ) : null}
+        {msg ? <p className={msg === "Guardado." ? "ok" : "error"}>{msg}</p> : null}
+      </div>
+    </div>
+  );
+
+  if (bare) return form;
+
   return (
-    <details className={active ? "nut-details meal-slot on" : "nut-details meal-slot"} open>
+    <details className="nut-details meal-slot" open>
       <summary>
         {label}
         {meal ? ` · ${meal.title}` : ""}
       </summary>
-      <div className="nut-body meal-form">
-        {meal?.hasPhoto ? (
-          <img className="nut-menu-photo" src={`/api/meals/${meal.id}/photo?v=${encodeURIComponent(meal.updatedAt)}`} alt="" />
-        ) : null}
-        <label>
-          Plato
-          <input value={title} maxLength={200} placeholder="Ej. Arroz con pollo" onChange={(e) => setTitle(e.target.value)} />
-        </label>
-        <label>
-          Preparación
-          <textarea
-            rows={4}
-            value={preparation}
-            placeholder="Ingredientes, cantidades, cómo cocinarlo…"
-            onChange={(e) => setPreparation(e.target.value)}
-          />
-        </label>
-        <label>
-          Foto
-          <input
-            key={fileKey}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-        </label>
-        <div className="nut-actions">
-          <button type="button" className="btn" disabled={busy} onClick={() => void save()}>
-            {busy ? "Guardando…" : "Guardar plato"}
-          </button>
-          {meal ? (
-            <button type="button" className="btn secondary" disabled={busy} onClick={() => void remove()}>
-              Quitar
-            </button>
-          ) : null}
-          {msg ? <p className={msg === "Guardado." ? "ok" : "error"}>{msg}</p> : null}
-        </div>
-      </div>
+      {form}
     </details>
   );
 }
