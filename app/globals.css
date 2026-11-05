@@ -1047,7 +1047,11 @@ body.nut-modal-open { overflow: hidden; }
   .nut-ws-cal > p { margin: 0; padding: 0 2px; font-size: 0.8125rem; }
 
   .nut-week { display: flex; flex-direction: column; min-height: 0; }
-  .nut-week .cal-nav { margin-bottom: 8px; flex-shrink: 0; }
+  .nut-week .cal-nav { margin-bottom: 8px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+  .nut-week .cal-nav h2 { font-size: 0.95rem; flex: 1; text-align: center; min-width: 8rem; }
+  .nut-week .cal-nav .nut-menu-import { margin-left: auto; font-size: 0.75rem; padding: 6px 10px; white-space: nowrap; }
+  .nut-import-dialog { margin-top: 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; width: 100%; flex-basis: 100%; }
+  .nut-import-dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; }
   .nut-week .cal-nav h2 { font-size: 0.95rem; }
   .nut-week-grid {
     display: grid;

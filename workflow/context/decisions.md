@@ -53,3 +53,5 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
   Look clínico con tokens Óptimo y surface sólida; ficha jugador `/a/**` Nutrición no rediseñada. APIs meal_slots sin cambios.
 - 2026-11-05: layout2 nutricionista — grid 2 columnas, drawer al clicar celda; suplementos/dieta en Ajustes (rail), no columna fija.
   Header `wide` alineado al workspace; Salir en rail desktop. Sin tocar `/a/**` ni admin `/panel`.
+- 2026-11-05: import menú Word Amanda — mammoth+cheerio en servidor; solo lunch/dinner upsert; plantillas y semanas duplicadas ignoradas.
+  PDF rechazado v1; lunes ISO manual si el doc no trae fechas. Jugador `/a/**` solo lee slots ya guardados.

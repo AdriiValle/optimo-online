@@ -10,6 +10,7 @@ import { PasswordForm } from "@/app/components/password-form";
 import { UsernameForm } from "@/app/components/username-form";
 import { NutritionPane } from "@/app/a/[id]/nutrition-pane";
 import { NutAthleteNav } from "../athlete-nav";
+import { MenuWordImportButton } from "./menu-word-import";
 
 type Props = {
   athleteId: string;
@@ -42,13 +43,14 @@ export function NutricionAthleteClient({
   const [center, setCenter] = useState(today);
   const [editor, setEditor] = useState<EditorTarget | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [mealRefresh, setMealRefresh] = useState(0);
 
   const weekStart = startOfWeekMonday(center);
   const weekDays = useMemo(() => {
     const monday = parseDateLocal(weekStart);
     return Array.from({ length: 7 }, (_, i) => dateKey(addDays(monday, i)));
   }, [weekStart]);
-  const [meals, setMeals] = useWeekMeals(athleteId, weekDays[0], weekDays[6]);
+  const [meals, setMeals] = useWeekMeals(athleteId, weekDays[0], weekDays[6], mealRefresh);
 
   const closeEditor = useCallback(() => setEditor(null), []);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
@@ -147,6 +149,8 @@ export function NutricionAthleteClient({
           center={center}
           today={today}
           editor={editor}
+          athleteId={athleteId}
+          onMenuImported={() => setMealRefresh((n) => n + 1)}
           onWeek={(delta) => selectDate(dateKey(addDays(parseDateLocal(center), delta * 7)))}
           onDay={selectDate}
           onCell={openCell}
@@ -209,7 +213,7 @@ export function NutricionAthleteClient({
   );
 }
 
-function useWeekMeals(athleteId: string, from: string, to: string) {
+function useWeekMeals(athleteId: string, from: string, to: string, refresh = 0) {
   const state = useState<MealSlot[] | null>(null);
   const setMeals = state[1];
 
@@ -225,7 +229,7 @@ function useWeekMeals(athleteId: string, from: string, to: string) {
     return () => {
       cancelled = true;
     };
-  }, [athleteId, from, to, setMeals]);
+  }, [athleteId, from, to, refresh, setMeals]);
 
   return state;
 }
@@ -241,6 +245,8 @@ function WeekGrid({
   center,
   today,
   editor,
+  athleteId,
+  onMenuImported,
   onWeek,
   onDay,
   onCell
@@ -251,6 +257,8 @@ function WeekGrid({
   center: string;
   today: string;
   editor: EditorTarget | null;
+  athleteId: string;
+  onMenuImported: () => void;
   onWeek: (delta: number) => void;
   onDay: (iso: string) => void;
   onCell: (iso: string, slot: MealSlotKind) => void;
@@ -274,6 +282,7 @@ function WeekGrid({
         <button type="button" className="icon-btn" aria-label="Semana siguiente" onClick={() => onWeek(1)}>
           ›
         </button>
+        <MenuWordImportButton athleteId={athleteId} onImported={onMenuImported} />
       </div>
       <div className="nut-week-grid">
         <div />
