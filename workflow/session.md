@@ -1,8 +1,8 @@
 # Session
 
-Escrito: 2026-11-05 13:05
+Escrito: 2026-11-05 13:20
 
-Objetivo: layout v2 nutricionista — full-bleed, rail con Ajustes, drawer al clicar celda (sin panel derecho).
+Objetivo: nutri-slots — 5 comidas, modal centro, suplementos columna derecha, Ajustes = cuenta Amanda.
 
 Rama: `dev`
 
@@ -10,17 +10,20 @@ Local: http://localhost:3001 · Prod: https://optimo-online.vercel.app · Neon: 
 
 ## Acceso
 
-- Admin: `adriivalle` / `123456789` → `/panel` (ajustes: nutricionistas + asignación)
-- Nutricionista: `amanda` / `123456789` → `/nutricion` (desktop ≥1280: rail + calendario + grid; drawer comida/ajustes)
-- Ricardo: `ricardovisus` / `123456789` → pestaña Nutrición (sin cambios)
+- Nutricionista: `amanda` / `123456789` → `/nutricion` (desktop ≥1280: rail + calendario + grid 5 filas + suplementos derecha)
+- Admin: `adriivalle` / `123456789` → `/panel`
 
 ## Hecho
 
-- v2 desktop nutricionista (grid semanal, calendario MD).
-- layout2: header `wide`, grid 2 cols, drawer slot + Ajustes (`NutritionPane`), Salir en rail desktop.
-- Briefs: `to-opus-nutri-layout2.md`, `from-opus-nutri-layout2.md`.
+- Enum `meal_slot_kind`: `morning_snack`, `afternoon_snack` (+ migrate Neon).
+- Grid: Desayuno / Media mañana / Comida / Merienda / Cena (filas snack más bajas).
+- Editor: modal centrado (`NutModal`); Ajustes: `UsernameForm` + `PasswordForm` (sin NutritionPane).
+- Panel derecho sticky: `NutritionPane` (suplementos + dieta).
+- Fix middleware: `/api/meals` ya no cae bajo bloqueo `/api/me`; nutricionista puede `/api/me/password` y `/api/me/username`.
+- Verificado localhost:3001 desktop 1440.
 
 ## Siguiente
 
 - Preview Vercel en `dev`; OK Adrián antes de merge `main`.
-- Futuro: copiar menú entre días, estado en lista pacientes.
+
+PRO-CERO: nutri-slots (implementación inline subagent, sin despachar opus/sonnet).

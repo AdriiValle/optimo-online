@@ -8,7 +8,15 @@ function homeFor(role: UserRole, athleteId: string | null) {
   return `/a/${athleteId}`;
 }
 
-const NUTRITIONIST_BLOCKED = ["/a/", "/ajustes", "/api/me", "/api/diaries", "/api/integrations"];
+const NUTRITIONIST_BLOCKED = ["/a/", "/ajustes", "/api/diaries", "/api/integrations"];
+
+function isOwnAccountApi(pathname: string) {
+  return pathname === "/api/me" || pathname.startsWith("/api/me/");
+}
+
+function nutritionistOwnAccountApi(pathname: string) {
+  return pathname.startsWith("/api/me/password") || pathname.startsWith("/api/me/username");
+}
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -44,6 +52,10 @@ export default auth((req) => {
     return NextResponse.rewrite(new URL("/__not_found", req.url));
   }
 
+  if (session.user.role === "nutritionist" && isOwnAccountApi(pathname) && !nutritionistOwnAccountApi(pathname)) {
+    return NextResponse.rewrite(new URL("/__not_found", req.url));
+  }
+
   if (pathname.startsWith("/panel") && session.user.role !== "admin") {
     return NextResponse.rewrite(new URL("/__not_found", req.url));
   }
@@ -52,7 +64,7 @@ export default auth((req) => {
     return NextResponse.rewrite(new URL("/__not_found", req.url));
   }
 
-  if (pathname.startsWith("/api/me") && session.user.role !== "athlete" && session.user.role !== "admin") {
+  if (isOwnAccountApi(pathname) && session.user.role !== "athlete" && session.user.role !== "admin" && session.user.role !== "nutritionist") {
     return NextResponse.rewrite(new URL("/__not_found", req.url));
   }
 

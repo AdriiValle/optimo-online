@@ -115,12 +115,22 @@ export type Athlete = {
   sleepRoutine: string | null;
 };
 
-export type MealSlotKind = "breakfast" | "lunch" | "dinner";
+export const MEAL_SLOT_KINDS = [
+  "breakfast",
+  "morning_snack",
+  "lunch",
+  "afternoon_snack",
+  "dinner"
+] as const;
 
-export const MEAL_SLOTS: { slot: MealSlotKind; label: string }[] = [
-  { slot: "breakfast", label: "Desayuno" },
-  { slot: "lunch", label: "Comida" },
-  { slot: "dinner", label: "Cena" }
+export type MealSlotKind = (typeof MEAL_SLOT_KINDS)[number];
+
+export const MEAL_SLOTS: { slot: MealSlotKind; label: string; tier: "main" | "snack" }[] = [
+  { slot: "breakfast", label: "Desayuno", tier: "main" },
+  { slot: "morning_snack", label: "Media mañana", tier: "snack" },
+  { slot: "lunch", label: "Comida", tier: "main" },
+  { slot: "afternoon_snack", label: "Merienda", tier: "snack" },
+  { slot: "dinner", label: "Cena", tier: "main" }
 ];
 
 /** Plato de un día y comida (tabla `meal_slots`); foto vía `/api/meals/[id]/photo`. */

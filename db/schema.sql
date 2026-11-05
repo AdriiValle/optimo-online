@@ -323,6 +323,9 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+ALTER TYPE meal_slot_kind ADD VALUE IF NOT EXISTS 'morning_snack';
+ALTER TYPE meal_slot_kind ADD VALUE IF NOT EXISTS 'afternoon_snack';
+
 CREATE TABLE IF NOT EXISTS meal_slots (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   athlete_id uuid NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,

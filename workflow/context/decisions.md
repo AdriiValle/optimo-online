@@ -37,7 +37,8 @@ Tras cada slice, 3 líneas. El worker no hereda el chat.
 - 2026-11-03: Cadena anterior Visus 3 y 16 nov: bloque Fuerza v2 (española uni 45 → zancadas caballero+mancuernas → salto cajón con carga → CEA/TRX); sin española 2 piernas.
   Gate por fecha (ANTERIOR_FUERZA_V2); resto de anteriores intactos. Knowledge: ficha zancada + apunte excéntrica a velocidades.
 
-- 2026-11-03: Cadena posterior Visus 5 y 18 nov: Fuerza = HT mancuernas bi → uni → barra 50 kg 2×8 → salidas cajón sagital/frontal + med ball; sin HT sin peso ni isos de cuña.
+- 2026-11-05: Amanda workspace — 5 slots (`morning_snack` / `afternoon_snack`), modal centrado, suplementos en columna derecha, Ajustes solo login/contraseña.
+  Enum ampliado en Neon; jugador reutiliza `MEAL_SLOTS` sin cambios de UI. Middleware: prefijo `/api/me` no debe bloquear `/api/meals`.
   Gate `POSTERIOR_FUERZA_V2`; 26-nov+ intactos. Knowledge: ficha HT mancuernas bi + apunte recorte.
 - 2026-11-04: fuente del plan = `lib/plan-data/` (JSON protocolos + TS calendario); HTML seed backup, no runtime.
   Ficha sin tabla (`SessionList`). Look glass encima de tokens Óptimo. Neon no se escribió.

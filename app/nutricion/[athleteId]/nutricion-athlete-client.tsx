@@ -6,11 +6,14 @@ import { addDays, dateKey, DOW_SHORT, formatLongDate, MONTHS_ES, parseDateLocal,
 import { MEAL_SLOTS, type DayPlan, type MealSlot, type MealSlotKind, type SupplementEntry } from "@/lib/types";
 import type { NutritionistAthleteCard } from "@/lib/queries";
 import { PlanCalendar } from "@/app/components/plan-calendar";
+import { PasswordForm } from "@/app/components/password-form";
+import { UsernameForm } from "@/app/components/username-form";
 import { NutritionPane } from "@/app/a/[id]/nutrition-pane";
 import { NutAthleteNav } from "../athlete-nav";
 
 type Props = {
   athleteId: string;
+  accountLogin: string;
   dietNotes: string | null;
   supplements: SupplementEntry[];
   plans: DayPlan[];
@@ -23,6 +26,7 @@ type EditorTarget = { date: string; slot: MealSlotKind };
 
 export function NutricionAthleteClient({
   athleteId,
+  accountLogin,
   dietNotes,
   supplements,
   plans,
@@ -63,8 +67,8 @@ export function NutricionAthleteClient({
 
   useEffect(() => {
     if (!editor && !settingsOpen) return;
-    document.body.classList.add("nut-drawer-open");
-    return () => document.body.classList.remove("nut-drawer-open");
+    document.body.classList.add("nut-modal-open");
+    return () => document.body.classList.remove("nut-modal-open");
   }, [editor, settingsOpen]);
 
   function selectDate(iso: string) {
@@ -149,6 +153,15 @@ export function NutricionAthleteClient({
         />
       </div>
 
+      <aside className="nut-ws-side card dash-pane" aria-label="Suplementación">
+        <NutritionPane
+          athleteId={athleteId}
+          initialDietNotes={dietNotes}
+          initialSupplements={supplements}
+          canEdit
+        />
+      </aside>
+
       {/* Móvil: menú del día apilado (sin drawer obligatorio en pantallas estrechas). */}
       <div className="nut-ws-mobile-menu">
         <section className="card dash-pane nut-wrap">
@@ -174,10 +187,7 @@ export function NutricionAthleteClient({
       </div>
 
       {editor ? (
-        <NutDrawer
-          title={`${editorLabel} · ${formatLongDate(parseDateLocal(editor.date))}`}
-          onClose={closeEditor}
-        >
+        <NutModal title={`${editorLabel} · ${formatLongDate(parseDateLocal(editor.date))}`} onClose={closeEditor}>
           {meals === null ? (
             <p className="muted">Cargando…</p>
           ) : (
@@ -193,13 +203,16 @@ export function NutricionAthleteClient({
               }}
             />
           )}
-        </NutDrawer>
+        </NutModal>
       ) : null}
 
       {settingsOpen ? (
-        <NutDrawer title="Ajustes del deportista" onClose={closeSettings}>
-          <NutritionPane athleteId={athleteId} initialDietNotes={dietNotes} initialSupplements={supplements} canEdit />
-        </NutDrawer>
+        <NutModal title="Tu cuenta" onClose={closeSettings}>
+          <section className="nut-account-settings">
+            <UsernameForm initialUsername={accountLogin} />
+            <PasswordForm heading="Contraseña" submitLabel="Cambiar contraseña" />
+          </section>
+        </NutModal>
       ) : null}
     </div>
   );
@@ -289,12 +302,13 @@ function WeekGrid({
             </button>
           );
         })}
-        {MEAL_SLOTS.map(({ slot: kind, label }) => (
-          <div key={kind} className="nut-week-row">
-            <div className="nut-week-slot">{label}</div>
+        {MEAL_SLOTS.map(({ slot: kind, label, tier }) => (
+          <div key={kind} className={tier === "snack" ? "nut-week-row nut-week-row--snack" : "nut-week-row"}>
+            <div className={tier === "snack" ? "nut-week-slot nut-week-slot--snack" : "nut-week-slot"}>{label}</div>
             {days.map((iso) => {
               const meal = meals?.find((m) => m.date === iso && m.slot === kind);
               const cls = ["nut-week-cell"];
+              if (tier === "snack") cls.push("nut-week-cell--snack");
               if (iso === center) cls.push("col-on");
               if (editor?.date === iso && editor.slot === kind) cls.push("on");
               return (
@@ -326,28 +340,28 @@ function WeekGrid({
   );
 }
 
-function NutDrawer({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+function NutModal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
   return createPortal(
-    <div className="nut-drawer-root" role="presentation" onClick={onClose}>
-      <aside
-        className="nut-drawer card"
+    <div className="nut-modal-root" role="presentation" onClick={onClose}>
+      <div
+        className="nut-modal card"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="nut-drawer-title"
+        aria-labelledby="nut-modal-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="nut-drawer-head">
-          <h2 id="nut-drawer-title">{title}</h2>
+        <div className="nut-modal-head">
+          <h2 id="nut-modal-title">{title}</h2>
           <button type="button" className="icon-btn" aria-label="Cerrar" onClick={onClose}>
             ×
           </button>
         </div>
-        <div className="nut-drawer-body">{children}</div>
-      </aside>
+        <div className="nut-modal-body">{children}</div>
+      </div>
     </div>,
     document.body
   );

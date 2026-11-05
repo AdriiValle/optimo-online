@@ -38,6 +38,7 @@ export default async function NutricionAthletePage({ params }: { params: Promise
       />
       <main className="page nut-page">
         <NutricionAthleteClient
+          accountLogin={user.email}
           athleteId={data.athlete.id}
           dietNotes={data.athlete.dietNotes}
           supplements={data.athlete.supplements}

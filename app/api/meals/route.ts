@@ -5,6 +5,7 @@ import { withRls } from "@/lib/rls";
 import { canSeeAthleteNutrition } from "@/lib/access";
 import { apiError, notFound, unauthenticated } from "@/lib/errors";
 import { mealsForAthleteRange, upsertMealSlot } from "@/lib/queries";
+import { MEAL_SLOT_KINDS } from "@/lib/types";
 
 const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
@@ -17,7 +18,7 @@ const QuerySchema = z.object({
 const PutSchema = z.object({
   athleteId: z.string().uuid(),
   date: IsoDate,
-  slot: z.enum(["breakfast", "lunch", "dinner"]),
+  slot: z.enum(MEAL_SLOT_KINDS),
   title: z.string().trim().min(1).max(200),
   preparation: z.string().max(8000).nullable().optional()
 });
