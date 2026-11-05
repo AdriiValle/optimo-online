@@ -12,6 +12,7 @@ Formato: `YYYY-MM-DD HH:MM | repo | tarea | arranque | preguntas | repitió | pu
 
 ## Registro
 
+2026-11-05 22:52 | Ricardo Visus | look coherencia Óptimo+Apple | más lento | 1 | sí | no | no
 2026-11-05 11:36 | Ricardo Visus | semana parón + anterior 12 nov | más rápido | 0 | no | no | no
 2026-11-04 11:45 | Ricardo Visus | plan-data + session-list + look | más rápido | 0 | no | no | no
 

@@ -1,0 +1,8 @@
+- Hecho: sí (ya estaba en `c6563ea docs(look): design-system Óptimo + tacto Apple, paleta intacta`; esta pasada solo verifica y cierra el brief, sin commit nuevo)
+- Qué cambió (rutas):
+  - `workflow/context/design-system.md` — nota de una pantalla (45 líneas): tokens del `:root` real (marca + `--glass*` + `--header-*` + tacto), press / glass / sheet / foco / objetivos táctiles / tipo, reduced-motion, reduced-transparency, contrast more, layout, prohibidos (regla 5 + otra marca, `scroll-world`, React Bits).
+  - `workflow/handshake.md` (UTF-16) — línea 32: «Look & feel: Óptimo + apple-design (press, glass, sheets, reduced-motion). Paleta intacta. Patrón para el resto de apps Óptimo: `workflow/context/design-system.md`.»
+  - Verificado: los tokens de la nota coinciden 1:1 con `app/globals.css` `:root` actual (líneas 3–37, ya incluye los añadidos de Oleada 2 en `0d8b00d`). El commit `c6563ea` no tocó `app/`.
+- Duda:
+- Recomendación:
+- Bloquea a Adrián: no

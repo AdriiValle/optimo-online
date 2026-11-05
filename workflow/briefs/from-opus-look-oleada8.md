@@ -1,0 +1,7 @@
+- Hecho: parcial (decisión registrada; recorrido pendiente)
+- Qué cambió (rutas):
+  - `workflow/context/decisions.md` — entrada 2026-11-05: look = Óptimo + Apple; no Design.md ajeno; `workflow/context/design-system.md` = patrón de familia para otras apps Óptimo.
+  - Commit `c5380c3` en `dev` — `docs(look): decisión de look de familia Óptimo` (solo decisions.md). Sin tocar `app/`, `main` ni prod.
+- Duda: :3001 no responde (curl → 000), así que no lo levanté. Recorrido login → panel → Visus (día, análisis, nutrición, ajustes) → Amanda `/nutricion` **pendiente**.
+- Recomendación: cuando el dev server esté arriba en :3001, que el orquestador pase un worker corto de solo recorrido (sin CSS salvo bug de una línea de esta serie) y lo anote aquí o en la bitácora.
+- Bloquea a Adrián: no.

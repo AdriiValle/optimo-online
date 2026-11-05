@@ -1,21 +1,22 @@
 # Session
 
-Escrito: 2026-11-05 14:05
+Escrito: 2026-11-05 22:52
 
-Objetivo: import Word (.docx) → `meal_slots` lunch/dinner en workspace Amanda.
+Objetivo: look Óptimo + apple-design. Paleta intacta.
 
-Rama: `dev`
+Rama: `dev` (cierre `c5380c3`)
 
-Local: http://localhost:3001 · Prod: https://optimo-online.vercel.app · Neon: noisy-meadow-03777185
+Local: http://localhost:3001 · Prod: https://optimo-online.vercel.app y https://app.optimosport.com
+
+## Acceso Amanda
+
+- `amanda` / `123456789` → `/nutricion`
 
 ## Hecho
 
-- Parser tablas Word (mammoth+cheerio): bloques, plantillas 3–4, dedupe semanas, ALMUERZO/CENA → lunch/dinner.
-- `POST /api/nutrition/menu-import` (RLS nutricionista; PDF rechazado).
-- Botón «Subir menú Word (.docx)» en grid semanal + lunes de inicio.
-- Probado `EJEMPLO DE MENU.docx` → Visus (14 slots, semana anclada al lunes ISO elegido).
+- Oleadas 1–8 en `dev` (`c6563ea` … `c5380c3`)
+- Recorrido local: casa Visus (entreno, registro, ajustes). `/panel` con sesión de atleta → 404 (esperado). Amanda y 375 no pasados.
 
 ## Siguiente
 
-- Preview Vercel `dev`; OK Adrián antes de merge `main`.
-
+- Adrián mira :3001. OK → main. No prod hasta entonces.
