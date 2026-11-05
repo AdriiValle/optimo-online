@@ -413,6 +413,7 @@ export const STRENGTH_FROM = "2026-10-19";
 
 export const ANTERIOR_FUERZA_V2: string[] = [
   "2026-11-03",
+  "2026-11-12",
   "2026-11-16"
 ];
 
@@ -420,3 +421,16 @@ export const POSTERIOR_FUERZA_V2: string[] = [
   "2026-11-05",
   "2026-11-18"
 ];
+
+export type DayOverrideKind = "libre" | "pendiente" | "club" | "recovery-club" | "amistoso" | "anterior-v2";
+
+export const DAY_OVERRIDES: Record<string, { mdTag: string | null; kind: DayOverrideKind; note: string; venue?: "casa" | "fuera" }> = {
+  "2026-11-08": { mdTag: "MD+1", kind: "recovery-club", note: "Recovery con el club. Sin trabajo Óptimo." },
+  "2026-11-09": { mdTag: null, kind: "libre", note: "Día libre." },
+  "2026-11-10": { mdTag: null, kind: "libre", note: "Día libre." },
+  "2026-11-11": { mdTag: null, kind: "pendiente", note: "Pendiente según resultado del sábado. Sin trabajo." },
+  "2026-11-12": { mdTag: "MD-4", kind: "anterior-v2", note: "Primer gym si ganan." },
+  "2026-11-13": { mdTag: null, kind: "club", note: "Entrenamiento con el club. Sin trabajo Óptimo." },
+  "2026-11-14": { mdTag: "MD", kind: "amistoso", note: "Partido amistoso en casa.", venue: "casa" },
+  "2026-11-15": { mdTag: "MD+1", kind: "recovery-club", note: "Recovery con el club. Sin trabajo Óptimo." }
+};

@@ -1,5 +1,6 @@
 import { addDays, dateKey, daysBetween, parseDateLocal } from "@/lib/dates";
 import type { ParsedPlan } from "@/lib/plan-data";
+import { DAY_OVERRIDES } from "@/lib/plan-data/calendar";
 import type { DayPlan, DayPlanBlock, HtmlMatch, MatchVenue } from "@/lib/types";
 
 function sortedMatches(matches: HtmlMatch[]) {
@@ -283,6 +284,46 @@ function buildBlocks(
   return blocks;
 }
 
+function buildOverridePlan(
+  parsed: ParsedPlan,
+  iso: string,
+  o: (typeof DAY_OVERRIDES)[string],
+  strengthMap: Record<string, "anterior" | "posterior">,
+  fieldMap: Record<string, true>
+): DayPlan {
+  const empty = { matchOpponent: null, matchVenue: null, matchTime: null, matchCompetition: null };
+  if (o.kind === "anterior-v2") {
+    const sm = { ...strengthMap, [iso]: "anterior" as const };
+    const fm = { ...fieldMap };
+    delete fm[iso];
+    return {
+      date: iso,
+      mdTag: o.mdTag,
+      title: o.mdTag,
+      minutes: sessionDurationMinutes(o.mdTag, iso, parsed, sm, fm),
+      blocks: [...buildBlocks(parsed, iso, o.mdTag, undefined, sm, fm), { kind: "note", text: o.note }],
+      ...empty
+    };
+  }
+  const titles: Record<string, string> = {
+    libre: "Libre",
+    pendiente: "Pendiente",
+    club: "Club",
+    "recovery-club": "Recovery club",
+    amistoso: "Amistoso"
+  };
+  return {
+    date: iso,
+    mdTag: o.mdTag,
+    title: titles[o.kind] ?? o.kind,
+    minutes: null,
+    blocks: [{ kind: "note", text: o.note }],
+    ...(o.kind === "amistoso"
+      ? { matchOpponent: "Amistoso", matchVenue: o.venue ?? null, matchTime: null, matchCompetition: "Amistoso" }
+      : empty)
+  };
+}
+
 export function buildDayPlans(parsed: ParsedPlan): DayPlan[] {
   const mdMap = buildMdMap(parsed.matches);
   const strengthMap = buildStrengthDayMap(parsed.matches, mdMap, parsed.strengthFrom);
@@ -292,9 +333,14 @@ export function buildDayPlans(parsed: ParsedPlan): DayPlan[] {
     if (!byDate[m.date]) byDate[m.date] = m;
   }
 
-  const dates = new Set([...Object.keys(mdMap), ...Object.keys(byDate)]);
+  const dates = new Set([...Object.keys(mdMap), ...Object.keys(byDate), ...Object.keys(DAY_OVERRIDES)]);
   const plans: DayPlan[] = [];
   for (const iso of [...dates].sort()) {
+    const override = DAY_OVERRIDES[iso];
+    if (override) {
+      plans.push(buildOverridePlan(parsed, iso, override, strengthMap, fieldMap));
+      continue;
+    }
     const md = mdMap[iso] ?? null;
     const match = byDate[iso];
     const minutes = sessionDurationMinutes(md, iso, parsed, strengthMap, fieldMap);
