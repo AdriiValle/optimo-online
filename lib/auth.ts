@@ -47,7 +47,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return {
           id: account.id,
           email: account.email,
-          role: account.role,
+          role: String(account.role) as SessionUser["role"],
           athleteId: athlete?.id ?? null
         };
       }
@@ -57,8 +57,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.role = String(user.role) as SessionUser["role"];
         token.athleteId = validAthleteId(user.athleteId);
+      } else {
+        token.athleteId = validAthleteId(token.athleteId);
       }
       return token;
     },
