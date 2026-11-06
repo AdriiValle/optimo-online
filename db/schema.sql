@@ -410,3 +410,98 @@ BEGIN
   RETURN FOUND;
 END;
 $$;
+
+-- Macros del menú (additive). Valores de foods por 100 g de porción comestible; null = desconocido, no 0.
+CREATE TABLE IF NOT EXISTS foods (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name_es text NOT NULL UNIQUE,
+  aliases text[] NOT NULL DEFAULT '{}',
+  source text NOT NULL CHECK (source IN ('fdc', 'bedca', 'manual')),
+  source_ref text,
+  kcal numeric,
+  protein_g numeric,
+  carbs_g numeric,
+  fat_g numeric,
+  fiber_g numeric,
+  sodium_mg numeric,
+  iron_mg numeric,
+  calcium_mg numeric,
+  vit_d_ug numeric,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS meal_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  meal_slot_id uuid NOT NULL REFERENCES meal_slots(id) ON DELETE CASCADE,
+  food_id uuid REFERENCES foods(id),
+  raw_text text NOT NULL,
+  role text NOT NULL CHECK (role IN ('veg', 'protein', 'carb', 'fat', 'other')),
+  grams numeric CHECK (grams >= 0),
+  origin text NOT NULL CHECK (origin IN ('rule', 'manual', 'llm')),
+  confirmed boolean NOT NULL DEFAULT false,
+  position integer NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS meal_items_slot_idx ON meal_items (meal_slot_id, position);
+
+CREATE TABLE IF NOT EXISTS portion_templates (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  athlete_id uuid REFERENCES athletes(id) ON DELETE CASCADE,
+  day_type text NOT NULL CHECK (day_type IN ('rest', 'training', 'match')),
+  slot meal_slot_kind NOT NULL,
+  role text NOT NULL CHECK (role IN ('veg', 'protein', 'carb', 'fat', 'other')),
+  grams numeric NOT NULL CHECK (grams >= 0),
+  UNIQUE NULLS NOT DISTINCT (athlete_id, day_type, slot, role)
+);
+
+ALTER TABLE meal_slots ADD COLUMN IF NOT EXISTS items_text_hash text;
+
+ALTER TABLE foods ENABLE ROW LEVEL SECURITY;
+ALTER TABLE foods FORCE ROW LEVEL SECURITY;
+ALTER TABLE meal_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meal_items FORCE ROW LEVEL SECURITY;
+ALTER TABLE portion_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE portion_templates FORCE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS foods_select ON foods;
+CREATE POLICY foods_select ON foods FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS foods_write ON foods;
+CREATE POLICY foods_write ON foods FOR ALL
+  USING (app_is_admin() OR app_is_nutritionist())
+  WITH CHECK (app_is_admin() OR app_is_nutritionist());
+
+DROP POLICY IF EXISTS meal_items_select ON meal_items;
+CREATE POLICY meal_items_select ON meal_items FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM meal_slots ms
+    WHERE ms.id = meal_items.meal_slot_id
+      AND (app_is_admin() OR ms.athlete_id = app_athlete_id() OR app_nutritionist_assigned(ms.athlete_id))
+  ));
+
+DROP POLICY IF EXISTS meal_items_write ON meal_items;
+CREATE POLICY meal_items_write ON meal_items FOR ALL
+  USING (EXISTS (
+    SELECT 1 FROM meal_slots ms
+    WHERE ms.id = meal_items.meal_slot_id
+      AND (app_is_admin() OR app_nutritionist_assigned(ms.athlete_id))
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM meal_slots ms
+    WHERE ms.id = meal_items.meal_slot_id
+      AND (app_is_admin() OR app_nutritionist_assigned(ms.athlete_id))
+  ));
+
+DROP POLICY IF EXISTS portion_templates_select ON portion_templates;
+CREATE POLICY portion_templates_select ON portion_templates FOR SELECT
+  USING (
+    app_is_admin()
+    OR athlete_id = app_athlete_id()
+    OR (app_is_nutritionist() AND (athlete_id IS NULL OR app_nutritionist_assigned(athlete_id)))
+  );
+
+DROP POLICY IF EXISTS portion_templates_write ON portion_templates;
+CREATE POLICY portion_templates_write ON portion_templates FOR ALL
+  USING (app_is_admin() OR (app_is_nutritionist() AND (athlete_id IS NULL OR app_nutritionist_assigned(athlete_id))))
+  WITH CHECK (app_is_admin() OR (app_is_nutritionist() AND (athlete_id IS NULL OR app_nutritionist_assigned(athlete_id))));
