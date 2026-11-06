@@ -1216,28 +1216,64 @@ body.nut-modal-open { overflow: hidden; }
   .nut-view-btn:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
   .nut-view-btn:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
   .nut-view-btn.on { background: var(--surface); font-weight: 600; box-shadow: var(--shadow-sm); }
-  .nut-month-list { display: flex; flex-direction: column; gap: 2px; max-height: 420px; overflow-y: auto; overscroll-behavior: contain; font-size: 0.8125rem; }
-  .nut-month-row {
+  /* Día: lista de franjas (izq.) + resumen del día (dcha.). */
+  .nut-day-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    gap: 20px;
+    align-items: start;
+  }
+  .nut-day-list { display: flex; flex-direction: column; gap: 4px; font-size: 0.8125rem; }
+  .nut-day-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; }
+  .nut-day-row .nut-week-cell { min-height: 56px; padding: 6px 10px; }
+  .nut-day-row .nut-week-cell img { width: 44px; height: 44px; }
+  .nut-day-row--snack .nut-week-cell { min-height: 40px; }
+  .nut-day-row--snack .nut-week-cell img { width: 32px; height: 32px; }
+  .nut-dash.nut-dash--side { margin-top: 0; padding: 0 0 0 20px; border-top: 0; border-left: 1px solid var(--line); }
+  .nut-dash--side .nut-dash-main { gap: 16px 20px; }
+  .nut-dash--side .nut-dash-micros { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 12px; }
+  /* Mes: calendario a ancho de zona; un punto por franja (relleno = con plato). */
+  .nut-month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; font-size: 0.8125rem; }
+  .nut-month-dow {
+    padding: 0 0 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--secondary);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .nut-month-day {
     display: flex;
-    gap: 12px;
-    align-items: center;
-    min-height: 36px;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+    min-height: 64px;
+    padding: 6px 8px 8px;
     font: inherit;
     color: inherit;
     text-align: left;
     cursor: pointer;
     border: 0;
-    background: transparent;
-    padding: 6px 10px;
     border-radius: var(--radius-sm);
-    transition: transform var(--dur) var(--ease), background var(--dur) ease;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur) var(--ease), background var(--dur) ease, box-shadow var(--dur) ease;
   }
-  .nut-month-row:hover { background: var(--bg); }
-  .nut-month-row:active { transform: scale(var(--press-scale-lg)); transition-duration: var(--dur-press); }
-  .nut-month-row:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
-  .nut-month-row strong { flex: 0 0 64px; font-weight: 600; text-transform: capitalize; font-variant-numeric: tabular-nums; }
-  .nut-month-row .muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .nut-month-row.on { background: var(--fill-secondary); }
+  .nut-month-day:hover { box-shadow: inset 0 0 0 1px var(--secondary); }
+  .nut-month-day:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+  .nut-month-day:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  .nut-month-day.empty { background: var(--bg); box-shadow: none; }
+  .nut-month-day.empty:hover { background: var(--fill-secondary); }
+  .nut-month-day.on, .nut-month-day.on:hover { box-shadow: inset 0 0 0 1.5px var(--text); }
+  .nut-month-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .nut-month-top .nut-dnum { margin-left: -4px; }
+  .nut-month-top .md-tag { font-size: 0.625rem; font-weight: 600; color: var(--secondary); }
+  .nut-month-dots { display: flex; gap: 3px; }
+  .nut-month-dots i { width: 6px; height: 6px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--secondary); opacity: 0.5; }
+  .nut-month-dots i.on { background: var(--text); box-shadow: none; opacity: 1; }
   /* Hoy: número en cápsula oscura (mismo gesto que Calendario de Apple, sin color nuevo). */
   .nut-dnum {
     display: inline-flex;
@@ -1248,7 +1284,7 @@ body.nut-modal-open { overflow: hidden; }
     padding: 0 4px;
     border-radius: 999px;
   }
-  .nut-month-row.today .nut-dnum, .nut-week-day.today .nut-dnum { background: var(--text); color: var(--surface); }
+  .nut-month-day.today .nut-dnum, .nut-week-day.today .nut-dnum { background: var(--text); color: var(--surface); }
   .nut-week-day, .nut-week-cell {
     font: inherit;
     color: inherit;
