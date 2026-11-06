@@ -119,11 +119,6 @@ export function NutricionAthleteClient({
             onSelect={selectDate}
           />
 
-          <div className="day-line">
-            <strong>{formatLongDate(parseDateLocal(center))}</strong>
-            {plan?.mdTag ? <span className="day-focus-md">{plan.mdTag}</span> : null}
-            {plan?.minutes ? <span className="muted">~{plan.minutes} min</span> : null}
-          </div>
           {plan?.matchOpponent ? (
             <p className="muted">
               Partido vs {plan.matchOpponent}

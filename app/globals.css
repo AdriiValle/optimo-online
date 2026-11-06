@@ -1102,7 +1102,6 @@ body.nut-modal-open { overflow: hidden; }
     border-bottom: 1px solid var(--line);
     background: var(--surface);
   }
-  .nut-ws-list-above .day-line { padding-top: 4px; font-size: 0.8125rem; }
   .nut-ws-list-above > p { margin: 0; padding: 0 2px; font-size: 0.75rem; }
 
   .nut-ws-list h2 {
