@@ -5,10 +5,8 @@ import { withRls } from "@/lib/rls";
 import { canSeeAthleteNutrition } from "@/lib/access";
 import { assignedAthletesForNutritionist, athleteById, calendarPlansForAthlete } from "@/lib/queries";
 import { planData } from "@/lib/plan-data";
-import { BrandHeader } from "@/app/components/brand-header";
 import { HeaderBackButton } from "@/app/components/header-back-button";
 import { LogoutButton } from "@/app/logout-button";
-import { NutRailLogout } from "../nut-rail-logout";
 import { NutricionAthleteClient } from "./nutricion-athlete-client";
 
 export default async function NutricionAthletePage({ params }: { params: Promise<{ athleteId: string }> }) {
@@ -30,12 +28,6 @@ export default async function NutricionAthletePage({ params }: { params: Promise
 
   return (
     <>
-      <BrandHeader
-        wide
-        player={data.athlete.name}
-        leading={<HeaderBackButton href="/nutricion" />}
-        trailing={<LogoutButton />}
-      />
       <main className="page nut-page">
         <NutricionAthleteClient
           accountLogin={user.email}
@@ -45,7 +37,9 @@ export default async function NutricionAthletePage({ params }: { params: Promise
           plans={data.plans}
           crests={planData.crests}
           athletes={data.athletes}
-          railFoot={<NutRailLogout />}
+          playerName={data.athlete.name}
+          headerLeading={<HeaderBackButton href="/nutricion" />}
+          headerLogout={<LogoutButton inline />}
         />
       </main>
     </>

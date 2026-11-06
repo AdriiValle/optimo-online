@@ -8,15 +8,15 @@ import { athletePhoto, sportLine } from "./athlete-nav-shared";
 type Props = {
   athletes: NutritionistAthleteCard[];
   activeId?: string;
-  onOpenSettings?: () => void;
-  /** Salir u otras acciones fijas al pie del rail (desktop). */
-  footActions?: ReactNode;
+  /** Bloque sobre la lista (calendario), solo desktop. */
+  above?: ReactNode;
 };
 
 /** Lista persistente de deportistas asignados (columna izquierda del workspace desktop ≥1280px). */
-export function NutAthleteNav({ athletes, activeId, onOpenSettings, footActions }: Props) {
+export function NutAthleteNav({ athletes, activeId, above }: Props) {
   return (
     <nav className="nut-ws-list" aria-label="Deportistas asignados">
+      {above ? <div className="nut-ws-list-above">{above}</div> : null}
       <div className="nut-ws-list-body">
         <h2>Deportistas</h2>
         {athletes.length === 0 ? (
@@ -41,16 +41,6 @@ export function NutAthleteNav({ athletes, activeId, onOpenSettings, footActions 
           </ul>
         )}
       </div>
-      {(onOpenSettings || footActions) && (
-        <div className="nut-ws-list-foot">
-          {onOpenSettings ? (
-            <button type="button" className="nut-rail-btn" onClick={onOpenSettings}>
-              Ajustes
-            </button>
-          ) : null}
-          {footActions}
-        </div>
-      )}
     </nav>
   );
 }

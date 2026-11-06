@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { addDays, dateKey, DOW_SHORT, formatLongDate, MONTHS_ES, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
 import { MEAL_SLOTS, type DayPlan, type MealSlot, type MealSlotKind, type SupplementEntry } from "@/lib/types";
 import type { NutritionistAthleteCard } from "@/lib/queries";
+import { BrandHeader } from "@/app/components/brand-header";
 import { PlanCalendar } from "@/app/components/plan-calendar";
 import { PasswordForm } from "@/app/components/password-form";
 import { UsernameForm } from "@/app/components/username-form";
@@ -20,7 +21,9 @@ type Props = {
   plans: DayPlan[];
   crests: Record<string, string>;
   athletes: NutritionistAthleteCard[];
-  railFoot?: ReactNode;
+  playerName: string;
+  headerLeading: ReactNode;
+  headerLogout: ReactNode;
 };
 
 type EditorTarget = { date: string; slot: MealSlotKind };
@@ -33,7 +36,9 @@ export function NutricionAthleteClient({
   plans,
   crests,
   athletes,
-  railFoot
+  playerName,
+  headerLeading,
+  headerLogout
 }: Props) {
   const byDate = useMemo(() => Object.fromEntries(plans.map((p) => [p.date, p])), [plans]);
   const today = todayKey();
@@ -98,20 +103,8 @@ export function NutricionAthleteClient({
     editor && meals ? (meals.find((m) => m.date === editor.date && m.slot === editor.slot) ?? null) : null;
   const editorLabel = editor ? (MEAL_SLOTS.find((s) => s.slot === editor.slot)?.label ?? "") : "";
 
-  return (
-    <div className="dash nut-desktop">
-      <NutAthleteNav
-        athletes={athletes}
-        activeId={athleteId}
-        onOpenSettings={() => {
-          closeEditor();
-          setSettingsOpen(true);
-        }}
-        footActions={railFoot}
-      />
-
-      <div className="nut-ws-main">
-        <div className="nut-ws-cal">
+  const calBlock = (
+    <>
           <PlanCalendar
             byDate={byDate}
             crests={crests}
@@ -140,7 +133,43 @@ export function NutricionAthleteClient({
           ) : plan?.title ? (
             <p className="muted">{plan.title}</p>
           ) : null}
-        </div>
+    </>
+  );
+
+  return (
+    <div className="dash nut-desktop">
+      <BrandHeader
+        wide
+        player={playerName}
+        leading={headerLeading}
+        trailing={
+          <div className="top-actions">
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Ajustes"
+              onClick={() => {
+                closeEditor();
+                setSettingsOpen(true);
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+              </svg>
+            </button>
+            {headerLogout}
+          </div>
+        }
+      />
+      <NutAthleteNav
+        athletes={athletes}
+        activeId={athleteId}
+        above={calBlock}
+      />
+
+      <div className="nut-ws-main">
+        <div className="nut-ws-cal">{calBlock}</div>
 
         <WeekGrid
           days={weekDays}
