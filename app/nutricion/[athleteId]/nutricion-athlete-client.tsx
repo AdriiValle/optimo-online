@@ -365,7 +365,55 @@ function WeekGrid({
           </div>
         ))}
       </div>
+      <WeekPanel days={days} meals={meals} />
     </section>
+  );
+}
+
+function Ring({ value, total, label }: { value: number; total: number; label: string }) {
+  const r = 26;
+  const c = 2 * Math.PI * r;
+  const pct = total > 0 ? value / total : 0;
+  return (
+    <div className="nut-ring">
+      <svg width="72" height="72" viewBox="0 0 64 64" role="img" aria-label={`${label}: ${value} de ${total}`}>
+        <circle cx="32" cy="32" r={r} fill="none" stroke="var(--fill-secondary)" strokeWidth="7" />
+        <circle
+          cx="32"
+          cy="32"
+          r={r}
+          fill="none"
+          stroke="var(--text)"
+          strokeWidth="7"
+          strokeLinecap="round"
+          strokeDasharray={`${pct * c} ${c}`}
+          transform="rotate(-90 32 32)"
+        />
+        <text x="32" y="36" textAnchor="middle" fontSize="13" fontWeight="600" fill="currentColor">
+          {value}/{total}
+        </text>
+      </svg>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function WeekPanel({ days, meals }: { days: string[]; meals: MealSlot[] | null }) {
+  if (meals === null) return null;
+  const inWeek = meals.filter((m) => days.includes(m.date));
+  const mainKinds = MEAL_SLOTS.filter((s) => s.tier !== "snack").map((s) => s.slot);
+  const snackKinds = MEAL_SLOTS.filter((s) => s.tier === "snack").map((s) => s.slot);
+  const count = (kinds: MealSlotKind[]) => inWeek.filter((m) => kinds.includes(m.slot)).length;
+  const daysWithMenu = days.filter((d) => inWeek.some((m) => m.date === d)).length;
+  return (
+    <div className="nut-week-panel">
+      <div className="nut-rings">
+        <Ring value={daysWithMenu} total={7} label="Días con menú" />
+        <Ring value={count(mainKinds)} total={mainKinds.length * 7} label="Comidas principales" />
+        <Ring value={count(snackKinds)} total={snackKinds.length * 7} label="Snacks" />
+      </div>
+      <p className="muted">Macros y micronutrientes semanales: pendientes, los platos aún no guardan cantidades.</p>
+    </div>
   );
 }
 
