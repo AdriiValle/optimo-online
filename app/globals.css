@@ -1151,6 +1151,15 @@ body.nut-modal-open { overflow: hidden; }
     font-size: 0.78rem;
   }
   .nut-week-row { display: contents; }
+  .nut-view-switch { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius-sm); background: var(--fill-secondary); }
+  .nut-view-btn { font: inherit; font-size: 0.75rem; color: inherit; cursor: pointer; border: 0; background: transparent; padding: 4px 10px; border-radius: var(--radius-sm); }
+  .nut-view-btn.on { background: var(--bg, #fff); font-weight: 600; }
+  .nut-month-list { display: flex; flex-direction: column; gap: 2px; max-height: 360px; overflow-y: auto; font-size: 0.78rem; }
+  .nut-month-row { display: flex; gap: 10px; align-items: baseline; font: inherit; color: inherit; text-align: left; cursor: pointer; border: 0; background: transparent; padding: 4px 8px; border-radius: var(--radius-sm); }
+  .nut-month-row strong { flex: 0 0 56px; text-transform: capitalize; font-variant-numeric: tabular-nums; }
+  .nut-month-row .muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nut-month-row.on { background: var(--fill-secondary); }
+  .nut-month-row.today strong { text-decoration: underline; text-underline-offset: 3px; }
   .nut-week-day, .nut-week-cell {
     font: inherit;
     color: inherit;

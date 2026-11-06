@@ -26,6 +26,8 @@ type Props = {
   headerLogout: ReactNode;
 };
 
+type NutView = "day" | "week" | "month";
+
 type EditorTarget = { date: string; slot: MealSlotKind };
 
 export function NutricionAthleteClient({
@@ -50,12 +52,20 @@ export function NutricionAthleteClient({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mealRefresh, setMealRefresh] = useState(0);
 
+  const [view, setView] = useState<NutView>("week");
+
   const weekStart = startOfWeekMonday(center);
-  const weekDays = useMemo(() => {
+  const viewDays = useMemo(() => {
+    if (view === "day") return [center];
+    if (view === "month") {
+      const c = parseDateLocal(center);
+      const n = new Date(c.getFullYear(), c.getMonth() + 1, 0).getDate();
+      return Array.from({ length: n }, (_, i) => dateKey(new Date(c.getFullYear(), c.getMonth(), i + 1)));
+    }
     const monday = parseDateLocal(weekStart);
     return Array.from({ length: 7 }, (_, i) => dateKey(addDays(monday, i)));
-  }, [weekStart]);
-  const [meals, setMeals] = useWeekMeals(athleteId, weekDays[0], weekDays[6], mealRefresh);
+  }, [view, center, weekStart]);
+  const [meals, setMeals] = useWeekMeals(athleteId, viewDays[0], viewDays[viewDays.length - 1], mealRefresh);
 
   const closeEditor = useCallback(() => setEditor(null), []);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
@@ -167,7 +177,9 @@ export function NutricionAthleteClient({
         <div className="nut-ws-cal">{calBlock}</div>
 
         <WeekGrid
-          days={weekDays}
+          days={viewDays}
+          view={view}
+          onView={setView}
           byDate={byDate}
           meals={meals}
           center={center}
@@ -175,7 +187,16 @@ export function NutricionAthleteClient({
           editor={editor}
           athleteId={athleteId}
           onMenuImported={() => setMealRefresh((n) => n + 1)}
-          onWeek={(delta) => selectDate(dateKey(addDays(parseDateLocal(center), delta * 7)))}
+          onStep={(delta) => {
+            const c = parseDateLocal(center);
+            selectDate(
+              view === "day"
+                ? dateKey(addDays(c, delta))
+                : view === "week"
+                  ? dateKey(addDays(c, delta * 7))
+                  : dateKey(new Date(c.getFullYear(), c.getMonth() + delta, 1))
+            );
+          }}
           onDay={selectDate}
           onCell={openCell}
         />
@@ -264,6 +285,8 @@ function shortMonth(d: Date) {
 
 function WeekGrid({
   days,
+  view,
+  onView,
   byDate,
   meals,
   center,
@@ -271,11 +294,13 @@ function WeekGrid({
   editor,
   athleteId,
   onMenuImported,
-  onWeek,
+  onStep,
   onDay,
   onCell
 }: {
   days: string[];
+  view: NutView;
+  onView: (v: NutView) => void;
   byDate: Record<string, DayPlan>;
   meals: MealSlot[] | null;
   center: string;
@@ -283,32 +308,78 @@ function WeekGrid({
   editor: EditorTarget | null;
   athleteId: string;
   onMenuImported: () => void;
-  onWeek: (delta: number) => void;
+  onStep: (delta: number) => void;
   onDay: (iso: string) => void;
   onCell: (iso: string, slot: MealSlotKind) => void;
 }) {
   const first = parseDateLocal(days[0]);
-  const last = parseDateLocal(days[6]);
+  const last = parseDateLocal(days[days.length - 1]);
   const range =
     first.getMonth() === last.getMonth()
       ? `${first.getDate()}–${last.getDate()} ${shortMonth(last)}`
       : `${first.getDate()} ${shortMonth(first)} – ${last.getDate()} ${shortMonth(last)}`;
+  const title =
+    view === "day"
+      ? formatLongDate(first)
+      : view === "month"
+        ? `${MONTHS_ES[first.getMonth()]} ${first.getFullYear()}`
+        : `Semana ${range} ${last.getFullYear()}`;
+  const unit = view === "day" ? "Día" : view === "month" ? "Mes" : "Semana";
+  const VIEWS: { key: NutView; label: string }[] = [
+    { key: "day", label: "Día" },
+    { key: "week", label: "Semana" },
+    { key: "month", label: "Mes" }
+  ];
 
   return (
     <section className="card nut-week" aria-label="Menú semanal">
       <div className="cal-nav">
-        <button type="button" className="icon-btn" aria-label="Semana anterior" onClick={() => onWeek(-1)}>
+        <button type="button" className="icon-btn" aria-label={`${unit} anterior`} onClick={() => onStep(-1)}>
           ‹
         </button>
-        <h2>
-          Semana {range} {last.getFullYear()}
-        </h2>
-        <button type="button" className="icon-btn" aria-label="Semana siguiente" onClick={() => onWeek(1)}>
+        <h2>{title}</h2>
+        <button type="button" className="icon-btn" aria-label={`${unit} siguiente`} onClick={() => onStep(1)}>
           ›
         </button>
+        <div className="nut-view-switch" role="group" aria-label="Vista">
+          {VIEWS.map((v) => (
+            <button
+              key={v.key}
+              type="button"
+              className={v.key === view ? "nut-view-btn on" : "nut-view-btn"}
+              aria-pressed={v.key === view}
+              onClick={() => onView(v.key)}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
         <MenuWordImportButton athleteId={athleteId} onImported={onMenuImported} />
       </div>
-      <div className="nut-week-grid">
+      {view === "month" ? (
+        <div className="nut-month-list">
+          {days.map((iso) => {
+            const d = parseDateLocal(iso);
+            const titles = MEAL_SLOTS.map((s) => meals?.find((m) => m.date === iso && m.slot === s.slot)).filter(
+              (m): m is MealSlot => !!m
+            );
+            const cls = ["nut-month-row"];
+            if (iso === center) cls.push("on");
+            if (iso === today) cls.push("today");
+            return (
+              <button key={iso} type="button" className={cls.join(" ")} onClick={() => onDay(iso)}>
+                <strong>
+                  {DOW_SHORT[d.getDay()]} {d.getDate()}
+                </strong>
+                <span className="muted">
+                  {meals === null ? "…" : titles.length ? titles.map((m) => m.title).join(" · ") : "Sin platos"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+      <div className="nut-week-grid" style={{ gridTemplateColumns: `76px repeat(${days.length}, minmax(0, 1fr))` }}>
         <div />
         {days.map((iso) => {
           const d = parseDateLocal(iso);
@@ -360,7 +431,8 @@ function WeekGrid({
           </div>
         ))}
       </div>
-      <WeekPanel days={days} meals={meals} />
+      )}
+      <WeekPanel days={days} meals={meals} view={view} />
     </section>
   );
 }
@@ -468,19 +540,19 @@ function MacroDonut({ kcal }: { kcal: MacroKcal | null }) {
  * preparación en texto: no hay gramos ni nutrientes, así que los KPIs se muestran
  * pendientes en lugar de inventar cifras.
  */
-function WeekPanel({ days, meals }: { days: string[]; meals: MealSlot[] | null }) {
+function WeekPanel({ days, meals, view }: { days: string[]; meals: MealSlot[] | null; view: NutView }) {
   if (meals === null) return null;
   const planned = meals.filter((m) => days.includes(m.date)).length;
   return (
-    <section className="nut-dash" aria-label="Resumen nutricional semanal">
+    <section className="nut-dash" aria-label="Resumen nutricional">
       <header className="nut-dash-head">
-        <h3>Resumen semanal</h3>
+        <h3>{view === "day" ? "Resumen del día" : view === "month" ? "Resumen mensual" : "Resumen semanal"}</h3>
         <span className="muted">
-          {planned}/{MEAL_SLOTS.length * 7} platos
+          {planned}/{MEAL_SLOTS.length * days.length} platos
         </span>
       </header>
       <div className="nut-dash-main">
-        <Ring label="Energía" unit="kcal semana" value={null} pct={null} size={96} />
+        <Ring label="Energía" unit={view === "day" ? "kcal día" : view === "month" ? "kcal mes" : "kcal semana"} value={null} pct={null} size={96} />
         <MacroDonut kcal={null} />
         <div className="nut-dash-pair">
           <Ring label="Proteína" unit="g/kg/día" value={null} pct={null} />
