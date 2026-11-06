@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { NutritionistAthleteCard } from "@/lib/queries";
 import { athletePhoto, sportLine } from "./athlete-nav-shared";
 
@@ -14,16 +14,31 @@ type Props = {
 
 /** Lista persistente de deportistas asignados (columna izquierda del workspace desktop ≥1280px). */
 export function NutAthleteNav({ athletes, activeId, above }: Props) {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const shown = q ? athletes.filter((a) => a.name.toLowerCase().includes(q)) : athletes;
   return (
     <nav className="nut-ws-list" aria-label="Deportistas asignados">
       {above ? <div className="nut-ws-list-above">{above}</div> : null}
       <div className="nut-ws-list-body">
         <h2>Deportistas</h2>
+        {athletes.length > 0 ? (
+          <input
+            type="search"
+            className="nut-ws-search"
+            placeholder="Buscar deportista"
+            aria-label="Buscar deportista por nombre"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        ) : null}
         {athletes.length === 0 ? (
           <p className="muted">Aún no tienes deportistas asignados.</p>
+        ) : shown.length === 0 ? (
+          <p className="muted">Sin resultados.</p>
         ) : (
           <ul>
-            {athletes.map((a) => (
+            {shown.map((a) => (
               <li key={a.id}>
                 <Link
                   href={`/nutricion/${a.id}`}
