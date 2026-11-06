@@ -34,7 +34,21 @@
   --scrim: rgba(0, 0, 0, 0.28);
   --danger: #c41e3a;
   --ok: #248a3d;
+  /* Categoría de proteína: tierra desaturada. Ink = filete/punto/etiqueta sobre blanco; tint = fondo de la celda y placeholder. */
+  --cat-carne: #9A5B45;      --cat-carne-tint: #F4EAE5;
+  --cat-pescado: #557083;    --cat-pescado-tint: #E7EDF1;
+  --cat-huevos: #8F7234;     --cat-huevos-tint: #F5EFE1;
+  --cat-legumbres: #687A4E;  --cat-legumbres-tint: #ECEFE4;
+  --cat-none: var(--secondary); --cat-none-tint: var(--fill-secondary);
+  --cat-rule: 3px;
 }
+
+/* Categoría → par ink/tint que leen la celda, el punto del mes y (O2) la ficha. */
+.nut-cat--carne { --cat-ink: var(--cat-carne); --cat-tint: var(--cat-carne-tint); }
+.nut-cat--pescado { --cat-ink: var(--cat-pescado); --cat-tint: var(--cat-pescado-tint); }
+.nut-cat--huevos { --cat-ink: var(--cat-huevos); --cat-tint: var(--cat-huevos-tint); }
+.nut-cat--legumbres { --cat-ink: var(--cat-legumbres); --cat-tint: var(--cat-legumbres-tint); }
+.nut-cat--none { --cat-ink: var(--cat-none); --cat-tint: var(--cat-none-tint); }
 
 html {
   font-size: 16px;
@@ -1248,9 +1262,8 @@ body.nut-modal-open { overflow: hidden; }
   .nut-day-list { display: flex; flex-direction: column; gap: 4px; min-height: 0; font-size: 0.8125rem; }
   .nut-day-row { flex: 3 1 0; display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; min-height: 56px; }
   .nut-day-row--snack { flex: 2 1 0; min-height: 40px; }
+  .nut-day-row--thin { flex: 0 0 24px; min-height: 24px; }
   .nut-day-row .nut-week-cell { min-height: 0; padding: 6px 10px; }
-  .nut-day-row .nut-week-cell img { width: 44px; height: 44px; }
-  .nut-day-row--snack .nut-week-cell img { width: 32px; height: 32px; }
   .nut-dash.nut-dash--side {
     display: flex;
     margin-top: 0;
@@ -1308,6 +1321,7 @@ body.nut-modal-open { overflow: hidden; }
   .nut-month-dots { display: flex; gap: 3px; }
   .nut-month-dots i { width: 6px; height: 6px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--secondary); opacity: 0.5; }
   .nut-month-dots i.on { background: var(--text); box-shadow: none; opacity: 1; }
+  .nut-month-dots i.on[class*="nut-cat--"] { background: var(--cat-ink); }
   /* Hoy: número en cápsula oscura (mismo gesto que Calendario de Apple, sin color nuevo). */
   .nut-dnum {
     display: inline-flex;
@@ -1329,7 +1343,8 @@ body.nut-modal-open { overflow: hidden; }
     -webkit-tap-highlight-color: transparent;
     transition: transform var(--dur) var(--ease), background var(--dur) ease, border-color var(--dur) ease;
   }
-  .nut-week-day:active, .nut-week-cell:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+  .nut-week-day:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+  .nut-week-cell:active { transform: scale(var(--press-scale-lg)); transition-duration: var(--dur-press); }
   .nut-week-day {
     display: flex;
     flex-direction: column;
@@ -1369,6 +1384,19 @@ body.nut-modal-open { overflow: hidden; }
   .nut-week-cell.empty.col-on { background: var(--fill-secondary); }
   .nut-week-cell.empty:hover { background: var(--fill-secondary); }
   .nut-week-cell.on, .nut-week-cell.on:hover { box-shadow: inset 0 0 0 1.5px var(--text); }
+  /* Plato = tarjeta teñida por su proteína con filete izquierdo en tinta. */
+  .nut-week-cell.nut-cat {
+    align-items: flex-start;
+    padding-left: calc(var(--cat-rule) + 6px);
+    background: var(--cat-tint);
+    box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink);
+  }
+  .nut-week-cell.nut-cat:hover { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1px var(--cat-ink); }
+  .nut-week-cell.nut-cat.on, .nut-week-cell.nut-cat.on:hover { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1.5px var(--text); }
+  /* Franja sin platos en la semana: fila fina, hueco transparente y «+» al pasar. */
+  .nut-week-cell.thin { min-height: 0; padding-top: 0; padding-bottom: 0; }
+  .nut-week-cell.thin.empty { background: transparent; }
+  .nut-week-cell.thin.empty:hover, .nut-week-cell.thin.empty.col-on { background: var(--fill-secondary); }
   .nut-week-add {
     margin: auto;
     font-size: 1rem;
@@ -1437,13 +1465,24 @@ body.nut-modal-open { overflow: hidden; }
   .nut-dash > .muted { grid-area: note; margin: 0; font-size: 0.75rem; text-align: right; }
   .nut-dash--side { flex-direction: column; align-items: stretch; gap: 10px; }
   .nut-dash--side > .muted { text-align: left; }
-  .nut-week-cell img { width: 32px; height: 32px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
-  .nut-week-cell span {
-    min-width: 0;
+  .nut-week-cell img { width: 36px; height: 36px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
+  .nut-dish { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .nut-dish-head {
+    font-weight: 600;
+    letter-spacing: -0.01em;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+  }
+  /* --secondary sobre tint no llega a 4.5:1: la línea secundaria va en --accent-hover. */
+  .nut-dish-rest { font-size: 0.6875rem; color: var(--accent-hover); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Celda alta (franjas vacías colapsadas): el plato se lee entero en vez de dejar hueco. */
+  .nut-week-cell.nut-cat { container-type: size; }
+  @container (min-height: 96px) {
+    .nut-dish { gap: 3px; }
+    .nut-dish-head { -webkit-line-clamp: 3; }
+    .nut-dish-rest { display: -webkit-box; white-space: normal; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
   }
 
   .nut-week-row--snack .nut-week-slot--snack {
@@ -1459,7 +1498,6 @@ body.nut-modal-open { overflow: hidden; }
     padding: 3px 6px;
     font-size: 0.72rem;
   }
-  .nut-week-cell--snack img { width: 28px; height: 28px; }
 
   .nut-modal .nut-details { background: transparent; border: 0; box-shadow: none; }
   .nut-modal .meal-form .nut-menu-photo { max-height: 260px; border-radius: var(--radius-sm); }
@@ -1813,6 +1851,16 @@ body.nut-modal-open { overflow: hidden; }
 }
 
 @media (prefers-contrast: more) {
+  :root {
+    --cat-carne-tint: var(--surface);
+    --cat-pescado-tint: var(--surface);
+    --cat-huevos-tint: var(--surface);
+    --cat-legumbres-tint: var(--surface);
+    --cat-none-tint: var(--surface);
+    --cat-rule: 4px;
+  }
+  .nut-week-cell.nut-cat,
+  .nut-week-cell.nut-cat:hover { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1px var(--text); }
   .card {
     background: var(--surface);
     -webkit-backdrop-filter: none;

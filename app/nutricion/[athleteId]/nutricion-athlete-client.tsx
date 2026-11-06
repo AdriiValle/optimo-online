@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { addDays, dateKey, DOW_ES, DOW_SHORT, formatLongDate, MONTHS_ES, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
+import { addDays, dateKey, DOW_ES, DOW_FULL, DOW_SHORT, formatLongDate, MONTHS_ES, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
 import { MEAL_SLOTS, type DayPlan, type MealSlot, type MealSlotKind, type SupplementEntry } from "@/lib/types";
 import type { NutrientKey, NutritionistAthleteCard, NutritionTotals } from "@/lib/queries";
 import { BrandHeader } from "@/app/components/brand-header";
@@ -14,6 +14,7 @@ import { NutAthleteNav } from "../athlete-nav";
 import { MenuWordImportButton } from "./menu-word-import";
 import { MealItemsEditor } from "./meal-items-editor";
 import { perDay, periodTotal, summarizeNutrition, type PeriodNutrition } from "./nutrition-summary";
+import { dishLines, splitCategory } from "@/lib/nutrition/protein-category";
 
 type Props = {
   athleteId: string;
@@ -369,6 +370,7 @@ function WeekGrid({
         ? `${MONTHS_ES[first.getMonth()]} ${first.getFullYear()}`
         : `Semana ${range} ${last.getFullYear()}`;
   const unit = view === "day" ? "Día" : view === "month" ? "Mes" : "Semana";
+  const thin = useThinSlots(days, meals);
   const VIEWS: { key: NutView; label: string }[] = [
     { key: "day", label: "Día" },
     { key: "week", label: "Semana" },
@@ -411,33 +413,22 @@ function WeekGrid({
           <div className="nut-day-list">
             {MEAL_SLOTS.map(({ slot: kind, label, tier }) => {
               const iso = days[0];
-              const meal = meals?.find((m) => m.date === iso && m.slot === kind);
-              const on = editor?.date === iso && editor.slot === kind;
-              const cls = ["nut-week-cell"];
-              if (tier === "snack") cls.push("nut-week-cell--snack");
-              if (meals !== null && !meal) cls.push("empty");
-              if (on) cls.push("on");
+              const rowCls = ["nut-day-row"];
+              if (tier === "snack") rowCls.push("nut-day-row--snack");
+              if (thin.has(kind)) rowCls.push("nut-day-row--thin");
               return (
-                <div key={kind} className={tier === "snack" ? "nut-day-row nut-day-row--snack" : "nut-day-row"}>
+                <div key={kind} className={rowCls.join(" ")}>
                   <div className={tier === "snack" ? "nut-week-slot nut-week-slot--snack" : "nut-week-slot"}>{label}</div>
-                  <button
-                    type="button"
-                    className={cls.join(" ")}
-                    aria-label={`${label}${meal ? `: ${meal.title}` : ""}`}
-                    aria-pressed={on}
+                  <DishCell
+                    iso={iso}
+                    label={label}
+                    tier={tier}
+                    meals={meals}
+                    meal={meals?.find((m) => m.date === iso && m.slot === kind)}
+                    on={editor?.date === iso && editor.slot === kind}
+                    thin={thin.has(kind)}
                     onClick={() => onCell(iso, kind)}
-                  >
-                    {meals === null ? null : meal ? (
-                      <>
-                        {meal.hasPhoto ? (
-                          <img src={`/api/meals/${meal.id}/photo?v=${encodeURIComponent(meal.updatedAt)}`} alt="" />
-                        ) : null}
-                        <span>{meal.title}</span>
-                      </>
-                    ) : (
-                      <span className="nut-week-add" aria-hidden="true">+</span>
-                    )}
-                  </button>
+                  />
                 </div>
               );
             })}
@@ -453,8 +444,10 @@ function WeekGrid({
             className="nut-week-grid"
             style={{
               gridTemplateColumns: `76px repeat(${days.length}, minmax(0, 1fr))`,
-              /* Filas elásticas: las franjas reparten el alto libre (principal 3 : snack 2). */
-              gridTemplateRows: `auto ${MEAL_SLOTS.map((s) => (s.tier === "snack" ? "minmax(32px, 2fr)" : "minmax(44px, 3fr)")).join(" ")}`
+              /* Filas elásticas: las franjas reparten el alto libre (principal 3 : snack 2); sin platos, fila fina. */
+              gridTemplateRows: `auto ${MEAL_SLOTS.map((s) =>
+                thin.has(s.slot) ? "24px" : s.tier === "snack" ? "minmax(32px, 2fr)" : "minmax(44px, 3fr)"
+              ).join(" ")}`
             }}
           >
             <div />
@@ -477,35 +470,20 @@ function WeekGrid({
             {MEAL_SLOTS.map(({ slot: kind, label, tier }) => (
               <div key={kind} className={tier === "snack" ? "nut-week-row nut-week-row--snack" : "nut-week-row"}>
                 <div className={tier === "snack" ? "nut-week-slot nut-week-slot--snack" : "nut-week-slot"}>{label}</div>
-                {days.map((iso) => {
-                  const meal = meals?.find((m) => m.date === iso && m.slot === kind);
-                  const cls = ["nut-week-cell"];
-                  if (tier === "snack") cls.push("nut-week-cell--snack");
-                  if (meals !== null && !meal) cls.push("empty");
-                  if (iso === center) cls.push("col-on");
-                  if (editor?.date === iso && editor.slot === kind) cls.push("on");
-                  return (
-                    <button
-                      key={iso}
-                      type="button"
-                      className={cls.join(" ")}
-                      aria-label={`${label} ${iso}${meal ? `: ${meal.title}` : ""}`}
-                      aria-pressed={editor?.date === iso && editor.slot === kind}
-                      onClick={() => onCell(iso, kind)}
-                    >
-                      {meals === null ? null : meal ? (
-                        <>
-                          {meal.hasPhoto ? (
-                            <img src={`/api/meals/${meal.id}/photo?v=${encodeURIComponent(meal.updatedAt)}`} alt="" />
-                          ) : null}
-                          <span>{meal.title}</span>
-                        </>
-                      ) : (
-                        <span className="nut-week-add" aria-hidden="true">+</span>
-                      )}
-                    </button>
-                  );
-                })}
+                {days.map((iso) => (
+                  <DishCell
+                    key={iso}
+                    iso={iso}
+                    label={label}
+                    tier={tier}
+                    meals={meals}
+                    meal={meals?.find((m) => m.date === iso && m.slot === kind)}
+                    on={editor?.date === iso && editor.slot === kind}
+                    colOn={iso === center}
+                    thin={thin.has(kind)}
+                    onClick={() => onCell(iso, kind)}
+                  />
+                ))}
               </div>
             ))}
           </div>
@@ -514,6 +492,81 @@ function WeekGrid({
         </>
       )}
     </section>
+  );
+}
+
+/**
+ * Franjas sin ningún plato en los días visibles → fila fina. Mientras carga se mantiene
+ * la última decisión para que la rejilla no salte al cambiar de semana.
+ */
+function useThinSlots(days: string[], meals: MealSlot[] | null) {
+  const last = useRef<Set<MealSlotKind>>(new Set());
+  if (meals === null) return last.current;
+  const inRange = new Set(days);
+  const used = new Set(meals.filter((m) => inRange.has(m.date)).map((m) => m.slot));
+  last.current = new Set(MEAL_SLOTS.map((s) => s.slot).filter((k) => !used.has(k)));
+  return last.current;
+}
+
+/** Plato como tarjeta: tinte de su proteína, filete en tinta, la proteína de titular y el resto debajo. */
+function DishCell({
+  iso,
+  label,
+  tier,
+  meals,
+  meal,
+  on,
+  colOn,
+  thin,
+  onClick
+}: {
+  iso: string;
+  label: string;
+  tier: "main" | "snack";
+  meals: MealSlot[] | null;
+  meal: MealSlot | undefined;
+  on: boolean;
+  colOn?: boolean;
+  thin: boolean;
+  onClick: () => void;
+}) {
+  const d = parseDateLocal(iso);
+  const day = `${DOW_FULL[d.getDay()]} ${d.getDate()}`;
+  const cat = meal ? splitCategory(meal.title) : null;
+  const lines = cat ? dishLines(cat.body) : null;
+  const cls = ["nut-week-cell"];
+  if (tier === "snack") cls.push("nut-week-cell--snack");
+  if (thin) cls.push("thin");
+  if (meals !== null && !meal) cls.push("empty");
+  if (cat) cls.push("nut-cat", `nut-cat--${cat.key}`);
+  if (colOn) cls.push("col-on");
+  if (on) cls.push("on");
+  return (
+    <button
+      type="button"
+      className={cls.join(" ")}
+      aria-label={
+        cat && lines
+          ? `${label}, ${day}: ${lines.headline}${cat.label ? ` (${cat.label.toLowerCase()})` : ""}`
+          : `${label}, ${day}: sin plato`
+      }
+      aria-pressed={on}
+      onClick={onClick}
+    >
+      {meals === null ? null : meal && lines ? (
+        <>
+          {meal.hasPhoto && tier === "main" ? (
+            <img src={`/api/meals/${meal.id}/photo?v=${encodeURIComponent(meal.updatedAt)}`} alt="" />
+          ) : null}
+          <span className="nut-dish">
+            <span className="nut-dish-head">{lines.headline}</span>
+            {lines.rest ? <span className="nut-dish-rest">{lines.rest}</span> : null}
+          </span>
+        </>
+      ) : (
+        <span className="nut-week-add" aria-hidden="true">+</span>
+      )}
+    </button>
   );
 }
 
@@ -550,8 +603,8 @@ function MonthCalendar({
       {days.map((iso) => {
         const d = parseDateLocal(iso);
         const p = byDate[iso];
-        const filled = MEAL_SLOTS.map((s) => !!meals?.some((m) => m.date === iso && m.slot === s.slot));
-        const count = filled.filter(Boolean).length;
+        const dayMeals = MEAL_SLOTS.map((s) => meals?.find((m) => m.date === iso && m.slot === s.slot));
+        const count = dayMeals.filter(Boolean).length;
         const cls = ["nut-month-day"];
         if (meals !== null && count === 0) cls.push("empty");
         if (iso === center) cls.push("on");
@@ -570,9 +623,12 @@ function MonthCalendar({
             </span>
             {meals === null ? null : (
               <span className="nut-month-dots" aria-hidden="true">
-                {MEAL_SLOTS.map((s, i) => (
-                  <i key={s.slot} className={filled[i] ? "on" : undefined} />
-                ))}
+                {MEAL_SLOTS.map((s, i) => {
+                  const meal = dayMeals[i];
+                  /* Comida y cena llevan el color de su proteína; desayuno y snacks, neutro. */
+                  const cat = meal && (s.slot === "lunch" || s.slot === "dinner") ? ` nut-cat--${splitCategory(meal.title).key}` : "";
+                  return <i key={s.slot} className={meal ? `on${cat}` : undefined} />;
+                })}
               </span>
             )}
           </button>

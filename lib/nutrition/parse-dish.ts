@@ -1,4 +1,5 @@
 import type { CatalogFood } from "./food-catalog";
+import { splitCategory } from "./protein-category";
 
 export type DishItemRole = "veg" | "protein" | "carb" | "fat" | "other";
 
@@ -100,13 +101,7 @@ function stripParens(s: string) {
  */
 export function parseDish(text: string, catalog: CatalogFood[]): ParsedDish {
   const matchers = buildMatchers(catalog);
-  let body = text.replace(/\s+/g, " ").trim();
-  let category: string | null = null;
-  const cat = /^\[([^\]]*)\]\s*/.exec(body);
-  if (cat) {
-    category = cat[1].trim() || null;
-    body = body.slice(cat[0].length);
-  }
+  const { label: category, body } = splitCategory(text);
 
   const lines = body
     .split(/\s+·\s+/)

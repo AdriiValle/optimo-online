@@ -21,6 +21,26 @@ Patrón de familia Óptimo. Paleta, tipo y marca Óptimo intactos; el tacto (pre
 --radius-sm: 10px;  --scrim: rgba(0,0,0,.28);  --danger: #c41e3a;  --ok: #248a3d;
 ```
 
+## Categoría de proteína
+
+Única ampliación de paleta (la marca no cambia). Menú de nutrición: color por la proteína del plato, del corchete `[CARNE]` del import Word (`lib/nutrition/protein-category.ts`).
+
+```css
+/* Ink = filete/punto/etiqueta sobre blanco; tint = fondo de la celda y placeholder. */
+--cat-carne: #9A5B45;      --cat-carne-tint: #F4EAE5;      /* terracota */
+--cat-pescado: #557083;    --cat-pescado-tint: #E7EDF1;    /* pizarra */
+--cat-huevos: #8F7234;     --cat-huevos-tint: #F5EFE1;     /* ocre */
+--cat-legumbres: #687A4E;  --cat-legumbres-tint: #ECEFE4;  /* oliva */
+--cat-none: var(--secondary); --cat-none-tint: var(--fill-secondary);
+--cat-rule: 3px;  /* filete izquierdo; 4px en prefers-contrast */
+```
+
+- Clase `.nut-cat--{carne|pescado|huevos|legumbres|none}` expone `--cat-ink` / `--cat-tint` al elemento.
+- Contraste: ink sobre blanco 4.5–5.3:1; `--text` sobre tint ≥14:1. `--secondary` sobre tint no llega: texto secundario en celda teñida va en `--accent-hover`.
+- El color nunca va solo: la categoría también en texto o `aria-label`. Mixta (`HUEVOS/PESCADO`) → color de la primera. `LEGUMBRES/P. VEGETAL` → legumbres. Sin corchete o desconocida → `none`.
+- `prefers-contrast: more`: tint → `--surface`, filete 4px.
+- Placeholder: campo de tint liso + nombre de la categoría en texto. Sin icono, emoji ni degradado.
+
 ## Tacto
 
 - **Press**: todo lo tocable encoge en `:active` (no al soltar). `scale(var(--press-scale))` botones/chips/tabs; `--press-scale-lg` en tarjetas y filas. Entra en `--dur-press` `ease-out`; vuelve en `--dur` `var(--ease)`.
