@@ -1037,3 +1037,103 @@ export async function updateMealItem(
     where id = ${id}
   `;
 }
+
+/** Items de un plato (vigentes y obsoletos) con el deportista; null si el plato no existe o no es visible. */
+export async function mealItemsForSlot(tx: Tx, mealSlotId: string) {
+  const slot = await tx<{ athlete_id: string }[]>`select athlete_id from meal_slots where id = ${mealSlotId} limit 1`;
+  if (!slot[0]) return null;
+  const rows = await tx<MealItemRow[]>`
+    select mi.id, mi.meal_slot_id, ms.athlete_id, mi.food_id, mi.raw_text, mi.role, mi.grams::text, mi.origin,
+      mi.confirmed, mi.position,
+      mi.text_hash is distinct from md5(coalesce(nullif(ms.preparation, ''), ms.title)) as obsolete
+    from meal_items mi
+    join meal_slots ms on ms.id = mi.meal_slot_id
+    where mi.meal_slot_id = ${mealSlotId}
+    order by mi.position
+  `;
+  return { athleteId: slot[0].athlete_id, items: rows.map(mapMealItem) };
+}
+
+const NUTRIENT_KEYS = [
+  "kcal",
+  "protein_g",
+  "carbs_g",
+  "fat_g",
+  "fiber_g",
+  "sodium_mg",
+  "iron_mg",
+  "calcium_mg",
+  "vit_d_ug"
+] as const;
+
+export type NutrientKey = (typeof NUTRIENT_KEYS)[number];
+
+/** Suma de los platos cuantificados; `incomplete` = algún alimento sumado no tiene ese valor (null en foods). */
+export type NutrientSum = { value: number; incomplete: boolean };
+
+export type DayNutrition = {
+  date: string;
+  /** Platos del menú ese día. */
+  planned: number;
+  /** Platos que cuentan: todos sus items vigentes confirmados con alimento y gramos. */
+  quantified: number;
+  totals: Record<NutrientKey, NutrientSum>;
+};
+
+export type NutritionTotals = { weightKg: number | null; days: DayNutrition[] };
+
+type QuantItemRow = { meal_slot_id: string; ok: boolean; grams: string | null } & Record<
+  NutrientKey,
+  string | null
+>;
+
+/**
+ * Totales del menú planificado por día. Un plato cuenta si todos sus items vigentes (text_hash = hash actual)
+ * están confirmados con `food_id` y `grams`; los condimentos `other` sin gramos no bloquean ni suman.
+ * Los items obsoletos no cuentan. Días sin platos no aparecen.
+ */
+export async function nutritionTotals(tx: Tx, athleteId: string, from: string, to: string): Promise<NutritionTotals> {
+  const athlete = await tx<{ weight_kg: string | null }[]>`select weight_kg::text from athletes where id = ${athleteId}`;
+  const slots = await tx<{ id: string; date: string }[]>`
+    select id, date::text from meal_slots
+    where athlete_id = ${athleteId} and date between ${from}::date and ${to}::date
+  `;
+  const items = await tx<QuantItemRow[]>`
+    select mi.meal_slot_id, (mi.confirmed and mi.food_id is not null and mi.grams is not null) as ok,
+      mi.grams::text, f.kcal::text, f.protein_g::text, f.carbs_g::text, f.fat_g::text, f.fiber_g::text,
+      f.sodium_mg::text, f.iron_mg::text, f.calcium_mg::text, f.vit_d_ug::text
+    from meal_slots ms
+    join meal_items mi on mi.meal_slot_id = ms.id
+      and mi.text_hash = md5(coalesce(nullif(ms.preparation, ''), ms.title))
+    left join foods f on f.id = mi.food_id
+    where ms.athlete_id = ${athleteId} and ms.date between ${from}::date and ${to}::date
+      and not (mi.role = 'other' and mi.grams is null)
+  `;
+
+  const bySlot = new Map<string, QuantItemRow[]>();
+  for (const it of items) bySlot.set(it.meal_slot_id, [...(bySlot.get(it.meal_slot_id) ?? []), it]);
+
+  const empty = () =>
+    Object.fromEntries(NUTRIENT_KEYS.map((k) => [k, { value: 0, incomplete: false }])) as Record<NutrientKey, NutrientSum>;
+  const days = new Map<string, DayNutrition>();
+  for (const s of slots) {
+    const date = isoDate(s.date);
+    const day = days.get(date) ?? { date, planned: 0, quantified: 0, totals: empty() };
+    days.set(date, day);
+    day.planned += 1;
+    const rows = bySlot.get(s.id);
+    if (!rows?.length || !rows.every((r) => r.ok)) continue;
+    day.quantified += 1;
+    for (const r of rows) {
+      const grams = Number(r.grams);
+      for (const k of NUTRIENT_KEYS) {
+        if (r[k] == null) day.totals[k].incomplete = true;
+        else day.totals[k].value += (grams * Number(r[k])) / 100;
+      }
+    }
+  }
+  return {
+    weightKg: num(athlete[0]?.weight_kg ?? null),
+    days: [...days.values()].sort((a, b) => a.date.localeCompare(b.date))
+  };
+}

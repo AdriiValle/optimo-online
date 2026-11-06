@@ -1025,6 +1025,27 @@ body.nut-modal-open { overflow: hidden; }
 .nut-import p { margin: 0; }
 .nut-import input[type="date"] { margin: 6px 0 0; font-variant-numeric: tabular-nums; }
 .nut-import-file { font-weight: 600; overflow-wrap: anywhere; }
+.nut-import-check { display: flex; align-items: flex-start; gap: 8px; font-weight: 500; }
+.nut-import-check input { width: auto; margin: 3px 0 0; }
+/* Ingredientes del plato (modal): alimento + g en una fila, rol + confirmar debajo. */
+.nut-items { display: flex; flex-direction: column; gap: 8px; margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 0.8125rem; }
+.nut-items-head { display: flex; flex-direction: column; gap: 2px; }
+.nut-items-head h3 { margin: 0; font-size: 0.875rem; letter-spacing: -0.01em; }
+.nut-items-head .ok, .nut-items-head .muted { font-size: 0.75rem; }
+.nut-item { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 6px 8px; margin: 0; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.nut-item select, .nut-item input { width: 100%; margin: 0; }
+.nut-item-raw { grid-column: 1 / -1; margin: 0; color: var(--secondary); font-size: 0.75rem; overflow-wrap: anywhere; }
+.nut-item-grams { display: flex; align-items: center; gap: 4px; margin: 0; }
+.nut-item-grams input { text-align: right; font-variant-numeric: tabular-nums; }
+.nut-item-grams span { color: var(--secondary); }
+.nut-item-meta { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.nut-item-meta select { width: auto; flex: 0 1 140px; }
+.nut-item-ok { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 500; }
+.nut-item-ok input { width: auto; }
+.nut-item-warn { font-size: 0.75rem; font-weight: 600; color: var(--secondary); }
+.nut-items-obsolete { display: flex; flex-direction: column; gap: 4px; }
+.nut-items-obsolete > .muted { margin: 0; font-size: 0.75rem; }
+.nut-item--obsolete { display: flex; flex-direction: column; gap: 2px; opacity: 0.6; }
 /* Cabecera nutricionista: ajustes y salir a la misma altura (36px), cápsula + círculo. */
 .top-actions.nut-top-actions .btn { min-height: 36px; padding: 6px 14px; border-radius: 999px; }
 .nut-account-settings { display: flex; flex-direction: column; gap: 20px; }

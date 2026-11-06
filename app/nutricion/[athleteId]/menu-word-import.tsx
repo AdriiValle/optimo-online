@@ -14,6 +14,7 @@ export function MenuWordImportButton({ athleteId, onImported }: Props) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [weekStart, setWeekStart] = useState(startOfWeekMonday(todayKey()));
+  const [withItems, setWithItems] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -68,6 +69,7 @@ export function MenuWordImportButton({ athleteId, onImported }: Props) {
     fd.set("athleteId", athleteId);
     fd.set("weekStart", weekStart);
     fd.set("file", file);
+    if (withItems) fd.set("withItems", "1");
     const res = await fetch("/api/nutrition/menu-import", { method: "POST", body: fd });
     const json = await res.json().catch(() => null);
     setBusy(false);
@@ -75,12 +77,12 @@ export function MenuWordImportButton({ athleteId, onImported }: Props) {
       setErr(json?.error?.message ?? "No se pudo importar el menú.");
       return;
     }
-    const { weeksImported, slotsWritten } = json.data ?? {};
-    setMsg(
+    const { weeksImported, slotsWritten, drafts } = json.data ?? {};
+    const base =
       weeksImported === 1
         ? `Importada 1 semana (${slotsWritten} comidas/cenas).`
-        : `Importadas ${weeksImported} semanas (${slotsWritten} comidas/cenas).`
-    );
+        : `Importadas ${weeksImported} semanas (${slotsWritten} comidas/cenas).`;
+    setMsg(drafts ? `${base} Ingredientes en borrador: ${drafts.slotsDrafted} platos.` : base);
     onImported();
     window.setTimeout(reset, 1800);
   }
@@ -139,6 +141,15 @@ export function MenuWordImportButton({ athleteId, onImported }: Props) {
                         />
                       </label>
                       <p className="muted">Solo se actualizan comida y cena; desayuno y meriendas no se borran.</p>
+                      <label className="nut-import-check">
+                        <input
+                          type="checkbox"
+                          checked={withItems}
+                          disabled={busy}
+                          onChange={(e) => setWithItems(e.target.checked)}
+                        />
+                        Generar ingredientes en borrador para calcular macros (no toca los confirmados)
+                      </label>
                     </>
                   ) : null}
                   {err ? <p className="error">{err}</p> : null}

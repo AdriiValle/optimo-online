@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { createPortal } from "react-dom";
 import { addDays, dateKey, DOW_ES, DOW_SHORT, formatLongDate, MONTHS_ES, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
 import { MEAL_SLOTS, type DayPlan, type MealSlot, type MealSlotKind, type SupplementEntry } from "@/lib/types";
-import type { NutritionistAthleteCard } from "@/lib/queries";
+import type { NutrientKey, NutritionistAthleteCard, NutritionTotals } from "@/lib/queries";
 import { BrandHeader } from "@/app/components/brand-header";
 import { PlanCalendar } from "@/app/components/plan-calendar";
 import { PasswordForm } from "@/app/components/password-form";
@@ -12,6 +12,8 @@ import { UsernameForm } from "@/app/components/username-form";
 import { NutritionPane } from "@/app/a/[id]/nutrition-pane";
 import { NutAthleteNav } from "../athlete-nav";
 import { MenuWordImportButton } from "./menu-word-import";
+import { MealItemsEditor } from "./meal-items-editor";
+import { perDay, periodTotal, summarizeNutrition, type PeriodNutrition } from "./nutrition-summary";
 
 type Props = {
   athleteId: string;
@@ -51,6 +53,8 @@ export function NutricionAthleteClient({
   const [editor, setEditor] = useState<EditorTarget | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mealRefresh, setMealRefresh] = useState(0);
+  /** Cambios de plato o de ingredientes: recalcula los totales sin recargar el menú. */
+  const [totalsRefresh, setTotalsRefresh] = useState(0);
 
   const [view, setView] = useState<NutView>("week");
 
@@ -66,6 +70,7 @@ export function NutricionAthleteClient({
     return Array.from({ length: 7 }, (_, i) => dateKey(addDays(monday, i)));
   }, [view, center, weekStart]);
   const [meals, setMeals] = useWeekMeals(athleteId, viewDays[0], viewDays[viewDays.length - 1], mealRefresh);
+  const totals = useNutritionTotals(athleteId, viewDays[0], viewDays[viewDays.length - 1], mealRefresh + totalsRefresh);
 
   const closeEditor = useCallback(() => setEditor(null), []);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
@@ -100,6 +105,7 @@ export function NutricionAthleteClient({
       ...(rows ?? []).filter((m) => !(m.date === date && m.slot === kind)),
       ...(next ? [next] : [])
     ]);
+    setTotalsRefresh((n) => n + 1);
   }
 
   function openCell(iso: string, kind: MealSlotKind) {
@@ -182,6 +188,7 @@ export function NutricionAthleteClient({
           onView={setView}
           byDate={byDate}
           meals={meals}
+          totals={totals}
           center={center}
           today={today}
           editor={editor}
@@ -235,17 +242,26 @@ export function NutricionAthleteClient({
           {meals === null ? (
             <p className="muted">Cargando…</p>
           ) : (
-            <MealSlotForm
-              athleteId={athleteId}
-              date={editor.date}
-              slot={editor.slot}
-              label={editorLabel}
-              meal={editorMeal}
-              bare
-              onChange={(next) => {
-                updateMeal(editor.date, editor.slot, next);
-              }}
-            />
+            <>
+              <MealSlotForm
+                athleteId={athleteId}
+                date={editor.date}
+                slot={editor.slot}
+                label={editorLabel}
+                meal={editorMeal}
+                bare
+                onChange={(next) => {
+                  updateMeal(editor.date, editor.slot, next);
+                }}
+              />
+              {editorMeal ? (
+                <MealItemsEditor
+                  athleteId={athleteId}
+                  meal={editorMeal}
+                  onChanged={() => setTotalsRefresh((n) => n + 1)}
+                />
+              ) : null}
+            </>
           )}
         </NutModal>
       ) : null}
@@ -283,6 +299,26 @@ function useWeekMeals(athleteId: string, from: string, to: string, refresh = 0) 
   return state;
 }
 
+/** Totales del rango; al refrescar el mismo rango se mantiene el dato anterior (sin parpadeo). */
+function useNutritionTotals(athleteId: string, from: string, to: string, refresh = 0) {
+  const key = `${athleteId}:${from}:${to}`;
+  const [state, setState] = useState<{ key: string; data: NutritionTotals } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await fetch(`/api/nutrition/totals?athleteId=${athleteId}&from=${from}&to=${to}`);
+      const json = res.ok ? await res.json() : null;
+      if (!cancelled && json?.data) setState({ key: `${athleteId}:${from}:${to}`, data: json.data });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [athleteId, from, to, refresh]);
+
+  return state?.key === key ? state.data : null;
+}
+
 function shortMonth(d: Date) {
   return MONTHS_ES[d.getMonth()].slice(0, 3).toLowerCase();
 }
@@ -293,6 +329,7 @@ function WeekGrid({
   onView,
   byDate,
   meals,
+  totals,
   center,
   today,
   editor,
@@ -308,6 +345,7 @@ function WeekGrid({
   onView: (v: NutView) => void;
   byDate: Record<string, DayPlan>;
   meals: MealSlot[] | null;
+  totals: NutritionTotals | null;
   center: string;
   today: string;
   editor: EditorTarget | null;
@@ -404,7 +442,7 @@ function WeekGrid({
               );
             })}
           </div>
-          <WeekPanel days={days} meals={meals} view={view} side />
+          <WeekPanel days={days} totals={totals} view={view} side />
         </div>
       ) : (
         <>
@@ -472,7 +510,7 @@ function WeekGrid({
             ))}
           </div>
           )}
-          <WeekPanel days={days} meals={meals} view={view} />
+          <WeekPanel days={days} totals={totals} view={view} />
         </>
       )}
     </section>
@@ -550,17 +588,23 @@ function Ring({
   unit,
   value,
   pct,
+  approx,
+  digits = 0,
   size = 64
 }: {
   label: string;
   unit: string;
   value: number | null;
   pct: number | null;
+  /** Algún alimento no trae este valor: la cifra es un mínimo («≥»). */
+  approx?: boolean;
+  digits?: number;
   size?: number;
 }) {
   const r = 26;
   const c = 2 * Math.PI * r;
   const fill = value === null || pct === null ? 0 : Math.min(Math.max(pct, 0), 1);
+  const shown = value === null ? null : `${approx ? "≥" : ""}${fmt(value, digits)}`;
   return (
     <figure className={value === null ? "nut-ring nut-ring--empty" : "nut-ring"}>
       <svg
@@ -568,14 +612,14 @@ function Ring({
         height={size}
         viewBox="0 0 64 64"
         role="img"
-        aria-label={`${label}: ${value === null ? "pendiente" : `${value} ${unit}`}`}
+        aria-label={`${label}: ${shown === null ? "pendiente" : `${shown} ${unit}`}`}
       >
         <circle className="nut-ring-track" cx="32" cy="32" r={r} />
         {fill > 0 ? (
           <circle className="nut-ring-bar" cx="32" cy="32" r={r} strokeDasharray={`${fill * c} ${c}`} transform="rotate(-90 32 32)" />
         ) : null}
         <text x="32" y="33" textAnchor="middle" dominantBaseline="middle" className="nut-ring-value">
-          {value === null ? "—" : value.toLocaleString("es-ES")}
+          {shown ?? "—"}
         </text>
       </svg>
       <figcaption>
@@ -586,7 +630,14 @@ function Ring({
   );
 }
 
-type MacroKcal = { p: number; c: number; f: number };
+/** Gramos por día de cada macro. */
+type MacroGrams = { p: number; c: number; f: number };
+
+const KCAL_PER_G: MacroGrams = { p: 4, c: 4, f: 9 };
+
+function fmt(v: number, digits = 0) {
+  return v.toLocaleString("es-ES", { maximumFractionDigits: digits, useGrouping: "always" });
+}
 
 const MACROS = [
   { key: "p", label: "Proteína" },
@@ -594,10 +645,11 @@ const MACROS = [
   { key: "f", label: "Grasas" }
 ] as const;
 
-/** Donut de reparto P/HC/G en % de kcal; null = sin cantidades. */
-function MacroDonut({ kcal }: { kcal: MacroKcal | null }) {
+/** Donut de reparto P/HC/G en % de kcal (4/4/9 kcal por g); null = sin cantidades. */
+function MacroDonut({ grams }: { grams: MacroGrams | null }) {
   const r = 26;
   const c = 2 * Math.PI * r;
+  const kcal = grams ? { p: grams.p * KCAL_PER_G.p, c: grams.c * KCAL_PER_G.c, f: grams.f * KCAL_PER_G.f } : null;
   const total = kcal ? kcal.p + kcal.c + kcal.f : 0;
   let offset = 0;
   return (
@@ -633,7 +685,11 @@ function MacroDonut({ kcal }: { kcal: MacroKcal | null }) {
             <li key={key}>
               <i className={`nut-macro-dot nut-macro-dot--${key}`} aria-hidden="true" />
               <strong>{label}</strong>
-              <span>{kcal && total > 0 ? `${Math.round((kcal[key] / total) * 100)} % kcal` : "— g · — % kcal"}</span>
+              <span>
+                {grams && kcal && total > 0
+                  ? `${fmt(grams[key])} g/día · ${Math.round((kcal[key] / total) * 100)} % kcal`
+                  : "— g · — % kcal"}
+              </span>
             </li>
           ))}
         </ul>
@@ -643,38 +699,83 @@ function MacroDonut({ kcal }: { kcal: MacroKcal | null }) {
 }
 
 /**
- * Resumen nutricional de la semana. Los platos (MealSlot) solo guardan título y
- * preparación en texto: no hay gramos ni nutrientes, así que los KPIs se muestran
- * pendientes en lugar de inventar cifras.
+ * Resumen nutricional del periodo visible (día / semana / mes), estimado del menú planificado.
+ * Solo suman los platos cuantificados (ingredientes vigentes confirmados con alimento y gramos);
+ * sin ninguno, los KPIs siguen pendientes en lugar de inventar cifras.
  */
-function WeekPanel({ days, meals, view, side }: { days: string[]; meals: MealSlot[] | null; view: NutView; side?: boolean }) {
-  if (meals === null) return null;
-  const planned = meals.filter((m) => days.includes(m.date)).length;
+function WeekPanel({ days, totals, view, side }: { days: string[]; totals: NutritionTotals | null; view: NutView; side?: boolean }) {
+  if (totals === null) return null;
+  const p = summarizeNutrition(totals, days);
+  const has = p.quantified > 0;
+  const kcal = periodTotal(p, "kcal");
+  const prot = perDay(p, "protein_g");
+  const carb = perDay(p, "carbs_g");
+  const fat = perDay(p, "fat_g");
+  const coverage = `${p.quantified}/${p.planned} platos`;
   return (
     <section className={side ? "nut-dash nut-dash--side" : "nut-dash"} aria-label="Resumen nutricional">
       <header className="nut-dash-head">
         <h3>{view === "day" ? "Resumen del día" : view === "month" ? "Resumen mensual" : "Resumen semanal"}</h3>
         <span className="muted">
-          {planned}/{MEAL_SLOTS.length * days.length} platos
+          {!p.planned
+            ? "Sin platos"
+            : has && kcal
+              ? `${kcal.approx ? "≥" : ""}${fmt(kcal.value)} kcal · ${coverage}`
+              : `Pendiente · ${coverage}`}
         </span>
       </header>
       <div className="nut-dash-main">
-        <Ring label="Energía" unit={view === "day" ? "kcal día" : view === "month" ? "kcal mes" : "kcal semana"} value={null} pct={null} />
-        <MacroDonut kcal={null} />
+        <Ring
+          label="Energía"
+          unit={view === "day" ? "kcal día" : view === "month" ? "kcal mes" : "kcal semana"}
+          value={kcal?.value ?? null}
+          approx={kcal?.approx}
+          pct={null}
+        />
+        <MacroDonut grams={prot && carb && fat ? { p: prot.value, c: carb.value, f: fat.value } : null} />
         <div className="nut-dash-pair">
-          <Ring label="Proteína" unit="g/kg/día" value={null} pct={null} size={56} />
-          <Ring label="Hidratos" unit="g/kg/día" value={null} pct={null} size={56} />
+          <PerKgRing label="Proteína" v={prot} p={p} />
+          <PerKgRing label="Hidratos" v={carb} p={p} />
         </div>
       </div>
       <div className="nut-dash-micros">
-        <Ring label="Fibra" unit="g/día" value={null} pct={null} size={48} />
-        <Ring label="Sodio" unit="mg/día" value={null} pct={null} size={48} />
-        <Ring label="Hierro" unit="mg/día" value={null} pct={null} size={48} />
-        <Ring label="Calcio" unit="mg/día" value={null} pct={null} size={48} />
-        <Ring label="Vit. D" unit="µg/día" value={null} pct={null} size={48} />
+        {MICROS.map((m) => {
+          const v = perDay(p, m.key);
+          return (
+            <Ring key={m.key} label={m.label} unit={m.unit} value={v?.value ?? null} approx={v?.approx} digits={m.digits} pct={null} size={48} />
+          );
+        })}
       </div>
-      <p className="muted">Pendiente de cantidades: los platos aún no guardan gramos ni nutrientes.</p>
+      <p className="muted">
+        {has
+          ? "Estimado del menú planificado, solo platos con ingredientes confirmados. Sodio sin sal de mesa; «≥» = falta el dato en algún alimento."
+          : "Pendiente: confirma alimento y gramos de los ingredientes de cada plato para calcular."}
+      </p>
     </section>
+  );
+}
+
+const MICROS: { key: NutrientKey; label: string; unit: string; digits: number }[] = [
+  { key: "fiber_g", label: "Fibra", unit: "g/día", digits: 0 },
+  { key: "sodium_mg", label: "Sodio", unit: "mg/día", digits: 0 },
+  { key: "iron_mg", label: "Hierro", unit: "mg/día", digits: 1 },
+  { key: "calcium_mg", label: "Calcio", unit: "mg/día", digits: 0 },
+  { key: "vit_d_ug", label: "Vit. D", unit: "µg/día", digits: 1 }
+];
+
+/** g/kg/día: necesita platos cuantificados y el peso del deportista. */
+function PerKgRing({ label, v, p }: { label: string; v: { value: number; approx: boolean } | null; p: PeriodNutrition }) {
+  const kg = p.weightKg;
+  return (
+    <Ring
+      label={label}
+      unit={v && !kg ? "falta peso" : "g/kg/día"}
+      value={v && kg ? v.value / kg : null}
+      approx={v?.approx}
+      digits={1}
+      pct={null}
+      size={56}
+    />
   );
 }
 

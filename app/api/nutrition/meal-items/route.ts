@@ -4,7 +4,7 @@ import { currentUser, rlsFrom } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
 import { canSeeAthleteNutrition } from "@/lib/access";
 import { apiError, notFound, unauthenticated } from "@/lib/errors";
-import { foodsForDrafts, mealItemsByIds, updateMealItem } from "@/lib/queries";
+import { foodsForDrafts, mealItemsByIds, mealItemsForSlot, updateMealItem } from "@/lib/queries";
 
 const ItemPatch = z
   .object({
@@ -17,6 +17,25 @@ const ItemPatch = z
   .refine((p) => Object.keys(p).length > 1, "Nada que cambiar");
 
 const Body = z.object({ items: z.array(ItemPatch).min(1).max(100) });
+
+/** Items de un plato (vigentes y obsoletos) + catálogo de alimentos para el editor. */
+export async function GET(req: Request) {
+  const user = await currentUser();
+  if (!user) return unauthenticated();
+  if (user.role !== "admin" && user.role !== "nutritionist") return notFound();
+
+  const mealSlotId = new URL(req.url).searchParams.get("mealSlotId");
+  if (!z.string().uuid().safeParse(mealSlotId).success) return apiError(422, "VALIDATION_ERROR", "Plato inválido");
+
+  const data = await withRls(rlsFrom(user), async (tx) => {
+    const slot = await mealItemsForSlot(tx, mealSlotId!);
+    if (!slot) return null;
+    const foods = (await foodsForDrafts(tx)).map((f) => ({ id: f.id, name: f.name_es }));
+    return { ...slot, foods };
+  });
+  if (!data || !(await canSeeAthleteNutrition(user, data.athleteId))) return notFound();
+  return NextResponse.json({ data: { items: data.items, foods: data.foods } });
+}
 
 /** Edita y/o confirma items de plato. Cambiar alimento, gramos o rol los marca `origin='manual'`. */
 export async function PUT(req: Request) {
