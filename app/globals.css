@@ -1021,6 +1021,12 @@ header.doc-header--wide {
   .nut-modal-body { padding: 14px 16px 20px; }
 }
 body.nut-modal-open { overflow: hidden; }
+.nut-import { display: flex; flex-direction: column; gap: 10px; font-size: 0.875rem; }
+.nut-import p { margin: 0; }
+.nut-import input[type="date"] { margin: 6px 0 0; font-variant-numeric: tabular-nums; }
+.nut-import-file { font-weight: 600; overflow-wrap: anywhere; }
+/* Cabecera nutricionista: ajustes y salir a la misma altura (36px), cápsula + círculo. */
+.top-actions.nut-top-actions .btn { min-height: 36px; padding: 6px 14px; border-radius: 999px; }
 .nut-account-settings { display: flex; flex-direction: column; gap: 20px; }
 .nut-account-settings h2 { font-size: 0.95rem; margin: 0 0 4px; }
 
@@ -1046,6 +1052,7 @@ body.nut-modal-open { overflow: hidden; }
   .nut-ws-main {
     grid-area: main;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
     gap: 16px;
     min-width: 0;
@@ -1085,25 +1092,30 @@ body.nut-modal-open { overflow: hidden; }
     padding: 12px 8px;
   }
   .nut-ws-list-body ul { flex: 1; min-height: 0; overflow-y: auto; }
+  /* Campo de búsqueda HIG: lupa a la izquierda, 36px, radio de control. Lupa = --secondary (#86868B). */
   .nut-ws-search {
     width: 100%;
+    min-height: 36px;
     margin: 0 0 8px;
-    padding: 6px 10px;
+    padding: 7px 10px 7px 32px;
     font-size: 0.8125rem;
     border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--surface);
+    border-radius: var(--radius-sm);
+    background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2386868B' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 11px center;
   }
+  .nut-ws-search:focus { border-color: transparent; }
   .nut-ws-list-above {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 8px;
+    gap: 6px;
+    padding: 10px 10px 12px;
     border-bottom: 1px solid var(--line);
     background: var(--surface);
   }
-  .nut-ws-list-above > p { margin: 0; padding: 0 2px; font-size: 0.75rem; }
+  /* El calendario ya vive en la superficie del rail: sin segundo marco. */
+  .nut-ws-list-above .card { padding: 0; border: 0; box-shadow: none; background: transparent; }
+  .nut-ws-list-above > p { margin: 0; padding: 0 4px; font-size: 0.75rem; }
 
   .nut-ws-list h2 {
     padding: 0 8px 8px;
@@ -1139,27 +1151,104 @@ body.nut-modal-open { overflow: hidden; }
   .nut-ws-main > .nut-ws-cal { display: none; }
 
   .nut-week { display: flex; flex-direction: column; min-height: 0; }
-  .nut-week .cal-nav { margin-bottom: 8px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
-  .nut-week .cal-nav h2 { font-size: 0.95rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; flex: 1; text-align: center; min-width: 8rem; }
-  .nut-week .cal-nav .nut-menu-import { margin-left: auto; font-size: 0.75rem; padding: 6px 10px; white-space: nowrap; }
-  .nut-import-dialog { margin-top: 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; width: 100%; flex-basis: 100%; }
-  .nut-import-dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; }
+  /* Toolbar: título a la izquierda, segmentado al centro, paso + import a la derecha. Todo a 32px. */
+  .nut-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  .nut-toolbar h2 {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .nut-toolbar h2::first-letter { text-transform: uppercase; }
+  .nut-toolbar-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  .nut-stepper { display: inline-flex; gap: 4px; }
+  .nut-stepper .icon-btn { width: 32px; height: 32px; font-size: 1.0625rem; }
+  .nut-toolbar .nut-menu-import {
+    min-height: 32px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
   .nut-week-grid {
     display: grid;
     grid-template-columns: 76px repeat(7, minmax(0, 1fr));
-    gap: 3px;
+    gap: 4px;
     font-size: 0.78rem;
   }
   .nut-week-row { display: contents; }
-  .nut-view-switch { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius-sm); background: var(--fill-secondary); }
-  .nut-view-btn { font: inherit; font-size: 0.75rem; color: inherit; cursor: pointer; border: 0; background: transparent; padding: 4px 10px; border-radius: var(--radius-sm); }
-  .nut-view-btn.on { background: var(--bg, #fff); font-weight: 600; }
-  .nut-month-list { display: flex; flex-direction: column; gap: 2px; max-height: 360px; overflow-y: auto; font-size: 0.78rem; }
-  .nut-month-row { display: flex; gap: 10px; align-items: baseline; font: inherit; color: inherit; text-align: left; cursor: pointer; border: 0; background: transparent; padding: 4px 8px; border-radius: var(--radius-sm); }
-  .nut-month-row strong { flex: 0 0 56px; text-transform: capitalize; font-variant-numeric: tabular-nums; }
+  /* Segmentado HIG: pista gris, pulgar blanco con sombra; radios concéntricos (10 − 2 = 8). */
+  .nut-view-switch {
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 2px;
+    padding: 2px;
+    border-radius: var(--radius-sm);
+    background: var(--fill-secondary);
+  }
+  .nut-view-btn {
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    min-height: 28px;
+    min-width: 72px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    transition: transform var(--dur) var(--ease), background var(--dur) ease, box-shadow var(--dur) ease;
+  }
+  .nut-view-btn:hover:not(.on) { background: var(--glass); }
+  .nut-view-btn:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+  .nut-view-btn:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  .nut-view-btn.on { background: var(--surface); font-weight: 600; box-shadow: var(--shadow-sm); }
+  .nut-month-list { display: flex; flex-direction: column; gap: 2px; max-height: 420px; overflow-y: auto; overscroll-behavior: contain; font-size: 0.8125rem; }
+  .nut-month-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    min-height: 36px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    transition: transform var(--dur) var(--ease), background var(--dur) ease;
+  }
+  .nut-month-row:hover { background: var(--bg); }
+  .nut-month-row:active { transform: scale(var(--press-scale-lg)); transition-duration: var(--dur-press); }
+  .nut-month-row:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+  .nut-month-row strong { flex: 0 0 64px; font-weight: 600; text-transform: capitalize; font-variant-numeric: tabular-nums; }
   .nut-month-row .muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nut-month-row.on { background: var(--fill-secondary); }
-  .nut-month-row.today strong { text-decoration: underline; text-underline-offset: 3px; }
+  /* Hoy: número en cápsula oscura (mismo gesto que Calendario de Apple, sin color nuevo). */
+  .nut-dnum {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.6em;
+    height: 1.6em;
+    padding: 0 4px;
+    border-radius: 999px;
+  }
+  .nut-month-row.today .nut-dnum, .nut-week-day.today .nut-dnum { background: var(--text); color: var(--surface); }
   .nut-week-day, .nut-week-cell {
     font: inherit;
     color: inherit;
@@ -1175,17 +1264,17 @@ body.nut-modal-open { overflow: hidden; }
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 1px;
-    min-height: 36px;
-    padding: 4px 8px;
-    border: 1px solid transparent;
+    gap: 2px;
+    min-height: 44px;
+    padding: 6px 8px;
+    border: 0;
     background: transparent;
   }
-  .nut-week-day strong { font-size: 0.8125rem; text-transform: capitalize; font-variant-numeric: tabular-nums; }
+  .nut-week-day:hover { background: var(--bg); }
+  .nut-week-day strong { font-size: 0.8125rem; font-weight: 600; text-transform: capitalize; font-variant-numeric: tabular-nums; }
   .nut-week-day .md-tag { font-size: 0.6875rem; font-weight: 600; color: var(--secondary); }
   .nut-week-day .muted { max-width: 100%; font-size: 0.6875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nut-week-day.on { background: var(--fill-secondary); }
-  .nut-week-day.today strong { text-decoration: underline; text-underline-offset: 3px; }
   .nut-week-slot {
     display: flex;
     align-items: center;
@@ -1193,19 +1282,35 @@ body.nut-modal-open { overflow: hidden; }
     font-weight: 600;
     color: var(--secondary);
   }
+  /* Celda con plato = superficie con filete; vacía = hueco gris sin borde y «+» al pasar. */
   .nut-week-cell {
     display: flex;
     align-items: center;
     gap: 8px;
-    min-height: 40px;
-    padding: 3px 6px;
-    border: 1px solid var(--line);
+    min-height: 44px;
+    padding: 4px 6px;
+    border: 0;
     background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
     line-height: 1.3;
   }
-  .nut-week-cell:hover { border-color: var(--secondary); }
-  .nut-week-cell.col-on { background: var(--bg); }
-  .nut-week-cell.on { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+  .nut-week-cell:hover { box-shadow: inset 0 0 0 1px var(--secondary); }
+  .nut-week-cell.empty { background: var(--bg); box-shadow: none; }
+  .nut-week-cell.empty.col-on { background: var(--fill-secondary); }
+  .nut-week-cell.empty:hover { background: var(--fill-secondary); }
+  .nut-week-cell.on, .nut-week-cell.on:hover { box-shadow: inset 0 0 0 1.5px var(--text); }
+  .nut-week-add {
+    margin: auto;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--secondary);
+    opacity: 0;
+    transition: opacity var(--dur) ease;
+  }
+  .nut-week-cell:hover .nut-week-add,
+  .nut-week-cell:focus-visible .nut-week-add,
+  .nut-week-cell.on .nut-week-add,
+  .nut-week-cell.col-on .nut-week-add { opacity: 1; }
   .nut-week-day:focus-visible, .nut-week-cell:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
   .nut-dash {
     --macro-p: var(--text);
@@ -1263,7 +1368,6 @@ body.nut-modal-open { overflow: hidden; }
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
-  .nut-week-cell span.muted { margin: auto; }
 
   .nut-week-row--snack .nut-week-slot--snack {
     font-size: 0.6875rem;

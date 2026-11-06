@@ -17,7 +17,7 @@ export default async function NutricionPage() {
 
   return (
     <>
-      <BrandHeader wide meta="Nutrición" trailing={<div className="top-actions"><LogoutButton inline /></div>} />
+      <BrandHeader wide meta="Nutrición" trailing={<div className="top-actions nut-top-actions"><LogoutButton inline /></div>} />
       <main className="page nut-page">
         <div className="nut-desktop nut-desktop-index">
           <NutAthleteNav athletes={athletes} />

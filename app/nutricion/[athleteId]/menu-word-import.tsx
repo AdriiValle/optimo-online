@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { startOfWeekMonday, todayKey } from "@/lib/dates";
 
 type Props = {
@@ -27,20 +28,34 @@ export function MenuWordImportButton({ athleteId, onImported }: Props) {
     if (inputRef.current) inputRef.current.value = "";
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !busy) reset();
+    }
+    window.addEventListener("keydown", onKey);
+    document.body.classList.add("nut-modal-open");
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.classList.remove("nut-modal-open");
+    };
+  }, [open, busy, reset]);
+
   function onPick(f: File | null) {
     setMsg(null);
     setErr(null);
     if (!f) return;
     const lower = f.name.toLowerCase();
+    // El sheet se abre también con error: si no, un PDF elegido no daba ninguna señal.
     if (lower.endsWith(".pdf") || f.type === "application/pdf") {
+      setFile(null);
       setErr("Solo Word (.docx) en esta versión. Exporta el menú como .docx, no PDF.");
-      return;
-    }
-    if (!lower.endsWith(".docx")) {
+    } else if (!lower.endsWith(".docx")) {
+      setFile(null);
       setErr("Sube un archivo .docx (Word).");
-      return;
+    } else {
+      setFile(f);
     }
-    setFile(f);
     setOpen(true);
   }
 
@@ -70,6 +85,11 @@ export function MenuWordImportButton({ athleteId, onImported }: Props) {
     window.setTimeout(reset, 1800);
   }
 
+  function pickAgain() {
+    if (inputRef.current) inputRef.current.value = "";
+    inputRef.current?.click();
+  }
+
   return (
     <>
       <input
@@ -80,40 +100,69 @@ export function MenuWordImportButton({ athleteId, onImported }: Props) {
         onChange={(e) => onPick(e.target.files?.[0] ?? null)}
       />
       <button type="button" className="btn secondary nut-menu-import" onClick={() => inputRef.current?.click()}>
-        Subir menú Word (.docx)
+        Importar menú Word
       </button>
 
-      {open && file ? (
-        <div className="nut-import-dialog card" role="dialog" aria-labelledby="nut-import-title">
-          <h3 id="nut-import-title">Importar menú</h3>
-          <p className="muted">{file.name}</p>
-          <p className="muted">
-            El documento no trae fechas: elige el <strong>lunes</strong> de la primera semana que quieres rellenar.
-          </p>
-          <label>
-            Semana de inicio (lunes)
-            <input
-              type="date"
-              value={weekStart}
-              onChange={(e) => {
-                const iso = e.target.value;
-                if (iso) setWeekStart(startOfWeekMonday(iso));
-              }}
-            />
-          </label>
-          <p className="muted">Solo se actualizan comida y cena; desayuno y meriendas no se borran.</p>
-          <div className="nut-actions">
-            <button type="button" className="btn" disabled={busy} onClick={() => void submit()}>
-              {busy ? "Importando…" : "Importar"}
-            </button>
-            <button type="button" className="btn secondary" disabled={busy} onClick={reset}>
-              Cancelar
-            </button>
-          </div>
-          {err ? <p className="error">{err}</p> : null}
-          {msg ? <p className="ok">{msg}</p> : null}
-        </div>
-      ) : null}
+      {open
+        ? createPortal(
+            <div className="nut-modal-root" role="presentation" onClick={() => (busy ? null : reset())}>
+              <div
+                className="nut-modal card"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="nut-import-title"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="nut-modal-head">
+                  <h2 id="nut-import-title">Importar menú</h2>
+                  <button type="button" className="icon-btn" aria-label="Cerrar" disabled={busy} onClick={reset}>
+                    ×
+                  </button>
+                </div>
+                <div className="nut-modal-body nut-import">
+                  {file ? (
+                    <>
+                      <p className="nut-import-file">{file.name}</p>
+                      <p className="muted">
+                        El documento no trae fechas: elige el <strong>lunes</strong> de la primera semana que quieres
+                        rellenar.
+                      </p>
+                      <label>
+                        Semana de inicio (lunes)
+                        <input
+                          type="date"
+                          value={weekStart}
+                          onChange={(e) => {
+                            const iso = e.target.value;
+                            if (iso) setWeekStart(startOfWeekMonday(iso));
+                          }}
+                        />
+                      </label>
+                      <p className="muted">Solo se actualizan comida y cena; desayuno y meriendas no se borran.</p>
+                    </>
+                  ) : null}
+                  {err ? <p className="error">{err}</p> : null}
+                  {msg ? <p className="ok">{msg}</p> : null}
+                  <div className="nut-actions">
+                    {file ? (
+                      <button type="button" className="btn" disabled={busy || !!msg} onClick={() => void submit()}>
+                        {busy ? "Importando…" : "Importar"}
+                      </button>
+                    ) : (
+                      <button type="button" className="btn" onClick={pickAgain}>
+                        Elegir otro archivo
+                      </button>
+                    )}
+                    <button type="button" className="btn secondary" disabled={busy} onClick={reset}>
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </>
   );
 }

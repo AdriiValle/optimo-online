@@ -148,7 +148,7 @@ export function NutricionAthleteClient({
         player={playerName}
         leading={headerLeading}
         trailing={
-          <div className="top-actions">
+          <div className="top-actions nut-top-actions">
             <button
               type="button"
               className="icon-btn"
@@ -333,14 +333,9 @@ function WeekGrid({
 
   return (
     <section className="card nut-week" aria-label="Menú semanal">
-      <div className="cal-nav">
-        <button type="button" className="icon-btn" aria-label={`${unit} anterior`} onClick={() => onStep(-1)}>
-          ‹
-        </button>
+      {/* Toolbar: título | segmentado | paso + import (patrón Calendario de Apple). */}
+      <div className="nut-toolbar">
         <h2>{title}</h2>
-        <button type="button" className="icon-btn" aria-label={`${unit} siguiente`} onClick={() => onStep(1)}>
-          ›
-        </button>
         <div className="nut-view-switch" role="group" aria-label="Vista">
           {VIEWS.map((v) => (
             <button
@@ -354,7 +349,17 @@ function WeekGrid({
             </button>
           ))}
         </div>
-        <MenuWordImportButton athleteId={athleteId} onImported={onMenuImported} />
+        <div className="nut-toolbar-end">
+          <div className="nut-stepper">
+            <button type="button" className="icon-btn" aria-label={`${unit} anterior`} onClick={() => onStep(-1)}>
+              ‹
+            </button>
+            <button type="button" className="icon-btn" aria-label={`${unit} siguiente`} onClick={() => onStep(1)}>
+              ›
+            </button>
+          </div>
+          <MenuWordImportButton athleteId={athleteId} onImported={onMenuImported} />
+        </div>
       </div>
       {view === "month" ? (
         <div className="nut-month-list">
@@ -369,7 +374,7 @@ function WeekGrid({
             return (
               <button key={iso} type="button" className={cls.join(" ")} onClick={() => onDay(iso)}>
                 <strong>
-                  {DOW_SHORT[d.getDay()]} {d.getDate()}
+                  {DOW_SHORT[d.getDay()]} <span className="nut-dnum">{d.getDate()}</span>
                 </strong>
                 <span className="muted">
                   {meals === null ? "…" : titles.length ? titles.map((m) => m.title).join(" · ") : "Sin platos"}
@@ -390,7 +395,7 @@ function WeekGrid({
           return (
             <button key={iso} type="button" className={cls.join(" ")} onClick={() => onDay(iso)}>
               <strong>
-                {DOW_SHORT[d.getDay()]} {d.getDate()}
+                {DOW_SHORT[d.getDay()]} <span className="nut-dnum">{d.getDate()}</span>
               </strong>
               {p?.mdTag ? <span className="md-tag">{p.mdTag}</span> : null}
               {p?.matchOpponent ? <span className="muted">vs {p.matchOpponent}</span> : null}
@@ -404,6 +409,7 @@ function WeekGrid({
               const meal = meals?.find((m) => m.date === iso && m.slot === kind);
               const cls = ["nut-week-cell"];
               if (tier === "snack") cls.push("nut-week-cell--snack");
+              if (meals !== null && !meal) cls.push("empty");
               if (iso === center) cls.push("col-on");
               if (editor?.date === iso && editor.slot === kind) cls.push("on");
               return (
@@ -423,7 +429,7 @@ function WeekGrid({
                       <span>{meal.title}</span>
                     </>
                   ) : (
-                    <span className="muted">+</span>
+                    <span className="nut-week-add" aria-hidden="true">+</span>
                   )}
                 </button>
               );
