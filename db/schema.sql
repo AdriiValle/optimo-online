@@ -455,6 +455,8 @@ CREATE TABLE IF NOT EXISTS portion_templates (
 );
 
 ALTER TABLE meal_slots ADD COLUMN IF NOT EXISTS items_text_hash text;
+-- Hash del texto del plato con el que se generó cada item: si ya no coincide, el item queda obsoleto.
+ALTER TABLE meal_items ADD COLUMN IF NOT EXISTS text_hash text;
 
 ALTER TABLE foods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE foods FORCE ROW LEVEL SECURITY;

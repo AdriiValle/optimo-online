@@ -833,3 +833,207 @@ export async function setMealPhoto(tx: Tx, mealId: string, bytes: Buffer, mime: 
   `;
   return Boolean(rows[0]);
 }
+
+// Macros del menú: borradores de ingredientes (meal_items).
+
+type FoodForDraftRow = {
+  id: string;
+  name_es: string;
+  aliases: string[];
+  protein_g: string | null;
+  carbs_g: string | null;
+  fat_g: string | null;
+};
+
+const num = (v: string | number | null) => (v == null ? null : Number(v));
+
+export async function foodsForDrafts(tx: Tx) {
+  const rows = await tx<FoodForDraftRow[]>`
+    select id, name_es, aliases, protein_g::text, carbs_g::text, fat_g::text from foods order by name_es
+  `;
+  return rows.map((r) => ({
+    id: r.id,
+    name_es: r.name_es,
+    aliases: r.aliases,
+    protein_g: num(r.protein_g),
+    carbs_g: num(r.carbs_g),
+    fat_g: num(r.fat_g)
+  }));
+}
+
+/** Plantillas del deportista y generales (athlete_id null). */
+export async function portionTemplatesFor(tx: Tx, athleteId: string) {
+  const rows = await tx<
+    { athlete_id: string | null; day_type: "rest" | "training" | "match"; slot: MealSlotKind; role: string; grams: string }[]
+  >`
+    select athlete_id, day_type, slot, role, grams::text
+    from portion_templates
+    where athlete_id is null or athlete_id = ${athleteId}
+  `;
+  return rows.map((r) => ({
+    athleteId: r.athlete_id,
+    dayType: r.day_type,
+    slot: r.slot,
+    role: r.role as "veg" | "protein" | "carb" | "fat" | "other",
+    grams: Number(r.grams)
+  }));
+}
+
+export type MealSlotForDraft = {
+  id: string;
+  date: string;
+  slot: MealSlotKind;
+  title: string;
+  preparation: string | null;
+  itemsTextHash: string | null;
+  mdTag: string | null;
+};
+
+export async function mealSlotsForDrafts(
+  tx: Tx,
+  athleteId: string,
+  range: { from: string; to: string } | { ids: string[] }
+): Promise<MealSlotForDraft[]> {
+  const filter =
+    "ids" in range
+      ? tx`ms.id = any(${range.ids}::uuid[])`
+      : tx`ms.date between ${range.from}::date and ${range.to}::date`;
+  const rows = await tx<
+    {
+      id: string;
+      date: string;
+      slot: MealSlotKind;
+      title: string;
+      preparation: string | null;
+      items_text_hash: string | null;
+      md_tag: string | null;
+    }[]
+  >`
+    select ms.id, ms.date::text, ms.slot, ms.title, ms.preparation, ms.items_text_hash, dp.md_tag
+    from meal_slots ms
+    left join lateral (
+      select md_tag from day_plans where athlete_id = ms.athlete_id and date = ms.date limit 1
+    ) dp on true
+    where ms.athlete_id = ${athleteId} and ${filter}
+    order by ms.date, ms.slot
+  `;
+  return rows.map((r) => ({
+    id: r.id,
+    date: isoDate(r.date),
+    slot: r.slot,
+    title: r.title,
+    preparation: r.preparation,
+    itemsTextHash: r.items_text_hash,
+    mdTag: r.md_tag
+  }));
+}
+
+export async function deleteUnconfirmedMealItems(tx: Tx, mealSlotId: string) {
+  const rows = await tx<{ id: string }[]>`
+    delete from meal_items where meal_slot_id = ${mealSlotId} and not confirmed returning id
+  `;
+  return rows.length;
+}
+
+export async function hasConfirmedMealItems(tx: Tx, mealSlotId: string, textHash: string) {
+  const rows = await tx<{ ok: boolean }[]>`
+    select exists (
+      select 1 from meal_items where meal_slot_id = ${mealSlotId} and confirmed and text_hash = ${textHash}
+    ) as ok
+  `;
+  return rows[0]?.ok ?? false;
+}
+
+export async function insertDraftMealItems(
+  tx: Tx,
+  mealSlotId: string,
+  textHash: string,
+  items: { food_id: string | null; raw_text: string; role: string; grams: number | null; position: number }[]
+) {
+  for (const it of items) {
+    await tx`
+      insert into meal_items (meal_slot_id, food_id, raw_text, role, grams, origin, confirmed, position, text_hash)
+      values (${mealSlotId}, ${it.food_id}, ${it.raw_text}, ${it.role}, ${it.grams}, 'rule', false, ${it.position}, ${textHash})
+    `;
+  }
+  return items.length;
+}
+
+export async function setMealSlotItemsHash(tx: Tx, mealSlotId: string, textHash: string) {
+  await tx`update meal_slots set items_text_hash = ${textHash} where id = ${mealSlotId}`;
+}
+
+export type MealItem = {
+  id: string;
+  mealSlotId: string;
+  athleteId: string;
+  foodId: string | null;
+  rawText: string;
+  role: "veg" | "protein" | "carb" | "fat" | "other";
+  grams: number | null;
+  origin: "rule" | "manual" | "llm";
+  confirmed: boolean;
+  position: number;
+  /** El texto del plato cambió desde que se generó el item: no cuenta en totales. */
+  obsolete: boolean;
+};
+
+type MealItemRow = {
+  id: string;
+  meal_slot_id: string;
+  athlete_id: string;
+  food_id: string | null;
+  raw_text: string;
+  role: MealItem["role"];
+  grams: string | null;
+  origin: MealItem["origin"];
+  confirmed: boolean;
+  position: number;
+  obsolete: boolean;
+};
+
+function mapMealItem(r: MealItemRow): MealItem {
+  return {
+    id: r.id,
+    mealSlotId: r.meal_slot_id,
+    athleteId: r.athlete_id,
+    foodId: r.food_id,
+    rawText: r.raw_text,
+    role: r.role,
+    grams: num(r.grams),
+    origin: r.origin,
+    confirmed: r.confirmed,
+    position: r.position,
+    obsolete: r.obsolete
+  };
+}
+
+export async function mealItemsByIds(tx: Tx, ids: string[]) {
+  const rows = await tx<MealItemRow[]>`
+    select mi.id, mi.meal_slot_id, ms.athlete_id, mi.food_id, mi.raw_text, mi.role, mi.grams::text, mi.origin,
+      mi.confirmed, mi.position,
+      mi.text_hash is distinct from md5(coalesce(nullif(ms.preparation, ''), ms.title)) as obsolete
+    from meal_items mi
+    join meal_slots ms on ms.id = mi.meal_slot_id
+    where mi.id = any(${ids}::uuid[])
+    order by mi.meal_slot_id, mi.position
+  `;
+  return rows.map(mapMealItem);
+}
+
+export async function updateMealItem(
+  tx: Tx,
+  id: string,
+  patch: { foodId?: string | null; grams?: number | null; role?: MealItem["role"]; confirmed?: boolean }
+) {
+  const manual = patch.foodId !== undefined || patch.grams !== undefined || patch.role !== undefined;
+  await tx`
+    update meal_items set
+      food_id = ${patch.foodId === undefined ? tx`food_id` : patch.foodId},
+      grams = ${patch.grams === undefined ? tx`grams` : patch.grams},
+      role = ${patch.role === undefined ? tx`role` : patch.role},
+      confirmed = ${patch.confirmed === undefined ? tx`confirmed` : patch.confirmed},
+      origin = ${manual ? "manual" : tx`origin`}
+    where id = ${id}
+  `;
+}

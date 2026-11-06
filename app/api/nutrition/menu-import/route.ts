@@ -13,6 +13,7 @@ import {
   parseWordMenuTables
 } from "@/lib/menu-import/parse-word-menu";
 import { upsertMealSlot } from "@/lib/queries";
+import { generateMealItemDrafts, type DraftSummary } from "@/lib/nutrition/generate-drafts";
 import { addDays, dateKey, parseDateLocal } from "@/lib/dates";
 
 const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
   const athleteId = form.get("athleteId");
   const weekStart = form.get("weekStart");
   const file = form.get("file");
+  const withItems = form.get("withItems") === "1";
 
   if (typeof athleteId !== "string" || !z.string().uuid().safeParse(athleteId).success) {
     return apiError(422, "VALIDATION_ERROR", "Deportista inválido");
@@ -82,13 +84,15 @@ export async function POST(req: Request) {
     throw e;
   }
 
-  const written = await withRls(rlsFrom(user), async (tx) => {
-    let n = 0;
+  const { written, drafts } = await withRls(rlsFrom(user), async (tx) => {
+    const ids: string[] = [];
     for (const row of rows) {
-      await upsertMealSlot(tx, athleteId, row.date, row.slot, row.title, row.preparation);
-      n++;
+      const meal = await upsertMealSlot(tx, athleteId, row.date, row.slot, row.title, row.preparation);
+      if (meal) ids.push(meal.id);
     }
-    return n;
+    // Paso opcional: borradores de ingredientes solo para los platos cuyo texto cambió.
+    const drafts: DraftSummary | null = withItems ? await generateMealItemDrafts(tx, athleteId, { ids }) : null;
+    return { written: rows.length, drafts };
   });
 
   const weekStarts = weeks.map((_, i) => dateKey(addDays(parseDateLocal(weekStart), i * 7)));
@@ -99,7 +103,8 @@ export async function POST(req: Request) {
       slotsWritten: written,
       blocksInDoc: blocks.length,
       blocksSkipped: blocks.length - weeks.length,
-      weekStarts
+      weekStarts,
+      ...(drafts ? { drafts } : {})
     }
   });
 }
