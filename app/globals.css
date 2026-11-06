@@ -776,7 +776,8 @@ header.doc-header--wide {
   padding: 4px;
 }
 .cal-compact .cal-nav { margin-bottom: 4px; }
-.cal-compact .cal-nav h2 { font-size: 0.95rem; letter-spacing: -0.02em; }
+.cal-compact .cal-nav h2 { font-size: 0.8rem; letter-spacing: -0.02em; }
+.cal-compact .cal-nav .icon-btn { width: 26px; height: 26px; font-size: 0.85rem; }
 .cal-compact .cal-grid { gap: 2px; }
 .cal-compact .cal-dow { padding: 0 0 2px; font-size: 0.625rem; }
 .cal-compact .cal-day { min-height: 34px; padding: 2px 0 3px; border-radius: 8px; }
