@@ -370,50 +370,137 @@ function WeekGrid({
   );
 }
 
-function Ring({ value, total, label }: { value: number; total: number; label: string }) {
+/** Anillo KPI. `pct` 0–1 frente al objetivo; `value` null = sin datos todavía. */
+function Ring({
+  label,
+  unit,
+  value,
+  pct,
+  size = 64
+}: {
+  label: string;
+  unit: string;
+  value: number | null;
+  pct: number | null;
+  size?: number;
+}) {
   const r = 26;
   const c = 2 * Math.PI * r;
-  const pct = total > 0 ? value / total : 0;
+  const fill = value === null || pct === null ? 0 : Math.min(Math.max(pct, 0), 1);
   return (
-    <div className="nut-ring">
-      <svg width="72" height="72" viewBox="0 0 64 64" role="img" aria-label={`${label}: ${value} de ${total}`}>
-        <circle cx="32" cy="32" r={r} fill="none" stroke="var(--fill-secondary)" strokeWidth="7" />
-        <circle
-          cx="32"
-          cy="32"
-          r={r}
-          fill="none"
-          stroke="var(--text)"
-          strokeWidth="7"
-          strokeLinecap="round"
-          strokeDasharray={`${pct * c} ${c}`}
-          transform="rotate(-90 32 32)"
-        />
-        <text x="32" y="36" textAnchor="middle" fontSize="13" fontWeight="600" fill="currentColor">
-          {value}/{total}
+    <figure className={value === null ? "nut-ring nut-ring--empty" : "nut-ring"}>
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 64 64"
+        role="img"
+        aria-label={`${label}: ${value === null ? "pendiente" : `${value} ${unit}`}`}
+      >
+        <circle className="nut-ring-track" cx="32" cy="32" r={r} />
+        {fill > 0 ? (
+          <circle className="nut-ring-bar" cx="32" cy="32" r={r} strokeDasharray={`${fill * c} ${c}`} transform="rotate(-90 32 32)" />
+        ) : null}
+        <text x="32" y="33" textAnchor="middle" dominantBaseline="middle" className="nut-ring-value">
+          {value === null ? "—" : value.toLocaleString("es-ES")}
         </text>
       </svg>
-      <span>{label}</span>
-    </div>
+      <figcaption>
+        <strong>{label}</strong>
+        <span>{unit}</span>
+      </figcaption>
+    </figure>
   );
 }
 
+type MacroKcal = { p: number; c: number; f: number };
+
+const MACROS = [
+  { key: "p", label: "Proteína" },
+  { key: "c", label: "Hidratos" },
+  { key: "f", label: "Grasas" }
+] as const;
+
+/** Donut de reparto P/HC/G en % de kcal; null = sin cantidades. */
+function MacroDonut({ kcal }: { kcal: MacroKcal | null }) {
+  const r = 26;
+  const c = 2 * Math.PI * r;
+  const total = kcal ? kcal.p + kcal.c + kcal.f : 0;
+  let offset = 0;
+  return (
+    <figure className="nut-macro">
+      <svg width={96} height={96} viewBox="0 0 64 64" role="img" aria-label="Reparto de macronutrientes">
+        <circle className="nut-ring-track" cx="32" cy="32" r={r} />
+        {kcal && total > 0
+          ? MACROS.map(({ key }) => {
+              const len = (kcal[key] / total) * c;
+              const seg = (
+                <circle
+                  key={key}
+                  className={`nut-macro-seg nut-macro-seg--${key}`}
+                  cx="32"
+                  cy="32"
+                  r={r}
+                  strokeDasharray={`${len} ${c - len}`}
+                  strokeDashoffset={-offset}
+                  transform="rotate(-90 32 32)"
+                />
+              );
+              offset += len;
+              return seg;
+            })
+          : null}
+        <text x="32" y="33" textAnchor="middle" dominantBaseline="middle" className="nut-ring-value">
+          {kcal && total > 0 ? "P·HC·G" : "—"}
+        </text>
+      </svg>
+      <figcaption>
+        <ul className="nut-macro-legend">
+          {MACROS.map(({ key, label }) => (
+            <li key={key}>
+              <i className={`nut-macro-dot nut-macro-dot--${key}`} aria-hidden="true" />
+              <strong>{label}</strong>
+              <span>{kcal && total > 0 ? `${Math.round((kcal[key] / total) * 100)} % kcal` : "— g · — % kcal"}</span>
+            </li>
+          ))}
+        </ul>
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Resumen nutricional de la semana. Los platos (MealSlot) solo guardan título y
+ * preparación en texto: no hay gramos ni nutrientes, así que los KPIs se muestran
+ * pendientes en lugar de inventar cifras.
+ */
 function WeekPanel({ days, meals }: { days: string[]; meals: MealSlot[] | null }) {
   if (meals === null) return null;
-  const inWeek = meals.filter((m) => days.includes(m.date));
-  const mainKinds = MEAL_SLOTS.filter((s) => s.tier !== "snack").map((s) => s.slot);
-  const snackKinds = MEAL_SLOTS.filter((s) => s.tier === "snack").map((s) => s.slot);
-  const count = (kinds: MealSlotKind[]) => inWeek.filter((m) => kinds.includes(m.slot)).length;
-  const daysWithMenu = days.filter((d) => inWeek.some((m) => m.date === d)).length;
+  const planned = meals.filter((m) => days.includes(m.date)).length;
   return (
-    <div className="nut-week-panel">
-      <div className="nut-rings">
-        <Ring value={daysWithMenu} total={7} label="Días con menú" />
-        <Ring value={count(mainKinds)} total={mainKinds.length * 7} label="Comidas principales" />
-        <Ring value={count(snackKinds)} total={snackKinds.length * 7} label="Snacks" />
+    <section className="nut-dash" aria-label="Resumen nutricional semanal">
+      <header className="nut-dash-head">
+        <h3>Resumen semanal</h3>
+        <span className="muted">
+          {planned}/{MEAL_SLOTS.length * 7} platos
+        </span>
+      </header>
+      <div className="nut-dash-main">
+        <Ring label="Energía" unit="kcal semana" value={null} pct={null} size={96} />
+        <MacroDonut kcal={null} />
+        <div className="nut-dash-pair">
+          <Ring label="Proteína" unit="g/kg/día" value={null} pct={null} />
+          <Ring label="Hidratos" unit="g/kg/día" value={null} pct={null} />
+        </div>
       </div>
-      <p className="muted">Macros y micronutrientes semanales: pendientes, los platos aún no guardan cantidades.</p>
-    </div>
+      <div className="nut-dash-micros">
+        <Ring label="Fibra" unit="g/día" value={null} pct={null} size={56} />
+        <Ring label="Sodio" unit="mg/día" value={null} pct={null} size={56} />
+        <Ring label="Hierro" unit="mg/día" value={null} pct={null} size={56} />
+        <Ring label="Calcio" unit="mg/día" value={null} pct={null} size={56} />
+        <Ring label="Vit. D" unit="µg/día" value={null} pct={null} size={56} />
+      </div>
+      <p className="muted">Pendiente de cantidades: los platos aún no guardan gramos ni nutrientes.</p>
+    </section>
   );
 }
 
