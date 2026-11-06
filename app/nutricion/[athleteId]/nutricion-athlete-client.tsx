@@ -411,7 +411,14 @@ function WeekGrid({
           {view === "month" ? (
             <MonthCalendar days={days} byDate={byDate} meals={meals} center={center} today={today} onOpen={onOpenDay} />
           ) : (
-          <div className="nut-week-grid" style={{ gridTemplateColumns: `76px repeat(${days.length}, minmax(0, 1fr))` }}>
+          <div
+            className="nut-week-grid"
+            style={{
+              gridTemplateColumns: `76px repeat(${days.length}, minmax(0, 1fr))`,
+              /* Filas elásticas: las franjas reparten el alto libre (principal 3 : snack 2). */
+              gridTemplateRows: `auto ${MEAL_SLOTS.map((s) => (s.tier === "snack" ? "minmax(32px, 2fr)" : "minmax(44px, 3fr)")).join(" ")}`
+            }}
+          >
             <div />
             {days.map((iso) => {
               const d = parseDateLocal(iso);
@@ -595,7 +602,7 @@ function MacroDonut({ kcal }: { kcal: MacroKcal | null }) {
   let offset = 0;
   return (
     <figure className="nut-macro">
-      <svg width={96} height={96} viewBox="0 0 64 64" role="img" aria-label="Reparto de macronutrientes">
+      <svg width={64} height={64} viewBox="0 0 64 64" role="img" aria-label="Reparto de macronutrientes">
         <circle className="nut-ring-track" cx="32" cy="32" r={r} />
         {kcal && total > 0
           ? MACROS.map(({ key }) => {
@@ -652,19 +659,19 @@ function WeekPanel({ days, meals, view, side }: { days: string[]; meals: MealSlo
         </span>
       </header>
       <div className="nut-dash-main">
-        <Ring label="Energía" unit={view === "day" ? "kcal día" : view === "month" ? "kcal mes" : "kcal semana"} value={null} pct={null} size={96} />
+        <Ring label="Energía" unit={view === "day" ? "kcal día" : view === "month" ? "kcal mes" : "kcal semana"} value={null} pct={null} />
         <MacroDonut kcal={null} />
         <div className="nut-dash-pair">
-          <Ring label="Proteína" unit="g/kg/día" value={null} pct={null} />
-          <Ring label="Hidratos" unit="g/kg/día" value={null} pct={null} />
+          <Ring label="Proteína" unit="g/kg/día" value={null} pct={null} size={56} />
+          <Ring label="Hidratos" unit="g/kg/día" value={null} pct={null} size={56} />
         </div>
       </div>
       <div className="nut-dash-micros">
-        <Ring label="Fibra" unit="g/día" value={null} pct={null} size={56} />
-        <Ring label="Sodio" unit="mg/día" value={null} pct={null} size={56} />
-        <Ring label="Hierro" unit="mg/día" value={null} pct={null} size={56} />
-        <Ring label="Calcio" unit="mg/día" value={null} pct={null} size={56} />
-        <Ring label="Vit. D" unit="µg/día" value={null} pct={null} size={56} />
+        <Ring label="Fibra" unit="g/día" value={null} pct={null} size={48} />
+        <Ring label="Sodio" unit="mg/día" value={null} pct={null} size={48} />
+        <Ring label="Hierro" unit="mg/día" value={null} pct={null} size={48} />
+        <Ring label="Calcio" unit="mg/día" value={null} pct={null} size={48} />
+        <Ring label="Vit. D" unit="µg/día" value={null} pct={null} size={48} />
       </div>
       <p className="muted">Pendiente de cantidades: los platos aún no guardan gramos ni nutrientes.</p>
     </section>

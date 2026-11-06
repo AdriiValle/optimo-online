@@ -1034,18 +1034,19 @@ body.nut-modal-open { overflow: hidden; }
 .nut-drawer-root { display: none; }
 
 @media (min-width: 1280px) {
-  .page.nut-page { max-width: none; width: 100%; padding-left: 24px; padding-right: 24px; }
+  .page.nut-page { max-width: none; width: 100%; padding-left: 24px; padding-right: 24px; padding-bottom: 16px; }
+  /* Workspace a alto fijo de viewport: rail + zona de trabajo caben sin scroll de página. */
   .nut-desktop {
     --nut-top: calc(var(--header-offset) + var(--header-block) + var(--header-gap));
     display: grid;
     grid-template-columns: 300px minmax(0, 1fr);
     grid-template-areas: "list main";
-    grid-template-rows: 1fr;
+    grid-template-rows: minmax(0, 1fr);
     gap: 16px;
     align-items: stretch;
-    min-height: calc(100vh - var(--nut-top) - 24px);
+    height: calc(100vh - var(--nut-top) - 16px);
+    height: calc(100dvh - var(--nut-top) - 16px);
   }
-  .nut-desktop-index { grid-template-columns: 300px minmax(0, 1fr); grid-template-areas: "list main"; grid-template-rows: auto; min-height: 0; }
   .nut-ws-index { grid-area: main; max-width: 720px; }
   .nut-ws-index .athlete-list { display: none; }
 
@@ -1056,6 +1057,7 @@ body.nut-modal-open { overflow: hidden; }
     grid-template-rows: minmax(0, 1fr);
     gap: 16px;
     min-width: 0;
+    min-height: 0;
   }
 
   .nut-ws-mobile-menu { display: none; }
@@ -1074,10 +1076,7 @@ body.nut-modal-open { overflow: hidden; }
     grid-area: list;
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - var(--nut-top) - 24px);
-    max-height: calc(100vh - var(--nut-top) - 16px);
-    position: sticky;
-    top: var(--nut-top);
+    min-height: 0;
     padding: 0;
     background: var(--fill-secondary);
     border: 1px solid var(--line);
@@ -1151,13 +1150,15 @@ body.nut-modal-open { overflow: hidden; }
   .nut-ws-main > .nut-ws-cal { display: none; }
 
   .nut-week { display: flex; flex-direction: column; min-height: 0; }
+  /* Rejilla / lista / mes ocupan el alto libre; el resumen va debajo a su alto natural. */
+  .nut-week-grid, .nut-day-layout, .nut-month { flex: 1; min-height: 0; }
   /* Toolbar: título a la izquierda, segmentado al centro, paso + import a la derecha. Todo a 32px. */
   .nut-toolbar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     gap: 12px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     flex-shrink: 0;
   }
   .nut-toolbar h2 {
@@ -1221,19 +1222,31 @@ body.nut-modal-open { overflow: hidden; }
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
     gap: 20px;
-    align-items: start;
+    align-items: stretch;
   }
-  .nut-day-list { display: flex; flex-direction: column; gap: 4px; font-size: 0.8125rem; }
-  .nut-day-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; }
-  .nut-day-row .nut-week-cell { min-height: 56px; padding: 6px 10px; }
+  .nut-day-list { display: flex; flex-direction: column; gap: 4px; min-height: 0; font-size: 0.8125rem; }
+  .nut-day-row { flex: 3 1 0; display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; min-height: 56px; }
+  .nut-day-row--snack { flex: 2 1 0; min-height: 40px; }
+  .nut-day-row .nut-week-cell { min-height: 0; padding: 6px 10px; }
   .nut-day-row .nut-week-cell img { width: 44px; height: 44px; }
-  .nut-day-row--snack .nut-week-cell { min-height: 40px; }
   .nut-day-row--snack .nut-week-cell img { width: 32px; height: 32px; }
-  .nut-dash.nut-dash--side { margin-top: 0; padding: 0 0 0 20px; border-top: 0; border-left: 1px solid var(--line); }
-  .nut-dash--side .nut-dash-main { gap: 16px 20px; }
-  .nut-dash--side .nut-dash-micros { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 12px; }
+  .nut-dash.nut-dash--side {
+    display: flex;
+    margin-top: 0;
+    padding: 0 0 0 20px;
+    border-top: 0;
+    border-left: 1px solid var(--line);
+  }
+  .nut-dash--side .nut-dash-main { gap: 12px 16px; }
   /* Mes: calendario a ancho de zona; un punto por franja (relleno = con plato). */
-  .nut-month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; font-size: 0.8125rem; }
+  .nut-month {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: auto;
+    grid-auto-rows: minmax(44px, 1fr);
+    gap: 4px;
+    font-size: 0.8125rem;
+  }
   .nut-month-dow {
     padding: 0 0 4px;
     font-size: 0.6875rem;
@@ -1247,9 +1260,9 @@ body.nut-modal-open { overflow: hidden; }
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 6px;
+    gap: 4px;
     min-width: 0;
-    min-height: 64px;
+    min-height: 0;
     padding: 6px 8px 8px;
     font: inherit;
     color: inherit;
@@ -1348,27 +1361,32 @@ body.nut-modal-open { overflow: hidden; }
   .nut-week-cell.on .nut-week-add,
   .nut-week-cell.col-on .nut-week-add { opacity: 1; }
   .nut-week-day:focus-visible, .nut-week-cell:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  /* Resumen en una franja: cabecera + nota arriba; anillos principales | micros abajo. */
   .nut-dash {
     --macro-p: var(--text);
     --macro-c: #6E6E73;
     --macro-f: #AEAEB2;
-    margin-top: 12px;
-    padding-top: 12px;
+    flex-shrink: 0;
+    margin-top: 10px;
+    padding-top: 10px;
     border-top: 1px solid var(--line);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "head note" "main micros";
+    align-items: center;
+    gap: 8px 24px;
   }
-  .nut-dash-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .nut-dash-head { grid-area: head; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
   .nut-dash-head h3 { margin: 0; font-size: 0.875rem; letter-spacing: -0.01em; }
   .nut-dash-head .muted { font-size: 0.75rem; font-variant-numeric: tabular-nums; }
-  .nut-dash-main { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
-  .nut-dash-pair { display: flex; gap: 20px; }
+  .nut-dash-main { grid-area: main; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .nut-dash-pair { display: flex; gap: 16px; }
   .nut-dash-micros {
+    grid-area: micros;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 8px;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: var(--radius-sm);
     background: var(--bg);
   }
@@ -1395,7 +1413,9 @@ body.nut-modal-open { overflow: hidden; }
   .nut-macro-dot--p { background: var(--macro-p); }
   .nut-macro-dot--c { background: var(--macro-c); }
   .nut-macro-dot--f { background: var(--macro-f); }
-  .nut-dash > .muted { margin: 0; font-size: 0.75rem; }
+  .nut-dash > .muted { grid-area: note; margin: 0; font-size: 0.75rem; text-align: right; }
+  .nut-dash--side { flex-direction: column; align-items: stretch; gap: 10px; }
+  .nut-dash--side > .muted { text-align: left; }
   .nut-week-cell img { width: 32px; height: 32px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
   .nut-week-cell span {
     min-width: 0;
