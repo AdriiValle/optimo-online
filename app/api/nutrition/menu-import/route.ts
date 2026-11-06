@@ -90,8 +90,10 @@ export async function POST(req: Request) {
       const meal = await upsertMealSlot(tx, athleteId, row.date, row.slot, row.title, row.preparation);
       if (meal) ids.push(meal.id);
     }
-    // Paso opcional: borradores de ingredientes solo para los platos cuyo texto cambió.
-    const drafts: DraftSummary | null = withItems ? await generateMealItemDrafts(tx, athleteId, { ids }) : null;
+    // Paso opcional: ingredientes solo para los platos cuyo texto cambió; nacen confirmados (Amanda corrige después).
+    const drafts: DraftSummary | null = withItems
+      ? await generateMealItemDrafts(tx, athleteId, { ids }, { confirm: true })
+      : null;
     return { written: rows.length, drafts };
   });
 

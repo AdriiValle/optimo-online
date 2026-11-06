@@ -948,12 +948,13 @@ export async function insertDraftMealItems(
   tx: Tx,
   mealSlotId: string,
   textHash: string,
-  items: { food_id: string | null; raw_text: string; role: string; grams: number | null; position: number }[]
+  items: { food_id: string | null; raw_text: string; role: string; grams: number | null; position: number }[],
+  confirmed = false
 ) {
   for (const it of items) {
     await tx`
       insert into meal_items (meal_slot_id, food_id, raw_text, role, grams, origin, confirmed, position, text_hash)
-      values (${mealSlotId}, ${it.food_id}, ${it.raw_text}, ${it.role}, ${it.grams}, 'rule', false, ${it.position}, ${textHash})
+      values (${mealSlotId}, ${it.food_id}, ${it.raw_text}, ${it.role}, ${it.grams}, 'rule', ${confirmed}, ${it.position}, ${textHash})
     `;
   }
   return items.length;

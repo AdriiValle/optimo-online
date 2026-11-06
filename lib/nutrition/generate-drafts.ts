@@ -26,12 +26,13 @@ export type DraftSummary = {
  * hash igual al de la última generación → nada (re-import idéntico no duplica), salvo `force`;
  * si no → borra los no confirmados y genera borradores, salvo que ya haya confirmados del texto vigente.
  * Los confirmados de un texto anterior no se tocan: quedan obsoletos por su `text_hash`.
+ * `confirm`: los items nuevos nacen confirmados (import Word); se revisan y corrigen después en el editor.
  */
 export async function generateMealItemDrafts(
   tx: Tx,
   athleteId: string,
   range: { from: string; to: string } | { ids: string[] },
-  opts: { force?: boolean } = {}
+  opts: { force?: boolean; confirm?: boolean } = {}
 ): Promise<DraftSummary> {
   const summary: DraftSummary = {
     slotsSeen: 0,
@@ -68,7 +69,7 @@ export async function generateMealItemDrafts(
         dayType: dayTypeFromMdTag(slot.mdTag),
         slot: slot.slot
       });
-      summary.itemsCreated += await insertDraftMealItems(tx, slot.id, hash, items);
+      summary.itemsCreated += await insertDraftMealItems(tx, slot.id, hash, items, opts.confirm);
       summary.slotsDrafted++;
     }
     await setMealSlotItemsHash(tx, slot.id, hash);
