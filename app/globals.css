@@ -1096,6 +1096,26 @@ body.nut-modal-open { overflow: hidden; }
   font-weight: 600;
   color: var(--accent-hover);
 }
+/* Subida de foto (Amanda): el héroe es zona de soltar; acciones y «platos iguales» debajo. */
+.nut-ficha-photo { display: flex; flex-direction: column; gap: 8px; }
+.nut-ficha-hero { transition: box-shadow var(--dur) var(--ease); }
+.nut-ficha-hero.is-over { box-shadow: inset 0 0 0 2px var(--cat-ink); }
+.nut-ficha-drop {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.78);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.nut-ficha-photo-actions { display: flex; gap: 8px; }
+.nut-ficha-photo-actions .btn { flex: 1; min-height: 36px; padding: 6px 12px; font-size: 0.8125rem; }
+.nut-ficha-same { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--text); cursor: pointer; }
+.nut-ficha-same input { width: 16px; height: 16px; margin: 0; accent-color: var(--text); }
+.nut-ficha-photo-msg { margin: 0; font-size: 0.75rem; }
+.nut-modal .nut-ficha-photo-actions .btn { min-height: 44px; }
 .nut-ficha-title { display: flex; flex-direction: column; gap: 4px; }
 .nut-ficha-cat { font-size: 0.75rem; font-weight: 600; color: var(--cat-ink); }
 .nut-ficha-title h3 { margin: 0; font-size: 1.25rem; line-height: 1.25; letter-spacing: -0.02em; }

@@ -825,13 +825,43 @@ export async function mealPhotoFor(tx: Tx, mealId: string) {
   return { bytes: Buffer.from(row.photo_bytes), mime: row.photo_mime || "image/jpeg" };
 }
 
-export async function setMealPhoto(tx: Tx, mealId: string, bytes: Buffer, mime: string) {
-  const rows = await tx<{ id: string }[]>`
-    update meal_slots set photo_bytes = ${bytes}, photo_mime = ${mime}, updated_at = now()
-    where id = ${mealId}
-    returning id
+/** Platos iguales a este (mismo deportista y mismo texto, como el hash de ingredientes) que aún no tienen foto. */
+export async function sameDishWithoutPhotoCount(tx: Tx, mealId: string) {
+  const rows = await tx<{ n: number }[]>`
+    select count(*)::int as n
+    from meal_slots s join meal_slots m on m.id <> s.id
+    where s.id = ${mealId}
+      and m.athlete_id = s.athlete_id
+      and md5(coalesce(nullif(m.preparation, ''), m.title)) = md5(coalesce(nullif(s.preparation, ''), s.title))
+      and (m.photo_bytes is null or octet_length(m.photo_bytes) = 0)
   `;
-  return Boolean(rows[0]);
+  return rows[0]?.n ?? 0;
+}
+
+/**
+ * Guarda la foto del plato. Con `applyToSame`, la copia también a los platos iguales del deportista
+ * que no tienen foto (el Word repite la semana); nunca pisa una foto existente de otro plato.
+ */
+export async function setMealPhoto(tx: Tx, mealId: string, bytes: Buffer, mime: string, applyToSame = false) {
+  const rows = await tx<{ id: string; updated_at: string }[]>`
+    update meal_slots m set photo_bytes = ${bytes}, photo_mime = ${mime}, updated_at = now()
+    from meal_slots s
+    where s.id = ${mealId}
+      and (m.id = s.id or (${applyToSame} and m.athlete_id = s.athlete_id
+        and md5(coalesce(nullif(m.preparation, ''), m.title)) = md5(coalesce(nullif(s.preparation, ''), s.title))
+        and (m.photo_bytes is null or octet_length(m.photo_bytes) = 0)))
+    returning m.id, m.updated_at::text
+  `;
+  return rows.map((r) => ({ id: r.id, updatedAt: r.updated_at }));
+}
+
+export async function clearMealPhoto(tx: Tx, mealId: string) {
+  const rows = await tx<{ updated_at: string }[]>`
+    update meal_slots set photo_bytes = null, photo_mime = null, updated_at = now()
+    where id = ${mealId}
+    returning updated_at::text
+  `;
+  return rows[0]?.updated_at ?? null;
 }
 
 // Macros del menú: borradores de ingredientes (meal_items).

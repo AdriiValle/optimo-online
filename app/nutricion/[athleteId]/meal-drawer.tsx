@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent, type ReactNode } from "react";
 import type { MealSlot } from "@/lib/types";
 import type { MealNutrition } from "@/lib/queries";
 import { dishLines, splitCategory } from "@/lib/nutrition/protein-category";
+import { resizeImage } from "@/lib/image-resize";
 import { MealItemsEditor } from "./meal-items-editor";
 import { fmt, mealMacros } from "./nutrition-summary";
 
@@ -83,6 +84,159 @@ function categoryName(label: string | null) {
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
+/** Plato cuya foto cambió (este y, con «platos iguales», los demás que la recibieron). */
+export type PhotoChange = { id: string; hasPhoto: boolean; updatedAt: string };
+
+/**
+ * Héroe de la ficha: foto o placeholder, y zona de soltar (desktop) + «Elegir foto» (móvil).
+ * La foto se reduce en el navegador (≤300 KB) y la vista previa sale antes de que acabe la subida.
+ */
+function PhotoHero({ meal, name, onChanged }: { meal: MealSlot; name: string; onChanged: (changes: PhotoChange[]) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [busy, setBusy] = useState<"up" | "del" | null>(null);
+  const [over, setOver] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  /** Platos iguales sin foto (null = sin saber aún). */
+  const [same, setSame] = useState<number | null>(null);
+  const [applySame, setApplySame] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch(`/api/meals/${meal.id}/photo/same`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (!cancelled) setSame(json?.data?.count ?? 0);
+      })
+      .catch(() => {
+        if (!cancelled) setSame(0);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [meal.id, meal.title, meal.preparation, meal.hasPhoto]);
+
+  useEffect(() => {
+    if (!preview) return;
+    return () => URL.revokeObjectURL(preview);
+  }, [preview]);
+
+  async function upload(raw: File) {
+    if (busy) return;
+    if (raw.type && !raw.type.startsWith("image/")) {
+      setMsg({ ok: false, text: "Eso no es una imagen." });
+      return;
+    }
+    setBusy("up");
+    setMsg(null);
+    let file: File;
+    try {
+      file = await resizeImage(raw);
+    } catch {
+      setBusy(null);
+      setMsg({ ok: false, text: "No se pudo leer la foto. Prueba con JPEG o PNG." });
+      return;
+    }
+    setPreview(URL.createObjectURL(file));
+    const fd = new FormData();
+    fd.set("photo", file);
+    const toSame = applySame && Boolean(same);
+    if (toSame) fd.set("applyToSame", "1");
+    const res = await fetch(`/api/meals/${meal.id}/photo`, { method: "POST", body: fd }).catch(() => null);
+    const json = res?.ok ? await res.json().catch(() => null) : null;
+    const updated: { id: string; updatedAt: string }[] | undefined = json?.data?.updated;
+    setBusy(null);
+    if (!updated) {
+      setPreview(null);
+      setMsg({ ok: false, text: "No se pudo subir la foto." });
+      return;
+    }
+    onChanged(updated.map((u) => ({ ...u, hasPhoto: true })));
+    const others = updated.length - 1;
+    if (toSame && others > 0) setMsg({ ok: true, text: `Foto puesta también en ${others === 1 ? "1 plato igual" : `${others} platos iguales`}.` });
+  }
+
+  async function remove() {
+    if (busy) return;
+    setBusy("del");
+    setMsg(null);
+    const res = await fetch(`/api/meals/${meal.id}/photo`, { method: "DELETE" }).catch(() => null);
+    const json = res?.ok ? await res.json().catch(() => null) : null;
+    setBusy(null);
+    if (!json?.data?.updatedAt) {
+      setMsg({ ok: false, text: "No se pudo quitar la foto." });
+      return;
+    }
+    setPreview(null);
+    onChanged([{ id: meal.id, hasPhoto: false, updatedAt: json.data.updatedAt }]);
+  }
+
+  function onDragOver(e: DragEvent) {
+    if (!e.dataTransfer.types.includes("Files")) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    setOver(true);
+  }
+
+  function onDrop(e: DragEvent) {
+    e.preventDefault();
+    setOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) void upload(file);
+  }
+
+  const src = preview ?? (meal.hasPhoto ? `/api/meals/${meal.id}/photo?v=${encodeURIComponent(meal.updatedAt)}` : null);
+  return (
+    <div className="nut-ficha-photo">
+      <figure
+        className={`nut-ficha-hero${over ? " is-over" : ""}${busy ? " is-busy" : ""}`}
+        onDragOver={onDragOver}
+        onDragLeave={() => setOver(false)}
+        onDrop={onDrop}
+      >
+        {src ? <img src={src} alt="" /> : <figcaption aria-hidden="true">{name}</figcaption>}
+        {over || busy ? (
+          <span className="nut-ficha-drop" aria-hidden="true">
+            {busy === "up" ? "Subiendo…" : busy === "del" ? "Quitando…" : "Suelta para poner la foto"}
+          </span>
+        ) : null}
+      </figure>
+      <div className="nut-ficha-photo-actions">
+        <button type="button" className="btn secondary" disabled={Boolean(busy)} onClick={() => inputRef.current?.click()}>
+          {meal.hasPhoto ? "Cambiar foto" : "Elegir foto"}
+        </button>
+        {meal.hasPhoto ? (
+          <button type="button" className="btn secondary" disabled={Boolean(busy)} onClick={() => void remove()}>
+            Quitar foto
+          </button>
+        ) : null}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (file) void upload(file);
+          }}
+        />
+      </div>
+      {same ? (
+        <label className="nut-ficha-same">
+          <input type="checkbox" checked={applySame} disabled={Boolean(busy)} onChange={(e) => setApplySame(e.target.checked)} />
+          Usar en {same === 1 ? "el plato igual" : `los ${same} platos iguales`}
+        </label>
+      ) : null}
+      {msg ? (
+        <p className={`nut-ficha-photo-msg ${msg.ok ? "ok" : "error"}`} role="status">
+          {msg.text}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 /**
  * Ficha del plato: foto (o placeholder de su proteína), titular, macros de esta comida,
  * ingredientes (O4) y «Editar plato» plegado. Sin plato: solo el formulario para crearlo.
@@ -92,7 +246,8 @@ export function MealFicha({
   meal,
   nutrition,
   editForm,
-  onItemsChanged
+  onItemsChanged,
+  onPhotoChanged
 }: {
   athleteId: string;
   meal: MealSlot | null;
@@ -100,6 +255,7 @@ export function MealFicha({
   nutrition: MealNutrition | null;
   editForm: ReactNode;
   onItemsChanged: () => void;
+  onPhotoChanged: (changes: PhotoChange[]) => void;
 }) {
   if (!meal) return <>{editForm}</>;
   const cat = splitCategory(meal.title);
@@ -116,13 +272,7 @@ export function MealFicha({
           : "Sin ingredientes";
   return (
     <div className={`nut-ficha nut-cat nut-cat--${cat.key}`}>
-      <figure className="nut-ficha-hero">
-        {meal.hasPhoto ? (
-          <img src={`/api/meals/${meal.id}/photo?v=${encodeURIComponent(meal.updatedAt)}`} alt="" />
-        ) : (
-          <figcaption aria-hidden="true">{name}</figcaption>
-        )}
-      </figure>
+      <PhotoHero key={meal.id} meal={meal} name={name} onChanged={onPhotoChanged} />
 
       <header className="nut-ficha-title">
         <span className="nut-ficha-cat">{name}</span>

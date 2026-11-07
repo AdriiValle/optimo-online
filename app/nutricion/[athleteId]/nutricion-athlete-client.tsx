@@ -12,9 +12,10 @@ import { UsernameForm } from "@/app/components/username-form";
 import { NutritionPane } from "@/app/a/[id]/nutrition-pane";
 import { NutAthleteNav } from "../athlete-nav";
 import { MenuWordImportButton } from "./menu-word-import";
-import { MacroDonut, MealDrawer, MealFicha } from "./meal-drawer";
+import { MacroDonut, MealDrawer, MealFicha, type PhotoChange } from "./meal-drawer";
 import { fmt, perDay, periodTotal, summarizeNutrition, type PeriodNutrition } from "./nutrition-summary";
 import { dishLines, splitCategory } from "@/lib/nutrition/protein-category";
+import { resizeImage } from "@/lib/image-resize";
 
 type Props = {
   athleteId: string;
@@ -122,6 +123,17 @@ export function NutricionAthleteClient({
     setTotalsRefresh((n) => n + 1);
   }
 
+  /** Foto puesta o quitada (también en los platos iguales): miniaturas al momento, sin recargar la semana. */
+  function patchMealPhotos(changes: PhotoChange[]) {
+    const byId = new Map(changes.map((c) => [c.id, c]));
+    setMeals((rows) =>
+      rows?.map((m) => {
+        const c = byId.get(m.id);
+        return c ? { ...m, hasPhoto: c.hasPhoto, updatedAt: c.updatedAt } : m;
+      }) ?? null
+    );
+  }
+
   function openCell(iso: string, kind: MealSlotKind) {
     if (iso !== center) selectDate(iso);
     setSettingsOpen(false);
@@ -142,6 +154,7 @@ export function NutricionAthleteClient({
         meal={editorMeal}
         nutrition={(editorMeal && totals?.meals.find((m) => m.mealSlotId === editorMeal.id)) || null}
         onItemsChanged={() => setTotalsRefresh((n) => n + 1)}
+        onPhotoChanged={patchMealPhotos}
         editForm={
           <MealSlotForm
             athleteId={athleteId}
@@ -890,14 +903,14 @@ function MealSlotForm({
     }
     let saved: MealSlot = (await res.json()).data;
     if (file) {
+      const small = await resizeImage(file).catch(() => null);
       const fd = new FormData();
-      fd.set("photo", file);
-      const up = await fetch(`/api/meals/${saved.id}/photo`, { method: "POST", body: fd });
-      if (!up.ok) {
-        const json = await up.json().catch(() => null);
+      if (small) fd.set("photo", small);
+      const up = small && (await fetch(`/api/meals/${saved.id}/photo`, { method: "POST", body: fd }).catch(() => null));
+      if (!up?.ok) {
         onChange(saved);
         setBusy(false);
-        setMsg(json?.error?.message?.includes("400") ? "Plato guardado; la foto supera 400 KB." : "Plato guardado; la foto no se pudo subir.");
+        setMsg(small ? "Plato guardado; la foto no se pudo subir." : "Plato guardado; la foto no se pudo leer.");
         return;
       }
       saved = { ...saved, hasPhoto: true, updatedAt: new Date().toISOString() };
@@ -942,15 +955,18 @@ function MealSlotForm({
           onChange={(e) => setPreparation(e.target.value)}
         />
       </label>
-      <label>
-        Foto
-        <input
-          key={fileKey}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-        />
-      </label>
+      {/* En la ficha, la foto de un plato ya creado se gestiona en el héroe (con «platos iguales»). */}
+      {bare && meal ? null : (
+        <label>
+          Foto
+          <input
+            key={fileKey}
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+        </label>
+      )}
       <div className="nut-actions">
         <button type="button" className="btn" disabled={busy} onClick={() => void save()}>
           {busy ? "Guardando…" : "Guardar plato"}
