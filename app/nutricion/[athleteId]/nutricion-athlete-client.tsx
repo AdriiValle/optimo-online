@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { addDays, dateKey, DOW_ES, DOW_FULL, DOW_SHORT, formatLongDate, MONTHS_ES, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
 import { MEAL_SLOTS, type DayPlan, type MealSlot, type MealSlotKind, type SupplementEntry } from "@/lib/types";
@@ -12,8 +12,8 @@ import { UsernameForm } from "@/app/components/username-form";
 import { NutritionPane } from "@/app/a/[id]/nutrition-pane";
 import { NutAthleteNav } from "../athlete-nav";
 import { MenuWordImportButton } from "./menu-word-import";
-import { MealItemsEditor } from "./meal-items-editor";
-import { perDay, periodTotal, summarizeNutrition, type PeriodNutrition } from "./nutrition-summary";
+import { MacroDonut, MealDrawer, MealFicha } from "./meal-drawer";
+import { fmt, perDay, periodTotal, summarizeNutrition, type PeriodNutrition } from "./nutrition-summary";
 import { dishLines, splitCategory } from "@/lib/nutrition/protein-category";
 
 type Props = {
@@ -73,8 +73,21 @@ export function NutricionAthleteClient({
   const [meals, setMeals] = useWeekMeals(athleteId, viewDays[0], viewDays[viewDays.length - 1], mealRefresh);
   const totals = useNutritionTotals(athleteId, viewDays[0], viewDays[viewDays.length - 1], mealRefresh + totalsRefresh);
 
-  const closeEditor = useCallback(() => setEditor(null), []);
+  const wide = useWideWorkspace();
+  const editorRef = useRef(editor);
+  editorRef.current = editor;
+  /** Cierra la ficha y devuelve el foco a la celda que la abrió. */
+  const closeEditor = useCallback(() => {
+    const cur = editorRef.current;
+    setEditor(null);
+    if (cur) requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-cell="${cur.date}:${cur.slot}"]`)?.focus());
+  }, []);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
+
+  // Cambio de semana / mes / día: la ficha de un día que ya no se ve se cierra.
+  useEffect(() => {
+    if (editor && !viewDays.includes(editor.date)) setEditor(null);
+  }, [editor, viewDays]);
 
   useEffect(() => {
     if (!editor && !settingsOpen) return;
@@ -119,6 +132,30 @@ export function NutricionAthleteClient({
   const editorMeal =
     editor && meals ? (meals.find((m) => m.date === editor.date && m.slot === editor.slot) ?? null) : null;
   const editorLabel = editor ? (MEAL_SLOTS.find((s) => s.slot === editor.slot)?.label ?? "") : "";
+  const editorTitle = editor ? `${editorLabel} · ${formatLongDate(parseDateLocal(editor.date))}` : "";
+  const ficha = editor ? (
+    meals === null ? (
+      <p className="muted">Cargando…</p>
+    ) : (
+      <MealFicha
+        athleteId={athleteId}
+        meal={editorMeal}
+        nutrition={(editorMeal && totals?.meals.find((m) => m.mealSlotId === editorMeal.id)) || null}
+        onItemsChanged={() => setTotalsRefresh((n) => n + 1)}
+        editForm={
+          <MealSlotForm
+            athleteId={athleteId}
+            date={editor.date}
+            slot={editor.slot}
+            label={editorLabel}
+            meal={editorMeal}
+            bare
+            onChange={(next) => updateMeal(editor.date, editor.slot, next)}
+          />
+        }
+      />
+    )
+  ) : null;
 
   const calBlock = (
     <>
@@ -161,7 +198,7 @@ export function NutricionAthleteClient({
               className="icon-btn"
               aria-label="Ajustes"
               onClick={() => {
-                closeEditor();
+                setEditor(null);
                 setSettingsOpen(true);
               }}
             >
@@ -212,6 +249,12 @@ export function NutricionAthleteClient({
           }}
           onCell={openCell}
         />
+
+        {editor && wide ? (
+          <MealDrawer title={editorTitle} cellKey={`${editor.date}:${editor.slot}`} onClose={closeEditor}>
+            {ficha}
+          </MealDrawer>
+        ) : null}
       </div>
 
       {/* Móvil: menú del día apilado (sin drawer obligatorio en pantallas estrechas). */}
@@ -238,32 +281,9 @@ export function NutricionAthleteClient({
         <NutritionPane athleteId={athleteId} initialDietNotes={dietNotes} initialSupplements={supplements} canEdit />
       </div>
 
-      {editor ? (
-        <NutModal title={`${editorLabel} · ${formatLongDate(parseDateLocal(editor.date))}`} onClose={closeEditor}>
-          {meals === null ? (
-            <p className="muted">Cargando…</p>
-          ) : (
-            <>
-              <MealSlotForm
-                athleteId={athleteId}
-                date={editor.date}
-                slot={editor.slot}
-                label={editorLabel}
-                meal={editorMeal}
-                bare
-                onChange={(next) => {
-                  updateMeal(editor.date, editor.slot, next);
-                }}
-              />
-              {editorMeal ? (
-                <MealItemsEditor
-                  athleteId={athleteId}
-                  meal={editorMeal}
-                  onChanged={() => setTotalsRefresh((n) => n + 1)}
-                />
-              ) : null}
-            </>
-          )}
+      {editor && !wide ? (
+        <NutModal title={editorTitle} onClose={closeEditor}>
+          {ficha}
         </NutModal>
       ) : null}
 
@@ -318,6 +338,21 @@ function useNutritionTotals(athleteId: string, from: string, to: string, refresh
   }, [athleteId, from, to, refresh]);
 
   return state?.key === key ? state.data : null;
+}
+
+const WIDE_QUERY = "(min-width: 1280px)";
+
+/** ≥1280 (workspace con rail): la ficha va en drawer; debajo, en el sheet. */
+function useWideWorkspace() {
+  return useSyncExternalStore(
+    (cb) => {
+      const mq = window.matchMedia(WIDE_QUERY);
+      mq.addEventListener("change", cb);
+      return () => mq.removeEventListener("change", cb);
+    },
+    () => window.matchMedia(WIDE_QUERY).matches,
+    () => false
+  );
 }
 
 function shortMonth(d: Date) {
@@ -421,6 +456,7 @@ function WeekGrid({
                   <div className={tier === "snack" ? "nut-week-slot nut-week-slot--snack" : "nut-week-slot"}>{label}</div>
                   <DishCell
                     iso={iso}
+                    kind={kind}
                     label={label}
                     tier={tier}
                     meals={meals}
@@ -474,6 +510,7 @@ function WeekGrid({
                   <DishCell
                     key={iso}
                     iso={iso}
+                    kind={kind}
                     label={label}
                     tier={tier}
                     meals={meals}
@@ -511,6 +548,7 @@ function useThinSlots(days: string[], meals: MealSlot[] | null) {
 /** Plato como tarjeta: tinte de su proteína, filete en tinta, la proteína de titular y el resto debajo. */
 function DishCell({
   iso,
+  kind,
   label,
   tier,
   meals,
@@ -521,6 +559,7 @@ function DishCell({
   onClick
 }: {
   iso: string;
+  kind: MealSlotKind;
   label: string;
   tier: "main" | "snack";
   meals: MealSlot[] | null;
@@ -545,6 +584,7 @@ function DishCell({
     <button
       type="button"
       className={cls.join(" ")}
+      data-cell={`${iso}:${kind}`}
       aria-label={
         cat && lines
           ? `${label}, ${day}: ${lines.headline}${cat.label ? ` (${cat.label.toLowerCase()})` : ""}`
@@ -686,74 +726,6 @@ function Ring({
   );
 }
 
-/** Gramos por día de cada macro. */
-type MacroGrams = { p: number; c: number; f: number };
-
-const KCAL_PER_G: MacroGrams = { p: 4, c: 4, f: 9 };
-
-function fmt(v: number, digits = 0) {
-  return v.toLocaleString("es-ES", { maximumFractionDigits: digits, useGrouping: "always" });
-}
-
-const MACROS = [
-  { key: "p", label: "Proteína" },
-  { key: "c", label: "Hidratos" },
-  { key: "f", label: "Grasas" }
-] as const;
-
-/** Donut de reparto P/HC/G en % de kcal (4/4/9 kcal por g); null = sin cantidades. */
-function MacroDonut({ grams }: { grams: MacroGrams | null }) {
-  const r = 26;
-  const c = 2 * Math.PI * r;
-  const kcal = grams ? { p: grams.p * KCAL_PER_G.p, c: grams.c * KCAL_PER_G.c, f: grams.f * KCAL_PER_G.f } : null;
-  const total = kcal ? kcal.p + kcal.c + kcal.f : 0;
-  let offset = 0;
-  return (
-    <figure className="nut-macro">
-      <svg width={64} height={64} viewBox="0 0 64 64" role="img" aria-label="Reparto de macronutrientes">
-        <circle className="nut-ring-track" cx="32" cy="32" r={r} />
-        {kcal && total > 0
-          ? MACROS.map(({ key }) => {
-              const len = (kcal[key] / total) * c;
-              const seg = (
-                <circle
-                  key={key}
-                  className={`nut-macro-seg nut-macro-seg--${key}`}
-                  cx="32"
-                  cy="32"
-                  r={r}
-                  strokeDasharray={`${len} ${c - len}`}
-                  strokeDashoffset={-offset}
-                  transform="rotate(-90 32 32)"
-                />
-              );
-              offset += len;
-              return seg;
-            })
-          : null}
-        <text x="32" y="33" textAnchor="middle" dominantBaseline="middle" className="nut-ring-value">
-          {kcal && total > 0 ? "P·HC·G" : "—"}
-        </text>
-      </svg>
-      <figcaption>
-        <ul className="nut-macro-legend">
-          {MACROS.map(({ key, label }) => (
-            <li key={key}>
-              <i className={`nut-macro-dot nut-macro-dot--${key}`} aria-hidden="true" />
-              <strong>{label}</strong>
-              <span>
-                {grams && kcal && total > 0
-                  ? `${fmt(grams[key])} g/día · ${Math.round((kcal[key] / total) * 100)} % kcal`
-                  : "— g · — % kcal"}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </figcaption>
-    </figure>
-  );
-}
-
 /**
  * Resumen nutricional del periodo visible (día / semana / mes), estimado del menú planificado.
  * Solo suman los platos cuantificados (ingredientes vigentes confirmados con alimento y gramos);
@@ -879,7 +851,9 @@ function MealSlotForm({
   bare?: boolean;
   onChange: (meal: MealSlot | null) => void;
 }) {
-  const [title, setTitle] = useState(meal?.title ?? "");
+  // La categoría viene del Word y no se edita aquí: el campo muestra el plato sin corchete.
+  const cat = meal ? splitCategory(meal.title) : null;
+  const [title, setTitle] = useState(cat?.body ?? "");
   const [preparation, setPreparation] = useState(meal?.preparation ?? "");
   const [file, setFile] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
@@ -887,7 +861,7 @@ function MealSlotForm({
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    setTitle(meal?.title ?? "");
+    setTitle(meal ? splitCategory(meal.title).body : "");
     setPreparation(meal?.preparation ?? "");
     setFile(null);
     setFileKey((n) => n + 1);
@@ -899,12 +873,15 @@ function MealSlotForm({
       setMsg("Pon el nombre del plato.");
       return;
     }
+    // Texto sin tocar → título original tal cual (el hash de ingredientes no cambia); si cambia, mismo corchete delante.
+    const typed = title.trim();
+    const fullTitle = meal && cat && typed === cat.body ? meal.title : cat?.label ? `[${cat.label}] ${typed}` : typed;
     setBusy(true);
     setMsg(null);
     const res = await fetch("/api/meals", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ athleteId, date, slot, title: title.trim(), preparation: preparation.trim() || null })
+      body: JSON.stringify({ athleteId, date, slot, title: fullTitle, preparation: preparation.trim() || null })
     });
     if (!res.ok) {
       setBusy(false);
@@ -949,12 +926,12 @@ function MealSlotForm({
 
   const form = (
     <div className="nut-body meal-form">
-      {meal?.hasPhoto ? (
+      {meal?.hasPhoto && !bare ? (
         <img className="nut-menu-photo" src={`/api/meals/${meal.id}/photo?v=${encodeURIComponent(meal.updatedAt)}`} alt="" />
       ) : null}
       <label>
         Plato
-        <input value={title} maxLength={200} placeholder="Ej. Arroz con pollo" onChange={(e) => setTitle(e.target.value)} />
+        <input value={title} maxLength={200 - (cat?.label ? cat.label.length + 3 : 0)} placeholder="Ej. Arroz con pollo" onChange={(e) => setTitle(e.target.value)} />
       </label>
       <label>
         Preparación

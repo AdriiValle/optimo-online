@@ -1068,6 +1068,60 @@ body.nut-modal-open { overflow: hidden; }
 /* legacy drawer hooks (mobile fallback unused) */
 .nut-drawer-root { display: none; }
 
+/* Ficha del plato (drawer ≥1280 y sheet debajo): héroe 16:10, titular, macros de la comida, ingredientes. */
+@keyframes drawer-in { from { opacity: 0; transform: translateX(24px); } }
+.nut-ficha {
+  --macro-p: var(--text);
+  --macro-c: #6E6E73;
+  --macro-f: #AEAEB2;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.nut-ficha-hero {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--cat-tint);
+}
+.nut-ficha-hero img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Placeholder: tint liso + categoría en texto abajo a la izquierda (sin icono). */
+.nut-ficha-hero figcaption {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent-hover);
+}
+.nut-ficha-title { display: flex; flex-direction: column; gap: 4px; }
+.nut-ficha-cat { font-size: 0.75rem; font-weight: 600; color: var(--cat-ink); }
+.nut-ficha-title h3 { margin: 0; font-size: 1.25rem; line-height: 1.25; letter-spacing: -0.02em; }
+.nut-ficha-title p { margin: 0; font-size: 0.8125rem; color: var(--accent-hover); }
+.nut-ficha-macros { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.nut-ficha-kcal { margin: 0; font-size: 0.8125rem; color: var(--accent-hover); }
+.nut-ficha-kcal strong { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text); }
+.nut-ficha .nut-items { margin-top: 0; }
+.nut-ficha-edit { background: transparent; border: 0; box-shadow: none; }
+/* Donut de la ficha: mismas piezas que el resumen semanal, también en el sheet (<1280). */
+.nut-ficha .nut-macro { margin: 0; display: flex; align-items: center; gap: 10px; }
+.nut-ficha .nut-ring-track { fill: none; stroke: var(--fill-secondary); stroke-width: 6; }
+.nut-ficha .nut-macro-seg { fill: none; stroke-width: 6; stroke-linecap: butt; }
+.nut-ficha .nut-macro-seg--p { stroke: var(--macro-p); }
+.nut-ficha .nut-macro-seg--c { stroke: var(--macro-c); }
+.nut-ficha .nut-macro-seg--f { stroke: var(--macro-f); }
+.nut-ficha .nut-ring-value { fill: var(--secondary); font-size: 13px; font-weight: 600; letter-spacing: -0.02em; }
+.nut-ficha .nut-macro-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.nut-ficha .nut-macro-legend li { display: grid; grid-template-columns: 8px auto; column-gap: 6px; align-items: center; line-height: 1.2; }
+.nut-ficha .nut-macro-legend strong { font-size: 0.75rem; }
+.nut-ficha .nut-macro-legend span { grid-column: 2; font-size: 0.6875rem; color: var(--accent-hover); font-variant-numeric: tabular-nums; }
+.nut-ficha .nut-macro-dot { width: 8px; height: 8px; border-radius: 50%; }
+.nut-ficha .nut-macro-dot--p { background: var(--macro-p); }
+.nut-ficha .nut-macro-dot--c { background: var(--macro-c); }
+.nut-ficha .nut-macro-dot--f { background: var(--macro-f); }
+
 @media (min-width: 1280px) {
   .page.nut-page { max-width: none; width: 100%; padding-left: 24px; padding-right: 24px; padding-bottom: 16px; }
   /* Workspace a alto fijo de viewport: rail + zona de trabajo caben sin scroll de página. */
@@ -1087,6 +1141,7 @@ body.nut-modal-open { overflow: hidden; }
 
   .nut-ws-main {
     grid-area: main;
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
@@ -1501,6 +1556,38 @@ body.nut-modal-open { overflow: hidden; }
 
   .nut-modal .nut-details { background: transparent; border: 0; box-shadow: none; }
   .nut-modal .meal-form .nut-menu-photo { max-height: 260px; border-radius: var(--radius-sm); }
+
+  /* Ficha: panel opaco anclado a la derecha de la zona de trabajo, encima de la semana (no la empuja). */
+  .nut-drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    animation: drawer-in var(--dur-sheet) var(--ease);
+  }
+  .nut-drawer:focus { outline: none; }
+  .nut-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 12px 10px 16px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .nut-drawer-head h2 { margin: 0; min-width: 0; font-size: 0.9375rem; line-height: 1.3; letter-spacing: -0.02em; }
+  .nut-drawer-head .icon-btn { flex-shrink: 0; }
+  .nut-drawer-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 20px; }
+  .nut-drawer .nut-actions .btn { min-height: 44px; }
 }
 .btn-ghost {
   background: transparent;
@@ -1861,6 +1948,7 @@ body.nut-modal-open { overflow: hidden; }
   }
   .nut-week-cell.nut-cat,
   .nut-week-cell.nut-cat:hover { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1px var(--text); }
+  .nut-ficha-hero { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1px var(--text); }
   .card {
     background: var(--surface);
     -webkit-backdrop-filter: none;
@@ -1903,4 +1991,6 @@ body.nut-modal-open { overflow: hidden; }
     scroll-behavior: auto !important;
   }
   .session-video:active { transform: none; }
+  /* La ficha entra en fundido corto, sin desplazamiento. */
+  .nut-drawer { animation-name: scrim-in; animation-duration: 160ms !important; }
 }

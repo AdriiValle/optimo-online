@@ -1081,7 +1081,17 @@ export type DayNutrition = {
   totals: Record<NutrientKey, NutrientSum>;
 };
 
-export type NutritionTotals = { weightKg: number | null; days: DayNutrition[] };
+/** Macros de un plato (ficha). `totals` suma los items confirmados aunque falten otros (cifra parcial si `missing` > 0). */
+export type MealNutrition = {
+  mealSlotId: string;
+  /** Cuenta en el día: tiene items vigentes y todos confirmados con alimento y gramos. */
+  quantified: boolean;
+  /** Items vigentes que bloquean (sin confirmar o sin alimento/gramos). */
+  missing: number;
+  totals: Record<NutrientKey, NutrientSum>;
+};
+
+export type NutritionTotals = { weightKg: number | null; days: DayNutrition[]; meals: MealNutrition[] };
 
 type QuantItemRow = { meal_slot_id: string; ok: boolean; grams: string | null } & Record<
   NutrientKey,
@@ -1091,7 +1101,7 @@ type QuantItemRow = { meal_slot_id: string; ok: boolean; grams: string | null } 
 /**
  * Totales del menú planificado por día. Un plato cuenta si todos sus items vigentes (text_hash = hash actual)
  * están confirmados con `food_id` y `grams`; los condimentos `other` sin gramos no bloquean ni suman.
- * Los items obsoletos no cuentan. Días sin platos no aparecen.
+ * Los items obsoletos no cuentan. Días sin platos no aparecen. `meals` = macros de cada plato del rango (ficha).
  */
 export async function nutritionTotals(tx: Tx, athleteId: string, from: string, to: string): Promise<NutritionTotals> {
   const athlete = await tx<{ weight_kg: string | null }[]>`select weight_kg::text from athletes where id = ${athleteId}`;
@@ -1117,24 +1127,40 @@ export async function nutritionTotals(tx: Tx, athleteId: string, from: string, t
   const empty = () =>
     Object.fromEntries(NUTRIENT_KEYS.map((k) => [k, { value: 0, incomplete: false }])) as Record<NutrientKey, NutrientSum>;
   const days = new Map<string, DayNutrition>();
+  const meals: MealNutrition[] = [];
   for (const s of slots) {
     const date = isoDate(s.date);
     const day = days.get(date) ?? { date, planned: 0, quantified: 0, totals: empty() };
     days.set(date, day);
     day.planned += 1;
-    const rows = bySlot.get(s.id);
-    if (!rows?.length || !rows.every((r) => r.ok)) continue;
-    day.quantified += 1;
+    const rows = bySlot.get(s.id) ?? [];
+    const meal: MealNutrition = {
+      mealSlotId: s.id,
+      quantified: false,
+      missing: rows.filter((r) => !r.ok).length,
+      totals: empty()
+    };
+    meal.quantified = rows.length > 0 && meal.missing === 0;
+    meals.push(meal);
     for (const r of rows) {
+      if (!r.ok) continue;
       const grams = Number(r.grams);
       for (const k of NUTRIENT_KEYS) {
-        if (r[k] == null) day.totals[k].incomplete = true;
-        else day.totals[k].value += (grams * Number(r[k])) / 100;
+        if (r[k] == null) meal.totals[k].incomplete = true;
+        else meal.totals[k].value += (grams * Number(r[k])) / 100;
       }
+    }
+    // El día solo suma platos completos: así comida + cena = total del día.
+    if (!meal.quantified) continue;
+    day.quantified += 1;
+    for (const k of NUTRIENT_KEYS) {
+      day.totals[k].value += meal.totals[k].value;
+      day.totals[k].incomplete ||= meal.totals[k].incomplete;
     }
   }
   return {
     weightKg: num(athlete[0]?.weight_kg ?? null),
-    days: [...days.values()].sort((a, b) => a.date.localeCompare(b.date))
+    days: [...days.values()].sort((a, b) => a.date.localeCompare(b.date)),
+    meals
   };
 }

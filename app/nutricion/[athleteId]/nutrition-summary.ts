@@ -1,4 +1,8 @@
-import type { NutrientKey, NutrientSum, NutritionTotals } from "@/lib/queries";
+import type { MealNutrition, NutrientKey, NutrientSum, NutritionTotals } from "@/lib/queries";
+
+export function fmt(v: number, digits = 0) {
+  return v.toLocaleString("es-ES", { maximumFractionDigits: digits, useGrouping: "always" });
+}
 
 export type PeriodNutrition = {
   planned: number;
@@ -40,4 +44,18 @@ export function periodTotal(p: PeriodNutrition, key: NutrientKey): { value: numb
 export function perDay(p: PeriodNutrition, key: NutrientKey) {
   const t = periodTotal(p, key);
   return t ? { value: t.value / p.daysCounted, approx: t.approx } : null;
+}
+
+/**
+ * Macros de un plato para la ficha. «≈» = faltan ingredientes por confirmar (suma parcial);
+ * «≥» = completo pero algún alimento no trae el dato. null = nada sumado todavía.
+ */
+export function mealMacros(m: MealNutrition) {
+  const kcal = m.totals.kcal;
+  if (!m.quantified && kcal.value === 0) return null;
+  return {
+    kcal: kcal.value,
+    mark: m.missing > 0 ? "≈" : kcal.incomplete ? "≥" : "",
+    grams: { p: m.totals.protein_g.value, c: m.totals.carbs_g.value, f: m.totals.fat_g.value }
+  };
 }
