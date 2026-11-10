@@ -141,7 +141,7 @@ export function MealItemsEditor({ athleteId, meal, onChanged }: { athleteId: str
     }
     setMsg(
       json?.data?.itemsCreated
-        ? { ok: true, text: "Borradores generados: revisa alimento y gramos y confirma." }
+        ? { ok: true, text: "Ingredientes generados y confirmados: ya cuentan en los totales. Corrige lo que veas mal." }
         : { ok: false, text: "No hay borradores nuevos para este plato." }
     );
     setReload((n) => n + 1);

@@ -341,6 +341,14 @@ function useNutritionTotals(athleteId: string, from: string, to: string, refresh
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Ingredientes automáticos: los platos del rango sin ingredientes vigentes se generan ya confirmados
+      // (idempotente: los ya generados se saltan). Amanda corrige después en la ficha del plato.
+      await fetch("/api/nutrition/meal-items/draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ athleteId, from, to })
+      }).catch(() => null);
+      if (cancelled) return;
       const res = await fetch(`/api/nutrition/totals?athleteId=${athleteId}&from=${from}&to=${to}`);
       const json = res.ok ? await res.json() : null;
       if (!cancelled && json?.data) setState({ key: `${athleteId}:${from}:${to}`, data: json.data });

@@ -34,6 +34,9 @@ export async function POST(req: Request) {
 
   if (!(await canSeeAthleteNutrition(user, athleteId))) return notFound();
 
-  const data = await withRls(rlsFrom(user), (tx) => generateMealItemDrafts(tx, athleteId, { from, to }, { force }));
+  const data = await withRls(rlsFrom(user), (tx) =>
+    // Los ingredientes nacen confirmados (cuentan ya en los totales); la nutricionista corrige si ve un error.
+    generateMealItemDrafts(tx, athleteId, { from, to }, { force, confirm: true })
+  );
   return NextResponse.json({ data });
 }
