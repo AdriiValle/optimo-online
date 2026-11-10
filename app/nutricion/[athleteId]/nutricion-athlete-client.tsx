@@ -12,9 +12,11 @@ import { UsernameForm } from "@/app/components/username-form";
 import { NutritionPane } from "@/app/a/[id]/nutrition-pane";
 import { NutAthleteNav } from "../athlete-nav";
 import { MenuWordImportButton } from "./menu-word-import";
-import { AthleteProfileButton } from "./athlete-profile-form";
+import { AthleteProfileButton, AthleteProfileForm } from "./athlete-profile-form";
 import { MacroDonut, MealDrawer, MealFicha, type PhotoChange } from "./meal-drawer";
-import { fmt, perDay, periodTotal, summarizeNutrition, type PeriodNutrition } from "./nutrition-summary";
+import { fmt, perDay, periodTotal, summarizeNutrition } from "./nutrition-summary";
+import { dayTypeFromMdTag } from "@/lib/nutrition/day-type";
+import { averageTargets, dailyTargets, ringStatus, type DailyTargets, type RingStatus, type Target, type TargetKey } from "@/lib/nutrition/targets";
 import { dishLines, splitCategory } from "@/lib/nutrition/protein-category";
 import { resizeImage } from "@/lib/image-resize";
 
@@ -495,7 +497,7 @@ function WeekGrid({
               );
             })}
           </div>
-          <WeekPanel days={days} totals={totals} view={view} side />
+          <WeekPanel days={days} totals={totals} view={view} byDate={byDate} athleteId={athleteId} onProfileSaved={onProfileSaved} side />
         </div>
       ) : (
         <>
@@ -551,7 +553,7 @@ function WeekGrid({
             ))}
           </div>
           )}
-          <WeekPanel days={days} totals={totals} view={view} />
+          <WeekPanel days={days} totals={totals} view={view} byDate={byDate} athleteId={athleteId} onProfileSaved={onProfileSaved} />
         </>
       )}
     </section>
@@ -704,49 +706,89 @@ function MonthCalendar({
   );
 }
 
-/** Anillo KPI. `pct` 0–1 frente al objetivo; `value` null = sin datos todavía. */
+const STATUS_TEXT: Record<RingStatus, string> = {
+  low: "Falta",
+  ok: "En rango",
+  over: "Pasado",
+  "cap-ok": "Bajo tope",
+  "cap-over": "Sobre tope",
+  partial: "Parcial"
+};
+
+/**
+ * Anillo KPI frente a un objetivo diario. Se rellena `valor / objetivo` (tope visual al 100 % con marca si se pasa);
+ * el color sigue al estado y el estado también va en texto. Sin objetivo (perfil incompleto) solo muestra la cifra.
+ */
 function Ring({
   label,
   unit,
   value,
-  pct,
+  goal,
+  partial,
+  partialText,
+  emptyText = "Pendiente",
   approx,
   digits = 0,
-  size = 64
+  size = 64,
+  compact
 }: {
   label: string;
   unit: string;
+  /** null = sin datos todavía. */
   value: number | null;
-  pct: number | null;
+  /** Objetivo en la misma unidad que `value`; null = sin perfil. */
+  goal: Target | null;
+  /** Faltan platos por cuantificar en el periodo: no se pinta «pasado» ni «bajo». */
+  partial?: boolean;
+  partialText?: string;
+  /** Texto cuando `value` es null (p. ej. «Falta peso»). */
+  emptyText?: string;
   /** Algún alimento no trae este valor: la cifra es un mínimo («≥»). */
   approx?: boolean;
   digits?: number;
   size?: number;
+  /** Fila de micros: textos cortos. */
+  compact?: boolean;
 }) {
   const r = 26;
   const c = 2 * Math.PI * r;
-  const fill = value === null || pct === null ? 0 : Math.min(Math.max(pct, 0), 1);
+  const status = value !== null && goal ? ringStatus(value, goal, !!partial || !!approx) : null;
+  const pct = value !== null && goal ? value / goal.target : 0;
+  const fill = Math.min(Math.max(pct, 0), 1);
   const shown = value === null ? null : `${approx ? "≥" : ""}${fmt(value, digits)}`;
+  const goalText = goal ? `${goal.kind === "max" ? "tope " : "/ "}${fmt(goal.target, digits)} ${unit}` : unit;
+  let stateText = value === null ? emptyText : status ? STATUS_TEXT[status] : "";
+  if (status === "partial") stateText = partialText ?? STATUS_TEXT.partial;
+  else if (status === "low" && goal && !compact) stateText = `Falta ${fmt(goal.target - (value ?? 0), digits)}`;
+  else if (status === "over") stateText = `Pasado +${fmt((pct - 1) * 100)} %`;
+  const cls = ["nut-ring"];
+  if (value === null) cls.push("nut-ring--empty");
+  if (status) cls.push(`nut-ring--${status}`);
+  if (compact) cls.push("nut-ring--sm");
+  const aria = [
+    `${label}: ${shown === null ? "pendiente" : `${shown} ${unit}`}`,
+    goal ? `${goal.kind === "max" ? "tope" : "objetivo"} ${fmt(goal.target, digits)}` : "",
+    value !== null ? stateText : ""
+  ]
+    .filter(Boolean)
+    .join(", ");
   return (
-    <figure className={value === null ? "nut-ring nut-ring--empty" : "nut-ring"}>
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 64 64"
-        role="img"
-        aria-label={`${label}: ${shown === null ? "pendiente" : `${shown} ${unit}`}`}
-      >
+    <figure className={cls.join(" ")}>
+      <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={aria}>
         <circle className="nut-ring-track" cx="32" cy="32" r={r} />
         {fill > 0 ? (
           <circle className="nut-ring-bar" cx="32" cy="32" r={r} strokeDasharray={`${fill * c} ${c}`} transform="rotate(-90 32 32)" />
         ) : null}
+        {/* Marca del objetivo a las 12: visible cuando se pasa o cuando es un tope. */}
+        {goal && (pct > 1 || goal.kind === "max") ? <line className="nut-ring-mark" x1="32" y1="1.5" x2="32" y2="10.5" /> : null}
         <text x="32" y="33" textAnchor="middle" dominantBaseline="middle" className="nut-ring-value">
           {shown ?? "—"}
         </text>
       </svg>
       <figcaption>
         <strong>{label}</strong>
-        <span>{unit}</span>
+        <span>{goalText}</span>
+        {stateText ? <span className="nut-ring-state">{stateText}</span> : null}
       </figcaption>
     </figure>
   );
@@ -755,17 +797,60 @@ function Ring({
 /**
  * Resumen nutricional del periodo visible (día / semana / mes), estimado del menú planificado.
  * Solo suman los platos cuantificados (ingredientes vigentes confirmados con alimento y gramos);
- * sin ninguno, los KPIs siguen pendientes en lugar de inventar cifras.
+ * sin ninguno, los KPIs siguen pendientes en lugar de inventar cifras. Cada anillo mide la media por día con datos
+ * frente al objetivo diario medio de esos días (`lib/nutrition/targets.ts`, tipo de día MD / MD±n / descanso).
  */
-function WeekPanel({ days, totals, view, side }: { days: string[]; totals: NutritionTotals | null; view: NutView; side?: boolean }) {
+function WeekPanel({
+  days,
+  totals,
+  view,
+  side,
+  byDate,
+  athleteId,
+  onProfileSaved
+}: {
+  days: string[];
+  totals: NutritionTotals | null;
+  view: NutView;
+  side?: boolean;
+  byDate: Record<string, DayPlan>;
+  athleteId: string;
+  onProfileSaved: () => void;
+}) {
+  const [profileOpen, setProfileOpen] = useState(false);
+  useEffect(() => {
+    if (!profileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setProfileOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.classList.add("nut-modal-open");
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.classList.remove("nut-modal-open");
+    };
+  }, [profileOpen]);
+
   if (totals === null) return null;
   const p = summarizeNutrition(totals, days);
   const has = p.quantified > 0;
-  const kcal = periodTotal(p, "kcal");
+  const total = periodTotal(p, "kcal");
+  const kcal = perDay(p, "kcal");
   const prot = perDay(p, "protein_g");
   const carb = perDay(p, "carbs_g");
   const fat = perDay(p, "fat_g");
   const coverage = `${p.quantified}/${p.planned} platos`;
+  const partial = p.quantified < p.planned;
+  // Objetivo medio de los días con datos (o de todo el periodo si aún no hay ninguno).
+  const goalDays = p.countedDates.length ? p.countedDates : days;
+  const goals = averageTargets(
+    goalDays
+      .map((d) => dailyTargets(totals.profile, dayTypeFromMdTag(byDate[d]?.mdTag)))
+      .filter((t): t is DailyTargets => t !== null)
+  );
+  const kg = totals.profile.weightKg;
+  const perKg = (t: Target | undefined): Target | null =>
+    t && kg ? { kind: t.kind, target: t.target / kg, min: t.min && t.min / kg, max: t.max && t.max / kg } : null;
   return (
     <section className={side ? "nut-dash nut-dash--side" : "nut-dash"} aria-label="Resumen nutricional">
       <header className="nut-dash-head">
@@ -773,65 +858,96 @@ function WeekPanel({ days, totals, view, side }: { days: string[]; totals: Nutri
         <span className="muted">
           {!p.planned
             ? "Sin platos"
-            : has && kcal
-              ? `${kcal.approx ? "≥" : ""}${fmt(kcal.value)} kcal · ${coverage}`
+            : has && total
+              ? `${view === "day" ? "" : `${total.approx ? "≥" : ""}${fmt(total.value)} kcal · `}${coverage}`
               : `Pendiente · ${coverage}`}
         </span>
       </header>
       <div className="nut-dash-main">
         <Ring
           label="Energía"
-          unit={view === "day" ? "kcal día" : view === "month" ? "kcal mes" : "kcal semana"}
+          unit="kcal/día"
           value={kcal?.value ?? null}
           approx={kcal?.approx}
-          pct={null}
+          goal={goals?.kcal ?? null}
+          partial={partial}
+          partialText={coverage}
+          size={side ? 84 : 92}
         />
         <MacroDonut grams={prot && carb && fat ? { p: prot.value, c: carb.value, f: fat.value } : null} />
         <div className="nut-dash-pair">
-          <PerKgRing label="Proteína" v={prot} p={p} />
-          <PerKgRing label="Hidratos" v={carb} p={p} />
+          <Ring
+            label="Proteína"
+            unit="g/kg"
+            value={prot && kg ? prot.value / kg : null}
+            approx={prot?.approx}
+            goal={perKg(goals?.protein_g)}
+            partial={partial}
+            emptyText={prot && !kg ? "Falta peso" : undefined}
+            digits={1}
+          />
+          <Ring
+            label="Hidratos"
+            unit="g/kg"
+            value={carb && kg ? carb.value / kg : null}
+            approx={carb?.approx}
+            goal={perKg(goals?.carbs_g)}
+            partial={partial}
+            emptyText={carb && !kg ? "Falta peso" : undefined}
+            digits={1}
+          />
+          <Ring label="Grasa" unit="g" value={fat?.value ?? null} approx={fat?.approx} goal={goals?.fat_g ?? null} partial={partial} />
         </div>
       </div>
       <div className="nut-dash-micros">
         {MICROS.map((m) => {
           const v = perDay(p, m.key);
           return (
-            <Ring key={m.key} label={m.label} unit={m.unit} value={v?.value ?? null} approx={v?.approx} digits={m.digits} pct={null} size={48} />
+            <Ring
+              key={m.key}
+              label={m.label}
+              unit={m.unit}
+              value={v?.value ?? null}
+              approx={v?.approx}
+              goal={goals?.[m.key] ?? null}
+              partial={partial}
+              digits={m.digits}
+              size={52}
+              compact
+            />
           );
         })}
       </div>
-      <p className="muted">
-        {has
-          ? "Estimado del menú planificado, solo platos con ingredientes confirmados. Sodio sin sal de mesa; «≥» = falta el dato en algún alimento."
-          : "Pendiente: confirma alimento y gramos de los ingredientes de cada plato para calcular."}
-      </p>
+      {goals ? (
+        <p className="muted">
+          {has
+            ? "Media por día con datos frente al objetivo del perfil y del tipo de día. Sodio sin sal de mesa; «≥» = falta el dato en algún alimento."
+            : "Pendiente: confirma alimento y gramos de los ingredientes de cada plato para calcular."}
+        </p>
+      ) : (
+        <div className="nut-dash-goal">
+          <p>Completa el perfil (nacimiento, altura y peso) para ver los objetivos.</p>
+          <button type="button" className="btn secondary" onClick={() => setProfileOpen(true)}>
+            Completar perfil
+          </button>
+        </div>
+      )}
+      {profileOpen ? (
+        <NutModal title="Perfil del deportista" onClose={() => setProfileOpen(false)}>
+          <AthleteProfileForm athleteId={athleteId} onSaved={onProfileSaved} />
+        </NutModal>
+      ) : null}
     </section>
   );
 }
 
-const MICROS: { key: NutrientKey; label: string; unit: string; digits: number }[] = [
-  { key: "fiber_g", label: "Fibra", unit: "g/día", digits: 0 },
-  { key: "sodium_mg", label: "Sodio", unit: "mg/día", digits: 0 },
-  { key: "iron_mg", label: "Hierro", unit: "mg/día", digits: 1 },
-  { key: "calcium_mg", label: "Calcio", unit: "mg/día", digits: 0 },
-  { key: "vit_d_ug", label: "Vit. D", unit: "µg/día", digits: 1 }
+const MICROS: { key: NutrientKey & TargetKey; label: string; unit: string; digits: number }[] = [
+  { key: "fiber_g", label: "Fibra", unit: "g", digits: 0 },
+  { key: "sodium_mg", label: "Sodio", unit: "mg", digits: 0 },
+  { key: "iron_mg", label: "Hierro", unit: "mg", digits: 1 },
+  { key: "calcium_mg", label: "Calcio", unit: "mg", digits: 0 },
+  { key: "vit_d_ug", label: "Vit. D", unit: "µg", digits: 1 }
 ];
-
-/** g/kg/día: necesita platos cuantificados y el peso del deportista. */
-function PerKgRing({ label, v, p }: { label: string; v: { value: number; approx: boolean } | null; p: PeriodNutrition }) {
-  const kg = p.weightKg;
-  return (
-    <Ring
-      label={label}
-      unit={v && !kg ? "falta peso" : "g/kg/día"}
-      value={v && kg ? v.value / kg : null}
-      approx={v?.approx}
-      digits={1}
-      pct={null}
-      size={56}
-    />
-  );
-}
 
 function NutModal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const [mounted, setMounted] = useState(false);

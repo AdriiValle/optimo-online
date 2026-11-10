@@ -9,6 +9,8 @@ export type PeriodNutrition = {
   quantified: number;
   /** Días con al menos un plato cuantificado: divisor de las medias por día. */
   daysCounted: number;
+  /** Fechas que cuentan (para el objetivo medio según tipo de día). */
+  countedDates: string[];
   sum: Partial<Record<NutrientKey, NutrientSum>>;
   weightKg: number | null;
 };
@@ -16,13 +18,14 @@ export type PeriodNutrition = {
 /** Suma los días de la vista (día / semana / mes) a partir de los totales diarios del API. */
 export function summarizeNutrition(totals: NutritionTotals, days: string[]): PeriodNutrition {
   const inView = new Set(days);
-  const out: PeriodNutrition = { planned: 0, quantified: 0, daysCounted: 0, sum: {}, weightKg: totals.weightKg };
+  const out: PeriodNutrition = { planned: 0, quantified: 0, daysCounted: 0, countedDates: [], sum: {}, weightKg: totals.weightKg };
   for (const day of totals.days) {
     if (!inView.has(day.date)) continue;
     out.planned += day.planned;
     out.quantified += day.quantified;
     if (!day.quantified) continue;
     out.daysCounted += 1;
+    out.countedDates.push(day.date);
     for (const [k, v] of Object.entries(day.totals) as [NutrientKey, NutrientSum][]) {
       const acc = (out.sum[k] ??= { value: 0, incomplete: false });
       acc.value += v.value;

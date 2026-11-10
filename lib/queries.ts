@@ -1121,7 +1121,15 @@ export type MealNutrition = {
   totals: Record<NutrientKey, NutrientSum>;
 };
 
-export type NutritionTotals = { weightKg: number | null; days: DayNutrition[]; meals: MealNutrition[] };
+/** Perfil físico para los objetivos (`lib/nutrition/targets.ts`); null = no rellenado. */
+export type NutritionProfile = { weightKg: number | null; heightCm: number | null; ageYears: number | null };
+
+export type NutritionTotals = {
+  weightKg: number | null;
+  profile: NutritionProfile;
+  days: DayNutrition[];
+  meals: MealNutrition[];
+};
 
 type QuantItemRow = { meal_slot_id: string; ok: boolean; grams: string | null } & Record<
   NutrientKey,
@@ -1134,7 +1142,10 @@ type QuantItemRow = { meal_slot_id: string; ok: boolean; grams: string | null } 
  * Los items obsoletos no cuentan. Días sin platos no aparecen. `meals` = macros de cada plato del rango (ficha).
  */
 export async function nutritionTotals(tx: Tx, athleteId: string, from: string, to: string): Promise<NutritionTotals> {
-  const athlete = await tx<{ weight_kg: string | null }[]>`select weight_kg::text from athletes where id = ${athleteId}`;
+  const athlete = await tx<{ weight_kg: string | null; height_cm: string | null; age_years: number | null }[]>`
+    select weight_kg::text, height_cm::text, extract(year from age(birth_date))::int as age_years
+    from athletes where id = ${athleteId}
+  `;
   const slots = await tx<{ id: string; date: string }[]>`
     select id, date::text from meal_slots
     where athlete_id = ${athleteId} and date between ${from}::date and ${to}::date
@@ -1188,8 +1199,10 @@ export async function nutritionTotals(tx: Tx, athleteId: string, from: string, t
       day.totals[k].incomplete ||= meal.totals[k].incomplete;
     }
   }
+  const weightKg = num(athlete[0]?.weight_kg ?? null);
   return {
-    weightKg: num(athlete[0]?.weight_kg ?? null),
+    weightKg,
+    profile: { weightKg, heightCm: num(athlete[0]?.height_cm ?? null), ageYears: athlete[0]?.age_years ?? null },
     days: [...days.values()].sort((a, b) => a.date.localeCompare(b.date)),
     meals
   };

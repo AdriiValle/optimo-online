@@ -330,6 +330,8 @@ textarea { min-height: 72px; resize: vertical; }
 @keyframes scrim-in { from { opacity: 0; } }
 @keyframes sheet-up { from { transform: translateY(100%); } }
 @keyframes sheet-pop { from { opacity: 0; transform: scale(0.96); } }
+/* Anillo de nutrición: se rellena desde 0 al montar (reduced-motion lo deja instantáneo). */
+@keyframes nut-ring-fill { from { stroke-dasharray: 0 200; } }
 .create-overlay {
   position: fixed;
   inset: 0;
@@ -1519,16 +1521,30 @@ body.nut-modal-open { overflow: hidden; }
   .nut-ring-track { fill: none; stroke: var(--fill-secondary); stroke-width: 6; }
   .nut-ring--empty .nut-ring-track { stroke-dasharray: 2 4; stroke-linecap: round; }
   .nut-ring-bar, .nut-macro-seg { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dasharray var(--dur-sheet) var(--ease); }
-  .nut-ring-bar { stroke: var(--text); }
+  .nut-ring-bar { stroke: var(--text); animation: nut-ring-fill var(--dur-sheet) var(--ease) backwards; }
+  /* Estado frente al objetivo (el texto de estado lo repite: el color nunca va solo). */
+  .nut-ring { --ring-ink: var(--text); }
+  .nut-ring--ok, .nut-ring--cap-ok { --ring-ink: var(--ok); }
+  .nut-ring--over, .nut-ring--cap-over { --ring-ink: var(--danger); }
+  .nut-ring--partial { --ring-ink: var(--secondary); }
+  .nut-ring .nut-ring-bar { stroke: var(--ring-ink); }
+  .nut-ring-mark { stroke: var(--text); stroke-width: 2; stroke-linecap: round; }
+  .nut-ring-state { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .nut-ring figcaption .nut-ring-state { color: var(--ring-ink); }
+  .nut-ring--low figcaption .nut-ring-state, .nut-ring--partial figcaption .nut-ring-state { color: var(--accent-hover); }
   .nut-macro-seg { stroke-linecap: butt; }
   .nut-macro-seg--p { stroke: var(--macro-p); }
   .nut-macro-seg--c { stroke: var(--macro-c); }
   .nut-macro-seg--f { stroke: var(--macro-f); }
   .nut-ring-value { fill: currentColor; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
   .nut-ring--empty .nut-ring-value, .nut-macro .nut-ring-value { fill: var(--secondary); }
-  .nut-ring figcaption { display: flex; flex-direction: column; line-height: 1.2; }
-  .nut-ring figcaption strong { font-size: 0.75rem; }
-  .nut-ring figcaption span, .nut-macro-legend span { font-size: 0.6875rem; color: var(--secondary); }
+  .nut-ring figcaption { display: flex; flex-direction: column; line-height: 1.25; }
+  .nut-ring figcaption strong { font-size: 0.8125rem; letter-spacing: -0.01em; }
+  .nut-ring figcaption span, .nut-macro-legend span { font-size: 0.75rem; color: var(--secondary); font-variant-numeric: tabular-nums; }
+  /* Micros: fila compacta; la cifra sube en el viewBox para leerse a 52px. */
+  .nut-ring--sm .nut-ring-value { font-size: 14px; letter-spacing: -0.03em; }
+  .nut-ring--sm figcaption strong { font-size: 0.75rem; }
+  .nut-ring--sm figcaption span { font-size: 0.6875rem; white-space: nowrap; }
   .nut-macro-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
   .nut-macro-legend li { display: grid; grid-template-columns: 8px auto; column-gap: 6px; align-items: center; line-height: 1.2; }
   .nut-macro-legend strong { font-size: 0.75rem; }
@@ -1538,6 +1554,11 @@ body.nut-modal-open { overflow: hidden; }
   .nut-macro-dot--c { background: var(--macro-c); }
   .nut-macro-dot--f { background: var(--macro-f); }
   .nut-dash > .muted { grid-area: note; margin: 0; font-size: 0.75rem; text-align: right; }
+  /* Sin perfil: aviso + acción en lugar de la nota. */
+  .nut-dash-goal { grid-area: note; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+  .nut-dash-goal p { margin: 0; font-size: 0.8125rem; color: var(--accent-hover); }
+  .nut-dash-goal .btn { min-height: 36px; padding: 6px 14px; font-size: 0.8125rem; flex-shrink: 0; }
+  .nut-dash--side .nut-dash-goal { justify-content: space-between; }
   .nut-dash--side { flex-direction: column; align-items: stretch; gap: 10px; }
   .nut-dash--side > .muted { text-align: left; }
   .nut-week-cell img { width: 36px; height: 36px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
