@@ -411,6 +411,23 @@ BEGIN
 END;
 $$;
 
+-- Nutricionista asignada edita la ficha física (nacimiento, altura, peso) del deportista.
+CREATE OR REPLACE FUNCTION nutritionist_set_athlete_profile(p_athlete_id uuid, p_birth_date date, p_height_cm numeric, p_weight_kg numeric)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+SET row_security = off
+AS $$
+BEGIN
+  IF NOT app_nutritionist_assigned(p_athlete_id) THEN
+    RETURN false;
+  END IF;
+  UPDATE athletes SET birth_date = p_birth_date, height_cm = p_height_cm, weight_kg = p_weight_kg WHERE id = p_athlete_id;
+  RETURN FOUND;
+END;
+$$;
+
 -- Macros del menú (additive). Valores de foods por 100 g de porción comestible; null = desconocido, no 0.
 CREATE TABLE IF NOT EXISTS foods (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

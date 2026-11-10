@@ -1194,3 +1194,30 @@ export async function nutritionTotals(tx: Tx, athleteId: string, from: string, t
     meals
   };
 }
+
+export type AthleteProfile = { birthDate: string | null; heightCm: number | null; weightKg: number | null };
+
+export async function athleteProfile(tx: Tx, athleteId: string): Promise<AthleteProfile | null> {
+  const rows = await tx<{ birth_date: string | null; height_cm: string | null; weight_kg: string | null }[]>`
+    select birth_date::text, height_cm::text, weight_kg::text from athletes where id = ${athleteId} limit 1
+  `;
+  const r = rows[0];
+  if (!r) return null;
+  const n = (v: string | null) => (v == null ? null : Number(v));
+  return { birthDate: r.birth_date, heightCm: n(r.height_cm), weightKg: n(r.weight_kg) };
+}
+
+/** Admin escribe directo (RLS); la nutricionista asignada pasa por la función security definer. */
+export async function updateAthleteProfile(tx: Tx, athleteId: string, p: AthleteProfile, asNutritionist: boolean) {
+  if (asNutritionist) {
+    const rows = await tx<{ ok: boolean }[]>`
+      select nutritionist_set_athlete_profile(${athleteId}, ${p.birthDate}::date, ${p.heightCm}, ${p.weightKg}) as ok
+    `;
+    return rows[0]?.ok ?? false;
+  }
+  const rows = await tx<{ id: string }[]>`
+    update athletes set birth_date = ${p.birthDate}::date, height_cm = ${p.heightCm}, weight_kg = ${p.weightKg}
+    where id = ${athleteId} returning id
+  `;
+  return rows.length > 0;
+}

@@ -12,6 +12,7 @@ import { UsernameForm } from "@/app/components/username-form";
 import { NutritionPane } from "@/app/a/[id]/nutrition-pane";
 import { NutAthleteNav } from "../athlete-nav";
 import { MenuWordImportButton } from "./menu-word-import";
+import { AthleteProfileButton } from "./athlete-profile-form";
 import { MacroDonut, MealDrawer, MealFicha, type PhotoChange } from "./meal-drawer";
 import { fmt, perDay, periodTotal, summarizeNutrition, type PeriodNutrition } from "./nutrition-summary";
 import { dishLines, splitCategory } from "@/lib/nutrition/protein-category";
@@ -245,6 +246,7 @@ export function NutricionAthleteClient({
           editor={editor}
           athleteId={athleteId}
           onMenuImported={() => setMealRefresh((n) => n + 1)}
+          onProfileSaved={() => setTotalsRefresh((n) => n + 1)}
           onStep={(delta) => {
             const c = parseDateLocal(center);
             selectDate(
@@ -392,6 +394,7 @@ function WeekGrid({
   editor,
   athleteId,
   onMenuImported,
+  onProfileSaved,
   onStep,
   onDay,
   onOpenDay,
@@ -408,6 +411,7 @@ function WeekGrid({
   editor: EditorTarget | null;
   athleteId: string;
   onMenuImported: () => void;
+  onProfileSaved: () => void;
   onStep: (delta: number) => void;
   onDay: (iso: string) => void;
   onOpenDay: (iso: string) => void;
@@ -460,6 +464,7 @@ function WeekGrid({
               ›
             </button>
           </div>
+          <AthleteProfileButton athleteId={athleteId} onSaved={onProfileSaved} />
           <MenuWordImportButton athleteId={athleteId} onImported={onMenuImported} />
         </div>
       </div>
