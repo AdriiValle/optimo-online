@@ -1,7 +1,7 @@
 "use client";
 
 import { dateKey, DOW_ES, MONTHS_ES } from "@/lib/dates";
-import { LOAD_TINT_FROM, loadClassForMdTag } from "@/lib/plan";
+import { LOAD_TINT_FROM, loadClassForDay } from "@/lib/plan";
 import type { DayPlan } from "@/lib/types";
 
 const VENUE_SVG = {
@@ -70,7 +70,7 @@ export function PlanCalendar({ byDate, crests, year, month, center, today, onMon
           if (iso === center) cls.push("cal-highlight");
           if (p?.matchOpponent) cls.push("match");
           if (iso >= LOAD_TINT_FROM) {
-            const load = loadClassForMdTag(p?.mdTag ?? null);
+            const load = loadClassForDay(iso, p?.mdTag ?? null);
             if (load) cls.push(load);
           }
           const crest = p?.matchOpponent ? crests[p.matchOpponent] : null;

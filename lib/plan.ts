@@ -1,6 +1,6 @@
 import { addDays, dateKey, daysBetween, parseDateLocal } from "@/lib/dates";
 import type { ParsedPlan } from "@/lib/plan-data";
-import { DAY_OVERRIDES } from "@/lib/plan-data/calendar";
+import { DAY_OVERRIDES, DAY_TINT_OVERRIDES } from "@/lib/plan-data/calendar";
 import type { DayPlan, DayPlanBlock, HtmlMatch, MatchVenue } from "@/lib/types";
 
 function sortedMatches(matches: HtmlMatch[]) {
@@ -305,6 +305,29 @@ function buildOverridePlan(
       ...empty
     };
   }
+  if (o.kind === "activacion-general") {
+    const blocks: DayPlanBlock[] = [{ kind: "section", title: "Específica" }];
+    pushProtocol(parsed, blocks, "movilidad-cadera-lumbar-1");
+    blocks.push({ kind: "section", title: "Activación" });
+    pushProtocol(parsed, blocks, "activacion-basica-aductores");
+    pushProtocol(parsed, blocks, "activacion-basica-isquios-1");
+    pushProtocol(parsed, blocks, "activacion-basica-lumbar-1");
+    blocks.push({ kind: "note", text: o.note });
+    return { date: iso, mdTag: o.mdTag, title: "Activación general", minutes: 20, blocks, ...empty };
+  }
+  if (o.kind === "posterior-v2") {
+    const sm = { ...strengthMap, [iso]: "posterior" as const };
+    const fm = { ...fieldMap };
+    delete fm[iso];
+    return {
+      date: iso,
+      mdTag: o.mdTag,
+      title: "Cadena posterior",
+      minutes: sessionDurationMinutes("MD-2", iso, parsed, sm, fm),
+      blocks: [...buildBlocks(parsed, iso, "MD-2", undefined, sm, fm), { kind: "note", text: o.note }],
+      ...empty
+    };
+  }
   if (o.kind === "isquio-sled") {
     const blocks: DayPlanBlock[] = [{ kind: "section", title: "Activación" }];
     pushProtocol(parsed, blocks, "activacion-basica-isquios-1");
@@ -386,6 +409,10 @@ export function loadClassForMdTag(tag: string | null) {
     "MD-5": "load-md-minus5"
   };
   return byTag[tag] ?? null;
+}
+
+export function loadClassForDay(iso: string, tag: string | null) {
+  return iso in DAY_TINT_OVERRIDES ? DAY_TINT_OVERRIDES[iso] : loadClassForMdTag(tag);
 }
 
 export const LOAD_TINT_FROM = "2026-10-19";

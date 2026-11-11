@@ -15,9 +15,10 @@ async function main() {
   const all = buildDayPlans(planData);
   const protocolIds = (iso: string) =>
     JSON.stringify(all.find((p) => p.date === iso)?.blocks.flatMap((b) => (b.kind === "protocol" ? [b.protocolId] : [])));
-  const same = protocolIds("2026-11-12") === protocolIds("2026-11-03");
-  console.log(`ids protocolo 12 == 3: ${same}`);
-  if (!same) throw new Error("semana-paron: ids del 12 difieren del 3");
+  const same = protocolIds("2026-11-11") === protocolIds("2026-11-03");
+  console.log(`ids protocolo 11 == 3: ${same}`);
+  if (!same) throw new Error("semana-paron: ids del 11 difieren del 3");
+  if (!protocolIds("2026-11-13").includes("hip-thrust-barra-50")) throw new Error("semana-paron: el 13 no trae hip thrust");
 
   const client = unpooledSql();
   await client.begin(async (tx) => {
