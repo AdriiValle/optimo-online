@@ -1,5 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+
+// SF Pro sale del sistema en Apple (no se sirve como webfont); Inter es el respaldo en Windows/Android.
+const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Óptimo Online",
@@ -23,7 +27,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" className={inter.variable}>
       <head>
         {/* Explícito: metadata.icons no siempre llega al HTML inicial en prod. */}
         <link rel="icon" href="/favicon.ico" sizes="any" />

@@ -1,47 +1,151 @@
+/* Tokens v2 (workflow/context/design-system.md). Nombrados por rol, no por color: el modo oscuro
+   se añadirá redefiniendo solo este :root. Ningún color, sombra, radio ni duración fuera de aquí. */
 :root {
+  /* Superficies */
   --bg: #F5F5F7;
   --surface: #FFFFFF;
-  --text: #1D1D1F;
-  --secondary: #86868B;
-  --line: #D2D2D7;
-  --fill-secondary: #E8E8ED;
-  --accent: #1D1D1F;
-  --accent-hover: #424245;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.08);
-  --radius: 12px;
-  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", sans-serif;
-  --glass: rgba(255, 255, 255, 0.62);
-  --glass-strong: rgba(255, 255, 255, 0.86);
-  --glass-row: rgba(255, 255, 255, 0.74);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-blur: blur(20px) saturate(180%);
-  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  --surface-sidebar: #F5F5F7;
+  /* Texto */
+  --label: #1D1D1F;
+  --label-secondary: #6E6E73;
+  --label-tertiary: #86868B;
+  --label-quaternary: #AEAEB2;
+  --label-on-tint: #424245;
+  /* Rellenos (alfa iOS) */
+  --fill: rgba(120, 120, 128, 0.20);
+  --fill-secondary: rgba(120, 120, 128, 0.16);
+  --fill-tertiary: rgba(118, 118, 128, 0.12);
+  --fill-quaternary: rgba(116, 116, 128, 0.08);
+  /* Separadores */
+  --separator: #D2D2D7;
+  --separator-soft: rgba(0, 0, 0, 0.08);
+  /* Acento: solo lo interactivo */
+  --accent: #0071E3;
+  --accent-hi: #0077ED;
+  --accent-text: #0066CC;
+  --accent-tint: rgba(0, 113, 227, 0.12);
+  --on-accent: #FFFFFF;
+  /* Semántica */
+  --danger: #D70015;   --danger-tint: rgba(215, 0, 21, 0.08);
+  --ok: #1E7B34;       --ok-tint: rgba(30, 123, 52, 0.10);
+  --warn: #B25000;     --warn-tint: rgba(178, 80, 0, 0.10);
+  /* Anillos de nutrición */
+  --ring-track: var(--fill-secondary);
+  --ring-low: var(--label-secondary);
+  --ring-ok: var(--ok);
+  --ring-over: var(--warn);
+  --ring-cap-ok: var(--ok);
+  --ring-cap-over: var(--danger);
+  --ring-partial: var(--label-tertiary);
+  --macro-p: var(--label); --macro-c: #6E6E73; --macro-f: #AEAEB2;
+
+  /* Tipografía (Dynamic Type de iOS, en rem) */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--font-inter), system-ui, "Segoe UI", Roboto, sans-serif;
+  --t-large-title: 700 2.125rem/1.2 var(--font);   --ls-large-title: -0.022em;
+  --t-title-1: 700 1.75rem/1.214 var(--font);      --ls-title-1: -0.02em;
+  --t-title-2: 600 1.375rem/1.273 var(--font);     --ls-title-2: -0.016em;
+  --t-title-3: 600 1.25rem/1.25 var(--font);       --ls-title-3: -0.014em;
+  --t-headline: 600 1.0625rem/1.294 var(--font);   --ls-headline: -0.012em;
+  --t-body: 400 1.0625rem/1.47 var(--font);        --ls-body: -0.012em;
+  --t-body-row: 400 1.0625rem/1.294 var(--font);
+  --t-callout: 400 1rem/1.3125 var(--font);        --ls-callout: -0.01em;
+  --t-subhead: 400 0.9375rem/1.333 var(--font);    --ls-subhead: -0.008em;
+  --t-footnote: 400 0.8125rem/1.385 var(--font);   --ls-footnote: -0.004em;
+  --t-caption: 400 0.75rem/1.333 var(--font);      --ls-caption: 0;
+  --t-caption-2: 400 0.6875rem/1.182 var(--font);  --ls-caption-2: 0.006em;
+
+  /* Radios */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-sheet: 20px;
+  --radius-pill: 9999px;
+
+  /* Materiales */
+  --material-thin: rgba(255, 255, 255, 0.55);     --blur-thin: blur(12px) saturate(180%);
+  --material-regular: rgba(250, 250, 252, 0.72);  --blur-regular: blur(20px) saturate(180%);
+  --material-thick: rgba(255, 255, 255, 0.88);    --blur-thick: blur(30px) saturate(180%);
+  --material-edge: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --scrim: rgba(0, 0, 0, 0.30);
+
+  /* Elevación: solo lo que flota */
+  --elev-0: none;
+  --elev-1: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+  --elev-2: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --elev-3: 0 24px 64px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.04);
+
+  /* Espaciado (rejilla 4/8) */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px; --space-5: 20px;
+  --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px;
+  --gutter: 16px;
+  --row-inset: 16px;
+
+  /* Movimiento */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.3, 0.64, 1);
+  --dur-press: 100ms;
+  --dur-fast: 150ms;
+  --dur: 220ms;
+  --dur-sheet: 360ms;
+  --dur-move: 400ms;
+  --dur-spin: 800ms;    /* vuelta del spinner de pendiente (Óptimo) */
+  --dur-pulse: 1200ms;  /* pulso de opacidad del esqueleto de carga */
+  --press-scale: 0.97;  --press-scale-lg: 0.985;
+
+  /* Táctil y foco */
+  --tap-min: 44px;
+  --tap-compact: 32px;
+  --focus-ring: 2px solid var(--accent);  --focus-offset: 2px;
+
+  /* Barras */
+  --navbar-h: 44px;
+  --toolbar-h: 52px;
+  --tabbar-h: 49px;
+  --sidebar-w: 300px;
   --header-offset: env(safe-area-inset-top, 0px);
   --header-block: 58px;
   --header-gap: 12px;
-  --ease: cubic-bezier(0.23, 1, 0.32, 1);
-  --dur-press: 100ms;
-  --dur: 200ms;
-  --dur-sheet: 320ms;
-  --press-scale: 0.97;
-  --press-scale-lg: 0.985;
-  --focus-ring: 2px solid var(--text);
-  --focus-offset: 2px;
-  --radius-sm: 10px;
-  --scrim: rgba(0, 0, 0, 0.28);
-  --danger: #c41e3a;
-  --ok: #248a3d;
-  /* Categoría de proteína: tierra desaturada. Ink = filete/punto/etiqueta sobre blanco; tint = fondo de la celda y placeholder. */
+
+  /* Alias de transición v1 → v2 (se borran en la Oleada 4) */
+  --text: var(--label);
+  --secondary: var(--label-secondary);
+  --line: var(--separator);
+  --radius: var(--radius-md);
+  --shadow-sm: var(--elev-1);
+  --shadow-md: var(--elev-2);
+  --glass: var(--material-thin);
+  --glass-row: var(--material-regular);
+  --glass-strong: var(--material-thick);
+  --glass-blur: var(--blur-regular);
+  --glass-highlight: var(--material-edge);
+  --glass-border: var(--separator-soft);
+  --ease: var(--ease-out);
+  --accent-hover: var(--label-on-tint);
+
+  /* Categoría de proteína (se conserva). Ink = filete/punto/etiqueta; tint = fondo de celda y placeholder. */
   --cat-carne: #9A5B45;      --cat-carne-tint: #F4EAE5;
   --cat-pescado: #557083;    --cat-pescado-tint: #E7EDF1;
   --cat-huevos: #8F7234;     --cat-huevos-tint: #F5EFE1;
   --cat-legumbres: #687A4E;  --cat-legumbres-tint: #ECEFE4;
-  --cat-none: var(--secondary); --cat-none-tint: var(--fill-secondary);
+  --cat-none: var(--label-tertiary); --cat-none-tint: var(--fill-quaternary);
   --cat-rule: 3px;
 }
 
-/* Categoría → par ink/tint que leen la celda, el punto del mes y (O2) la ficha. */
+@media (min-width: 720px) { :root { --gutter: 24px; } }
+@media (min-width: 1024px) { :root { --gutter: 32px; } }
+
+/* Sin backdrop-filter el material sería un velo ilegible: superficie opaca. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --material-thin: var(--surface);
+    --material-regular: var(--surface);
+    --material-thick: var(--surface);
+  }
+}
+
+/* Categoría → par ink/tint que leen la celda, el punto del mes y la ficha. */
 .nut-cat--carne { --cat-ink: var(--cat-carne); --cat-tint: var(--cat-carne-tint); }
 .nut-cat--pescado { --cat-ink: var(--cat-pescado); --cat-tint: var(--cat-pescado-tint); }
 .nut-cat--huevos { --cat-ink: var(--cat-huevos); --cat-tint: var(--cat-huevos-tint); }
