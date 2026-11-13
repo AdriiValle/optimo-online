@@ -93,3 +93,30 @@ Motion, accesibilidad y responsive juntos por dueño de hoja, para no pisarse:
 - Colisión en git con árbol compartido: commit solo del master, por rutas.
 - Navegador compartido: lock de capturas y auditorías en serie.
 - Pérdida de trabajo: commit local por tarea en `feat/rediseno-apple`.
+
+## Pista N — Nutrición: funciones nuevas + diseño (añadida 2026-11-13)
+Base: `from-opus-investigacion-nutricion.md` (informe con fuentes). **Excepción a la regla 7:** esta pista sí toca datos, con migraciones **solo aditivas** (tablas/columnas nuevas, nada se borra ni cambia), escritas en `db/schema.sql` y aplicadas por el master tras el PASA de N0. Lo existente se conserva (menú día/semana/mes, ficha, importar Word, ingredientes automáticos, anillos, perfil).
+Orden: va **después** de A5/C1–C4 (mismos archivos: `nutricion-athlete-client.tsx`, `nutrition-pane.tsx`, `nutri.css`, `player.css`) y en serie salvo donde se indica. A5 y C-track dejan el diseño base; N lo completa sin rehacerlo.
+
+Criterios de diseño (de la investigación): el jugador **no ve kcal ni gramos de macros por defecto** (interruptor por deportista para Amanda); sin peso como protagonista, sin rachas ni gamificación, sin registro por gramos/escáner/IA, sin chat, sin generador de dietas por IA, sin despensa con inventario.
+
+**Jugador (móvil)** — pestañas *Hoy · Semana · Compra*
+- **N1 Hoy:** tarjeta del día con MD y «nivel de combustible» (carga / normal / suave) con color, nota de Amanda, franjas en orden con la siguiente destacada, foto, ingredientes redondeados, preparación plegable, suplementos en su franja, «Indicaciones de Amanda» plegable. (Presentación + `supplements` con franja opcional.)
+- **N2 Semana:** tira de 7 días con MD y miniaturas; tocar abre «Hoy» de ese día.
+- **N3 Lista de la compra:** semana o próximos 3 días, suma de `meal_items` por alimento, secciones por pasillo, cantidades en unidad de compra («6 huevos»), «ya lo tengo», compartir (Web Share/WhatsApp/copiar) e imprimir. Datos: `foods.aisle/unit_name/unit_g/pack_g/staple`, `shopping_checks`.
+- **N4 Check de comidas:** ✓ / ½ / ✕ por franja con foto opcional y comentario corto. Datos: `meal_checks`.
+
+**Amanda (escritorio)** — pestañas *Menú · Seguimiento · Perfil · Compra · Plantillas y platos · Informes* (+ *Alimentos* global)
+- **N5 Alimentos:** tabla de `foods` (sección, unidad, alias) y bandeja «sin alimento» (≈23 hoy) con un clic «es alias de X / alimento nuevo»; mejora del emparejado (plurales, palabras de preparación) en `lib/nutrition`.
+- **N6 Perfil ampliado:** alergias e intolerancias (alerta en la ficha del plato), «mostrar números al jugador», objetivos editables por Amanda sobre los calculados. Datos: `athletes.allergies/intolerances/show_numbers/target_overrides`.
+- **N7 Seguimiento:** cumplimiento por semana y por tipo de día, foto real junto a la del plan, gráfica de peso/medidas (solo panel de Amanda, el peso del perfil = último registro). Datos: `body_measurements`.
+- **N8 Plantillas y platos:** guardar día/semana como plantilla (MD-1, MD, MD+1) y aplicarla; biblioteca de platos («buscar en mis platos»); sustituciones aprobadas con gramos recalculados; nota por día. Datos: `menu_templates*`, `dishes*`, `food_swaps`, `meal_day_notes`.
+- **N9 Informes e impresión:** PDF/`@media print` del menú semanal + lista de la compra + objetivos.
+
+**Más adelante (no entra ahora):** informe mensual, plan vs real con números solo para Amanda, recordatorios push (exigen PWA instalada), carga BEDCA/Open Food Facts, hidratación intra-partido, anamnesis completa.
+
+**Supuestos a confirmar con Amanda (no bloquean):** (a) los gramos de los platos son en **crudo** (así lo asume el código); (b) el jugador compra y comparte la lista por WhatsApp. Ambos se cambian después sin rehacer nada.
+
+Estimación: N1–N4 jugador ≈ 4 tareas, N5–N9 Amanda ≈ 5 tareas, más 1 de migraciones (N0). Cada una con su ejecutor y auditor.
+
+**N0 Migraciones aditivas (previa a N1–N9):** un ejecutor escribe las tablas/columnas en `db/schema.sql` (idempotentes) y las RPC de nutricionista que haga falta; el auditor las revisa; el master ejecuta `npm run db:migrate` contra la base compartida solo tras el PASA.
