@@ -1,4 +1,15 @@
-/* Barra de app: fija al viewport (no al scroll). Portal en BrandHeader → document.body. */
+/* —— Barra superior (S2): navbar del jugador y toolbar de admin/nutricionista ——
+   BrandHeader la porta a body (fija al viewport). Alto = --header-block, que reserva
+   body { padding-top } (base.css) y lee el workspace de la nutricionista (nutri.css).
+   - navbar: 44 px, título centrado, borde de scroll: transparente sobre el lienzo arriba del todo,
+     material regular + filete en cuanto pasa contenido por debajo (data-scrolled).
+   - toolbar (≥720): 52 px, título a la izquierda, material fijo. <720 es navbar. */
+
+:root { --header-block: var(--navbar-h); }
+@media (min-width: 720px) {
+  :root:has(.doc-header-viewport--toolbar) { --header-block: var(--toolbar-h); }
+}
+
 .doc-header-viewport {
   position: fixed !important;
   top: 0 !important;
@@ -6,21 +17,37 @@
   right: 0 !important;
   bottom: auto !important;
   z-index: 1000;
+  isolation: isolate;
   box-sizing: border-box;
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: calc(var(--header-offset) + var(--header-block));
-  padding: var(--header-offset) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+  align-items: stretch;
+  height: calc(var(--header-offset) + var(--header-block));
   margin: 0;
-  background: rgba(245, 245, 247, 0.72);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border-bottom: 1px solid rgba(210, 210, 215, 0.65);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  pointer-events: none;
+  padding:
+    var(--header-offset)
+    max(var(--gutter), env(safe-area-inset-right, 0px))
+    0
+    max(var(--gutter), env(safe-area-inset-left, 0px));
+  background: transparent;
   transform: none !important;
 }
+
+/* Material en capa propia: el cambio de borde de scroll anima solo opacidad. */
+.doc-header-viewport::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--material-regular);
+  -webkit-backdrop-filter: var(--blur-regular);
+  backdrop-filter: var(--blur-regular);
+  box-shadow: inset 0 -1px 0 var(--separator-soft);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+  pointer-events: none;
+}
+.doc-header-viewport[data-scrolled="true"]::before { opacity: 1; }
 
 header.doc-header {
   position: relative;
@@ -29,80 +56,188 @@ header.doc-header {
   max-width: 640px;
   height: var(--header-block);
   margin: 0;
-  padding: 0 4px;
-  pointer-events: auto;
+  padding: 0;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  /* Laterales iguales (título centrado) mientras quepa; si no, el título cede y se recorta. */
+  grid-template-columns: 1fr minmax(0, auto) 1fr;
   align-items: center;
-  column-gap: 8px;
+  column-gap: var(--space-2);
   background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
   border: none;
   border-radius: 0;
   box-shadow: none;
 }
 
-.header-leading {
+/* —— Título (marca + deportista/sección) —— */
+.doc-header .brand-row {
+  grid-column: 2;
+  justify-self: center;
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  font: var(--t-headline);
+  letter-spacing: var(--ls-headline);
+  white-space: nowrap;
+}
+.doc-header .brand-logo { width: 28px; height: 28px; }
+.doc-header .brand-title,
+.doc-header .brand-player { font-weight: 600; }
+.doc-header .brand-player,
+.doc-header .brand-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.doc-header .brand-meta { color: var(--label-secondary); font-weight: 400; }
+.doc-header .brand-sep { color: var(--label-tertiary); font-weight: 400; }
+
+/* Móvil: el título de la navbar es el deportista o la sección; el logo ya dice «Óptimo». */
+@media (max-width: 719.98px) {
+  .doc-header .brand-row:has(.brand-sep) > .brand-title,
+  .doc-header .brand-row > .brand-title + .brand-sep { display: none; }
+  .doc-header .brand-row:not(:has(.brand-player)) .brand-meta { color: var(--label); font-weight: 600; }
+}
+
+/* —— Laterales —— */
+.header-leading {
   grid-column: 1;
   justify-self: start;
-  margin: 0;
-  min-width: 36px;
-  min-height: 36px;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: var(--tap-min);
+  margin: 0 0 0 calc(-1 * var(--space-2)); /* el chevron se alinea con el margen, no el área táctil */
 }
 .header-leading:empty {
   visibility: hidden;
   pointer-events: none;
 }
-.header-back {
-  flex-shrink: 0;
-  font-size: 1.25rem;
-  line-height: 1;
-}
 
 .top-actions {
+  grid-column: 3;
+  justify-self: end;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  grid-column: 3;
-  justify-self: end;
-  margin: 0;
-}
-.top-actions .btn,
-.top-actions .logout-inline .btn {
-  min-height: 32px;
-  padding: 6px 12px;
-  font-size: 0.8125rem;
-}
-.doc-header .btn.secondary,
-.doc-header .icon-btn {
-  background: rgba(255, 255, 255, 0.66);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06), var(--shadow-sm);
-}
-.doc-header .btn.secondary:hover,
-.doc-header .icon-btn:hover { background: var(--surface); }
-
-/* Nutricionista: cabecera al ancho del workspace, fondo clínico (sin pill 640px). */
-.doc-header-viewport--wide {
-  justify-content: stretch;
-  background: var(--bg);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  border-bottom: 1px solid var(--line);
-  box-shadow: none;
-  padding-left: max(24px, env(safe-area-inset-left, 0px));
-  padding-right: max(24px, env(safe-area-inset-right, 0px));
-}
-header.doc-header--wide {
-  max-width: 1680px;
-  margin: 0 auto;
-  padding: 0;
+  gap: 0;
+  margin: 0 calc(-1 * var(--space-2)) 0 0;
 }
 .logout-inline {
   margin: 0;
   display: contents;
+}
+
+/* —— Botones de barra (plain, acento: son lo interactivo de la barra) —— */
+.header-btn,
+.doc-header .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  box-shadow: none;
+  color: var(--accent-text);
+  font: var(--t-body-row);
+  letter-spacing: var(--ls-body);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform var(--dur) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+.header-btn--icon,
+.doc-header .icon-btn {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+}
+.doc-header .icon-btn svg { width: 22px; height: 22px; }
+@media (hover: hover) {
+  .header-btn:hover,
+  .doc-header .icon-btn:hover { background: var(--fill-quaternary); }
+}
+.header-btn:active,
+.doc-header .icon-btn:active {
+  transform: scale(var(--press-scale));
+  opacity: 0.6;
+  transition-duration: var(--dur-press);
+}
+.header-btn:focus-visible,
+.doc-header .icon-btn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: calc(-1 * var(--focus-offset));
+}
+
+/* Atrás: chevron + etiqueta, estilo iOS. */
+.header-back { padding-left: var(--space-1); padding-right: var(--space-2); gap: 2px; }
+.header-back-chevron { flex-shrink: 0; }
+.header-back-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* —— Toolbar (admin y nutricionista, ≥720) —— */
+@media (min-width: 720px) {
+  .doc-header-viewport--toolbar::before { opacity: 1; }
+  .doc-header-viewport--toolbar header.doc-header {
+    max-width: 1080px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: var(--space-3);
+  }
+  .doc-header-viewport--toolbar .header-leading:empty { display: none; }
+  .doc-header-viewport--toolbar .brand-row { justify-self: start; }
+  .doc-header-viewport--toolbar .header-btn,
+  .doc-header-viewport--toolbar .icon-btn {
+    font: var(--t-callout);
+    letter-spacing: var(--ls-callout);
+    border-radius: var(--radius-sm);
+  }
+  .doc-header-viewport--toolbar .header-btn--icon,
+  .doc-header-viewport--toolbar .icon-btn { border-radius: var(--radius-pill); }
+}
+
+/* Nutricionista: toolbar al ancho del workspace (sidebar + área de trabajo). */
+@media (min-width: 720px) {
+  .doc-header-viewport--wide {
+    padding-left: max(var(--space-6), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--space-6), env(safe-area-inset-right, 0px));
+  }
+  .doc-header-viewport--wide header.doc-header { max-width: 1680px; }
+}
+
+/* —— Preferencias (al final de la hoja) —— */
+@media (prefers-reduced-motion: reduce) {
+  .doc-header-viewport::before { transition: none; }
+  .header-btn:active,
+  .doc-header .icon-btn:active { transform: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .doc-header-viewport::before {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: inset 0 -1px 0 var(--separator);
+  }
+}
+
+@media (prefers-contrast: more) {
+  .doc-header-viewport::before {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: inset 0 -1px 0 var(--label);
+  }
+  .header-btn,
+  .doc-header .icon-btn { box-shadow: inset 0 0 0 1px currentColor; }
 }

@@ -14,7 +14,7 @@ export function LogoutButton({ inline }: Props) {
         await signOut({ redirectTo: "/login" });
       }}
     >
-      <button className="btn secondary" type="submit">
+      <button className="header-btn" type="submit">
         Salir
       </button>
     </form>
