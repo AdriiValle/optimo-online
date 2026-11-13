@@ -1,0 +1,6 @@
+- Veredicto: PASA
+- Bloqueantes (maximo 5): ninguno
+- Notas no bloqueantes (maximo 3, opcional):
+  1. Verificado: `npx tsc --noEmit` limpio. /login y /no-existe a 390x844 y 1440x900 sin scroll horizontal (scrollWidth = ancho de viewport). Botón principal 358x50 (390) y 400x50 (1440), campos de 56 px de alto; botón #0071E3 y fuente del stack v2. Vacío ("Escribe tu usuario.", foco al campo), credenciales malas (alerta roja "Usuario o contraseña incorrectos", conserva el usuario, foco en contraseña) y enviando (aria-busy, campos readOnly) funcionan. Tab: anillo de foco azul 2 px en campos (en la fila) y botón. Capturas en `.tmp-verify/audit-S1/` (login-empty/missing/error-{390x844,1440x900}.png, notfound-390.png, notfound-1440.png, focus-*-390.png).
+  2. Redirección por rol igual que antes: adriivalle -> /panel (admin), ricardovisus -> /a/<id> (jugador), amanda -> /nutricion. /no-existe con sesión muestra not-found coherente (logo, "Página no encontrada", botón "Ir al inicio" 358x50); sin sesión redirige a /login?from=… (middleware, sin cambios).
+  3. Entorno, no del diff: con U=http://127.0.0.1:3001 el login con credenciales válidas acaba en `localhost:3001/login?from=%2F` porque AUTH_URL apunta a localhost (la cookie queda en otro host). Con http://localhost:3001 todo redirige bien. No se tocó nada.

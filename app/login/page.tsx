@@ -1,22 +1,22 @@
 import { AuthError } from "next-auth";
-import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
-import { BrandHeader } from "@/app/components/brand-header";
+import { LoginForm, type LoginState } from "./login-form";
 
-async function login(formData: FormData) {
+async function login(_prev: LoginState, formData: FormData): Promise<LoginState> {
   "use server";
+  const email = String(formData.get("email") ?? "");
   try {
+    // Si las credenciales valen, signIn lanza la redirección a "/" (que reparte por rol).
     await signIn("credentials", {
-      email: String(formData.get("email") ?? ""),
+      email,
       password: String(formData.get("password") ?? ""),
       redirectTo: "/"
     });
   } catch (error) {
-    if (error instanceof AuthError) {
-      redirect("/login?error=1");
-    }
+    if (error instanceof AuthError) return { error: true, email };
     throw error;
   }
+  return { error: false, email };
 }
 
 export default async function LoginPage({
@@ -26,23 +26,15 @@ export default async function LoginPage({
 }) {
   const q = await searchParams;
   return (
-    <>
-      <BrandHeader meta="Entrenamientos online" />
-      <main className="page login-page">
-        <section className="card login-card">
-        <h1>Entrar</h1>
-        {q.error ? <p className="error">Nombre de usuario o contraseña incorrectos.</p> : null}
-        <form action={login}>
-          <label htmlFor="email">Nombre de usuario (login)</label>
-          <input id="email" name="email" type="text" autoComplete="username" required />
-          <label htmlFor="password">Contraseña</label>
-          <input id="password" name="password" type="password" autoComplete="current-password" required />
-          <button className="btn login-submit" type="submit">
-            Entrar
-          </button>
-        </form>
-        </section>
-      </main>
-    </>
+    <main className="login">
+      <div className="login-panel">
+        <header className="login-head">
+          <img className="login-logo" src="/logo-optimo.png" width={80} height={80} alt="Óptimo" />
+          <h1 className="login-title">Entrar en Óptimo</h1>
+          <p className="login-lede">Entrenamientos online</p>
+        </header>
+        <LoginForm action={login} initialError={Boolean(q.error)} />
+      </div>
+    </main>
   );
 }
