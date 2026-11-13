@@ -1,0 +1,201 @@
+.card {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md), var(--glass-highlight);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+a.card,
+button.card {
+  transition: transform var(--dur) var(--ease), background var(--dur) ease;
+}
+a.card:active,
+button.card:active {
+  transform: scale(var(--press-scale-lg));
+  transition-duration: var(--dur-press);
+}
+
+h1, h2, h3 { letter-spacing: -0.02em; }
+h1 { font-size: 1.25rem; line-height: 1.2; margin: 0 0 12px; }
+h2 { font-size: 1.0625rem; line-height: 1.25; margin: 0; }
+h3 { font-size: 1rem; line-height: 1.25; margin: 0 0 8px; }
+
+.card > h2 { margin-bottom: 12px; }
+
+label { display: block; font-size: 0.8125rem; font-weight: 600; margin: 0 0 6px; letter-spacing: 0; }
+input, select, textarea, button { font-family: var(--font); }
+input, select, textarea {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  background: var(--fill-secondary);
+  color: var(--text);
+  margin-bottom: 12px;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1.5px var(--text);
+}
+
+textarea { min-height: 72px; resize: vertical; }
+
+.btn, button.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius);
+  min-height: 44px;
+  padding: 10px 16px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), background var(--dur) ease;
+}
+.btn:hover { background: var(--accent-hover); }
+.btn:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.btn.secondary {
+  background: var(--fill-secondary);
+  color: var(--text);
+}
+.btn.secondary:hover { background: #DCDCE0; }
+.btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn:disabled:active { transform: none; }
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--fill-secondary);
+  font-size: 1.125rem;
+  cursor: pointer;
+  color: var(--text);
+  text-decoration: none;
+  transition: transform var(--dur) var(--ease), background var(--dur) ease;
+}
+.icon-btn:hover { background: #DCDCE0; }
+.icon-btn:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.icon-btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+.error { color: var(--danger); font-size: 0.875rem; margin: 0 0 12px; }
+.ok { color: var(--ok); font-size: 0.875rem; }
+
+.stack { margin-bottom: 16px; }
+.stack > h1 { padding: 0 4px; }
+
+.section-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.section-head-row h1 {
+  margin: 0;
+  padding: 0 4px;
+  flex: 1;
+  min-width: 0;
+}
+.section-head-row .btn {
+  min-height: 32px;
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+}
+.section-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.settings-stack .card form label + input,
+.settings-stack .card form label + button {
+  margin-top: 8px;
+}
+.settings-stack .btn + label:not(.btn),
+.settings-stack .btn + h2,
+.settings-stack .btn + h3,
+.settings-stack .btn + fieldset {
+  margin-top: 20px;
+}
+.settings-stack .btn + .btn { margin-left: 8px; }
+.settings-account-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.settings-account-item {
+  margin: 0;
+}
+/* Fila dentro de una card de cristal: opaca, sin cristal sobre cristal. :where() deja ganar a prefers-contrast. */
+.card:where(.settings-account-item) {
+  padding: 14px;
+  background: var(--surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: var(--line);
+  box-shadow: none;
+}
+.settings-account-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.settings-account-head .avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Sheet: móvil anclado abajo y sube; ≥720 centrado. Keyframes reutilizados por otros modales. */
+@keyframes scrim-in { from { opacity: 0; } }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+@keyframes sheet-pop { from { opacity: 0; transform: scale(0.96); } }
+/* Anillo de nutrición: se rellena desde 0 al montar (reduced-motion lo deja instantáneo). */
+@keyframes nut-ring-fill { from { stroke-dasharray: 0 200; } }
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--fill-secondary);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 12px;
+}
+.form-grid .span-2 { grid-column: 1 / -1; }
+
+.photo-block { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.photo-block .avatar { width: 72px; height: 72px; }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px dashed var(--line);
+  color: var(--text);
+  box-shadow: none;
+}
+.btn-ghost:hover { background: var(--glass-row); border-color: var(--secondary); }

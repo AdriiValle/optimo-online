@@ -1,0 +1,667 @@
+/* —— Nutricionista: workspace clínico desktop (≥1280px); debajo, flujo v1 apilado —— */
+.nut-ws-list, .nut-week { display: none; }
+.nut-ws-cal, .nut-ws-main, .nut-ws-mobile-menu { display: flex; flex-direction: column; gap: 8px; }
+.nut-ws-mobile-menu { gap: 12px; }
+
+/* Modal de comida / cuenta: sheet clínico (superficie opaca). Móvil anclado abajo; ≥720 centrado. */
+.nut-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: var(--scrim);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: max(24px, env(safe-area-inset-top, 0px)) 0 0;
+  animation: scrim-in var(--dur-sheet) ease;
+}
+.nut-modal {
+  width: 100%;
+  max-width: 640px;
+  max-height: min(92vh, 720px);
+  max-height: min(92svh, 720px);
+  margin: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  background: var(--surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--shadow-md);
+  animation: sheet-up var(--dur-sheet) var(--ease);
+}
+.nut-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.nut-modal-head h2 { font-size: 1rem; line-height: 1.3; letter-spacing: -0.02em; margin: 0; min-width: 0; }
+.nut-modal-head .icon-btn { flex-shrink: 0; }
+.nut-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding:
+    14px
+    max(16px, env(safe-area-inset-right, 0px))
+    calc(20px + env(safe-area-inset-bottom, 0px))
+    max(16px, env(safe-area-inset-left, 0px));
+  scroll-padding-block: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+.nut-modal-body > .nut-body { padding: 0; }
+.nut-modal .nut-actions .btn { width: 100%; min-height: 50px; }
+@media (min-width: 720px) {
+  .nut-modal-root { align-items: center; padding: 24px; }
+  .nut-modal {
+    max-width: 480px;
+    max-height: min(88vh, 640px);
+    border-bottom: 1px solid var(--line);
+    border-radius: var(--radius);
+    animation-name: sheet-pop;
+  }
+  .nut-modal-body { padding: 14px 16px 20px; }
+}
+body.nut-modal-open { overflow: hidden; }
+.nut-import { display: flex; flex-direction: column; gap: 10px; font-size: 0.875rem; }
+.nut-import p { margin: 0; }
+.nut-import input[type="date"] { margin: 6px 0 0; font-variant-numeric: tabular-nums; }
+.nut-import-file { font-weight: 600; overflow-wrap: anywhere; }
+.nut-import-check { display: flex; align-items: flex-start; gap: 8px; font-weight: 500; }
+.nut-import-check input { width: auto; margin: 3px 0 0; }
+/* Ingredientes del plato (modal): alimento + g en una fila, rol + confirmar debajo. */
+.nut-items { display: flex; flex-direction: column; gap: 8px; margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 0.8125rem; }
+.nut-items-head { display: flex; flex-direction: column; gap: 2px; }
+.nut-items-head h3 { margin: 0; font-size: 0.875rem; letter-spacing: -0.01em; }
+.nut-items-head .ok, .nut-items-head .muted { font-size: 0.75rem; }
+.nut-item { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 6px 8px; margin: 0; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.nut-item select, .nut-item input { width: 100%; margin: 0; }
+.nut-item-raw { grid-column: 1 / -1; margin: 0; color: var(--secondary); font-size: 0.75rem; overflow-wrap: anywhere; }
+.nut-item-grams { display: flex; align-items: center; gap: 4px; margin: 0; }
+.nut-item-grams input { text-align: right; font-variant-numeric: tabular-nums; }
+.nut-item-grams span { color: var(--secondary); }
+.nut-item-meta { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.nut-item-meta select { width: auto; flex: 0 1 140px; }
+.nut-item-ok { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 500; }
+.nut-item-ok input { width: auto; }
+.nut-item-warn { font-size: 0.75rem; font-weight: 600; color: var(--secondary); }
+.nut-items-obsolete { display: flex; flex-direction: column; gap: 4px; }
+.nut-items-obsolete > .muted { margin: 0; font-size: 0.75rem; }
+.nut-item--obsolete { display: flex; flex-direction: column; gap: 2px; opacity: 0.6; }
+/* Cabecera nutricionista: ajustes y salir a la misma altura (36px), cápsula + círculo. */
+.top-actions.nut-top-actions .btn { min-height: 36px; padding: 6px 14px; border-radius: 999px; }
+.nut-account-settings { display: flex; flex-direction: column; gap: 20px; }
+.nut-account-settings h2 { font-size: 0.95rem; margin: 0 0 4px; }
+
+/* legacy drawer hooks (mobile fallback unused) */
+.nut-drawer-root { display: none; }
+
+/* Ficha del plato (drawer ≥1280 y sheet debajo): héroe 16:10, titular, macros de la comida, ingredientes. */
+@keyframes drawer-in { from { opacity: 0; transform: translateX(24px); } }
+.nut-ficha {
+  --macro-p: var(--text);
+  --macro-c: #6E6E73;
+  --macro-f: #AEAEB2;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.nut-ficha-hero {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--cat-tint);
+}
+.nut-ficha-hero img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Placeholder: tint liso + categoría en texto abajo a la izquierda (sin icono). */
+.nut-ficha-hero figcaption {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent-hover);
+}
+/* Subida de foto (Amanda): el héroe es zona de soltar; acciones y «platos iguales» debajo. */
+.nut-ficha-photo { display: flex; flex-direction: column; gap: 8px; }
+.nut-ficha-hero { transition: box-shadow var(--dur) var(--ease); }
+.nut-ficha-hero.is-over { box-shadow: inset 0 0 0 2px var(--cat-ink); }
+.nut-ficha-drop {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.78);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.nut-ficha-photo-actions { display: flex; gap: 8px; }
+.nut-ficha-photo-actions .btn { flex: 1; min-height: 36px; padding: 6px 12px; font-size: 0.8125rem; }
+.nut-ficha-same { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--text); cursor: pointer; }
+.nut-ficha-same input { width: 16px; height: 16px; margin: 0; accent-color: var(--text); }
+.nut-ficha-photo-msg { margin: 0; font-size: 0.75rem; }
+.nut-modal .nut-ficha-photo-actions .btn { min-height: 44px; }
+.nut-ficha-title { display: flex; flex-direction: column; gap: 4px; }
+.nut-ficha-cat { font-size: 0.75rem; font-weight: 600; color: var(--cat-ink); }
+.nut-ficha-title h3 { margin: 0; font-size: 1.25rem; line-height: 1.25; letter-spacing: -0.02em; }
+.nut-ficha-title p { margin: 0; font-size: 0.8125rem; color: var(--accent-hover); }
+.nut-ficha-macros { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.nut-ficha-kcal { margin: 0; font-size: 0.8125rem; color: var(--accent-hover); }
+.nut-ficha-kcal strong { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text); }
+.nut-ficha .nut-items { margin-top: 0; }
+.nut-ficha-edit { background: transparent; border: 0; box-shadow: none; }
+/* Donut de la ficha: mismas piezas que el resumen semanal, también en el sheet (<1280). */
+.nut-ficha .nut-macro { margin: 0; display: flex; align-items: center; gap: 10px; }
+.nut-ficha .nut-ring-track { fill: none; stroke: var(--fill-secondary); stroke-width: 6; }
+.nut-ficha .nut-macro-seg { fill: none; stroke-width: 6; stroke-linecap: butt; }
+.nut-ficha .nut-macro-seg--p { stroke: var(--macro-p); }
+.nut-ficha .nut-macro-seg--c { stroke: var(--macro-c); }
+.nut-ficha .nut-macro-seg--f { stroke: var(--macro-f); }
+.nut-ficha .nut-ring-value { fill: var(--secondary); font-size: 13px; font-weight: 600; letter-spacing: -0.02em; }
+.nut-ficha .nut-macro-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.nut-ficha .nut-macro-legend li { display: grid; grid-template-columns: 8px auto; column-gap: 6px; align-items: center; line-height: 1.2; }
+.nut-ficha .nut-macro-legend strong { font-size: 0.75rem; }
+.nut-ficha .nut-macro-legend span { grid-column: 2; font-size: 0.6875rem; color: var(--accent-hover); font-variant-numeric: tabular-nums; }
+.nut-ficha .nut-macro-dot { width: 8px; height: 8px; border-radius: 50%; }
+.nut-ficha .nut-macro-dot--p { background: var(--macro-p); }
+.nut-ficha .nut-macro-dot--c { background: var(--macro-c); }
+.nut-ficha .nut-macro-dot--f { background: var(--macro-f); }
+
+@media (min-width: 1280px) {
+  .page.nut-page { max-width: none; width: 100%; padding-left: 24px; padding-right: 24px; padding-bottom: 16px; }
+  /* Workspace a alto fijo de viewport: rail + zona de trabajo caben sin scroll de página. */
+  .nut-desktop {
+    --nut-top: calc(var(--header-offset) + var(--header-block) + var(--header-gap));
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-areas: "list main";
+    grid-template-rows: minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+    height: calc(100vh - var(--nut-top) - 16px);
+    height: calc(100dvh - var(--nut-top) - 16px);
+  }
+  .nut-ws-index { grid-area: main; max-width: 720px; }
+  .nut-ws-index .athlete-list { display: none; }
+
+  .nut-ws-main {
+    grid-area: main;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 16px;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .nut-ws-mobile-menu { display: none; }
+
+  .nut-desktop .card {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-sm);
+    padding: 12px 14px;
+    margin-bottom: 0;
+  }
+
+  .nut-ws-list {
+    grid-area: list;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+    background: var(--fill-secondary);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .nut-ws-list-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px;
+  }
+  .nut-ws-list-body ul { flex: 1; min-height: 0; overflow-y: auto; }
+  /* Campo de búsqueda HIG: lupa a la izquierda, 36px, radio de control. Lupa = --secondary (#86868B). */
+  .nut-ws-search {
+    width: 100%;
+    min-height: 36px;
+    margin: 0 0 8px;
+    padding: 7px 10px 7px 32px;
+    font-size: 0.8125rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2386868B' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 11px center;
+  }
+  .nut-ws-search:focus { border-color: transparent; }
+  .nut-ws-list-above {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 10px 12px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+  /* El calendario ya vive en la superficie del rail: sin segundo marco. */
+  .nut-ws-list-above .card { padding: 0; border: 0; box-shadow: none; background: transparent; }
+  .nut-ws-list-above > p { margin: 0; padding: 0 4px; font-size: 0.75rem; }
+
+  .nut-ws-list h2 {
+    padding: 0 8px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--secondary);
+  }
+  .nut-ws-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  .nut-ws-list a {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-height: 44px;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    color: inherit;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    transition: transform var(--dur) var(--ease), background var(--dur) ease;
+  }
+  .nut-ws-list a:hover { background: var(--bg); }
+  .nut-ws-list a:active { transform: scale(var(--press-scale-lg)); transition-duration: var(--dur-press); }
+  .nut-ws-list a.on { background: var(--surface); box-shadow: var(--shadow-sm); }
+  .nut-ws-list a:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  .nut-ws-list .avatar { width: 32px; height: 32px; }
+  .nut-ws-list a > span { display: flex; flex-direction: column; min-width: 0; }
+  .nut-ws-list a strong, .nut-ws-list a .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nut-ws-list a .muted { font-size: 0.75rem; }
+  .nut-ws-list > p { margin: 0; padding: 0 8px; font-size: 0.8125rem; }
+
+  .nut-ws-main > .nut-ws-cal { display: none; }
+
+  .nut-week { display: flex; flex-direction: column; min-height: 0; }
+  /* Rejilla / lista / mes ocupan el alto libre; el resumen va debajo a su alto natural. */
+  .nut-week-grid, .nut-day-layout, .nut-month { flex: 1; min-height: 0; }
+  /* Toolbar: título a la izquierda, segmentado al centro, paso + import a la derecha. Todo a 32px. */
+  .nut-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+  }
+  .nut-toolbar h2 {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .nut-toolbar h2::first-letter { text-transform: uppercase; }
+  .nut-toolbar-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  .nut-stepper { display: inline-flex; gap: 4px; }
+  .nut-stepper .icon-btn { width: 32px; height: 32px; font-size: 1.0625rem; }
+  .nut-toolbar .nut-menu-import {
+    min-height: 32px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+  .nut-week-grid {
+    display: grid;
+    grid-template-columns: 76px repeat(7, minmax(0, 1fr));
+    gap: 4px;
+    font-size: 0.78rem;
+  }
+  .nut-week-row { display: contents; }
+  /* Segmentado HIG: pista gris, pulgar blanco con sombra; radios concéntricos (10 − 2 = 8). */
+  .nut-view-switch {
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 2px;
+    padding: 2px;
+    border-radius: var(--radius-sm);
+    background: var(--fill-secondary);
+  }
+  .nut-view-btn {
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    min-height: 28px;
+    min-width: 72px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    transition: transform var(--dur) var(--ease), background var(--dur) ease, box-shadow var(--dur) ease;
+  }
+  .nut-view-btn:hover:not(.on) { background: var(--glass); }
+  .nut-view-btn:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+  .nut-view-btn:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  .nut-view-btn.on { background: var(--surface); font-weight: 600; box-shadow: var(--shadow-sm); }
+  /* Día: lista de franjas (izq.) + resumen del día (dcha.). */
+  .nut-day-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    gap: 20px;
+    align-items: stretch;
+  }
+  .nut-day-list { display: flex; flex-direction: column; gap: 4px; min-height: 0; font-size: 0.8125rem; }
+  .nut-day-row { flex: 3 1 0; display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; min-height: 56px; }
+  .nut-day-row--snack { flex: 2 1 0; min-height: 40px; }
+  .nut-day-row--thin { flex: 0 0 24px; min-height: 24px; }
+  .nut-day-row .nut-week-cell { min-height: 0; padding: 6px 10px; }
+  .nut-dash.nut-dash--side {
+    display: flex;
+    margin-top: 0;
+    padding: 0 0 0 20px;
+    border-top: 0;
+    border-left: 1px solid var(--line);
+  }
+  .nut-dash--side .nut-dash-main { gap: 12px 16px; }
+  /* Mes: calendario a ancho de zona; un punto por franja (relleno = con plato). */
+  .nut-month {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: auto;
+    grid-auto-rows: minmax(44px, 1fr);
+    gap: 4px;
+    font-size: 0.8125rem;
+  }
+  .nut-month-dow {
+    padding: 0 0 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--secondary);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .nut-month-day {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4px;
+    min-width: 0;
+    min-height: 0;
+    padding: 6px 8px 8px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur) var(--ease), background var(--dur) ease, box-shadow var(--dur) ease;
+  }
+  .nut-month-day:hover { box-shadow: inset 0 0 0 1px var(--secondary); }
+  .nut-month-day:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+  .nut-month-day:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  .nut-month-day.empty { background: var(--bg); box-shadow: none; }
+  .nut-month-day.empty:hover { background: var(--fill-secondary); }
+  .nut-month-day.on, .nut-month-day.on:hover { box-shadow: inset 0 0 0 1.5px var(--text); }
+  .nut-month-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .nut-month-top .nut-dnum { margin-left: -4px; }
+  .nut-month-top .md-tag { font-size: 0.625rem; font-weight: 600; color: var(--secondary); }
+  .nut-month-dots { display: flex; gap: 3px; }
+  .nut-month-dots i { width: 6px; height: 6px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--secondary); opacity: 0.5; }
+  .nut-month-dots i.on { background: var(--text); box-shadow: none; opacity: 1; }
+  .nut-month-dots i.on[class*="nut-cat--"] { background: var(--cat-ink); }
+  /* Hoy: número en cápsula oscura (mismo gesto que Calendario de Apple, sin color nuevo). */
+  .nut-dnum {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.6em;
+    height: 1.6em;
+    padding: 0 4px;
+    border-radius: 999px;
+  }
+  .nut-month-day.today .nut-dnum, .nut-week-day.today .nut-dnum { background: var(--text); color: var(--surface); }
+  .nut-week-day, .nut-week-cell {
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    min-width: 0;
+    border-radius: var(--radius-sm);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur) var(--ease), background var(--dur) ease, border-color var(--dur) ease;
+  }
+  .nut-week-day:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+  .nut-week-cell:active { transform: scale(var(--press-scale-lg)); transition-duration: var(--dur-press); }
+  .nut-week-day {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-height: 44px;
+    padding: 6px 8px;
+    border: 0;
+    background: transparent;
+  }
+  .nut-week-day:hover { background: var(--bg); }
+  .nut-week-day strong { font-size: 0.8125rem; font-weight: 600; text-transform: capitalize; font-variant-numeric: tabular-nums; }
+  .nut-week-day .md-tag { font-size: 0.6875rem; font-weight: 600; color: var(--secondary); }
+  .nut-week-day .muted { max-width: 100%; font-size: 0.6875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nut-week-day.on { background: var(--fill-secondary); }
+  .nut-week-slot {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--secondary);
+  }
+  /* Celda con plato = superficie con filete; vacía = hueco gris sin borde y «+» al pasar. */
+  .nut-week-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 4px 6px;
+    border: 0;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    line-height: 1.3;
+  }
+  .nut-week-cell:hover { box-shadow: inset 0 0 0 1px var(--secondary); }
+  .nut-week-cell.empty { background: var(--bg); box-shadow: none; }
+  .nut-week-cell.empty.col-on { background: var(--fill-secondary); }
+  .nut-week-cell.empty:hover { background: var(--fill-secondary); }
+  .nut-week-cell.on, .nut-week-cell.on:hover { box-shadow: inset 0 0 0 1.5px var(--text); }
+  /* Plato = tarjeta teñida por su proteína con filete izquierdo en tinta. */
+  .nut-week-cell.nut-cat {
+    align-items: flex-start;
+    padding-left: calc(var(--cat-rule) + 6px);
+    background: var(--cat-tint);
+    box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink);
+  }
+  .nut-week-cell.nut-cat:hover { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1px var(--cat-ink); }
+  .nut-week-cell.nut-cat.on, .nut-week-cell.nut-cat.on:hover { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1.5px var(--text); }
+  /* Franja sin platos en la semana: fila fina, hueco transparente y «+» al pasar. */
+  .nut-week-cell.thin { min-height: 0; padding-top: 0; padding-bottom: 0; }
+  .nut-week-cell.thin.empty { background: transparent; }
+  .nut-week-cell.thin.empty:hover, .nut-week-cell.thin.empty.col-on { background: var(--fill-secondary); }
+  .nut-week-add {
+    margin: auto;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--secondary);
+    opacity: 0;
+    transition: opacity var(--dur) ease;
+  }
+  .nut-week-cell:hover .nut-week-add,
+  .nut-week-cell:focus-visible .nut-week-add,
+  .nut-week-cell.on .nut-week-add,
+  .nut-week-cell.col-on .nut-week-add { opacity: 1; }
+  .nut-week-day:focus-visible, .nut-week-cell:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  /* Resumen en una franja: cabecera + nota arriba; anillos principales | micros abajo. */
+  .nut-dash {
+    --macro-p: var(--text);
+    --macro-c: #6E6E73;
+    --macro-f: #AEAEB2;
+    flex-shrink: 0;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "head note" "main micros";
+    align-items: center;
+    gap: 8px 24px;
+  }
+  .nut-dash-head { grid-area: head; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .nut-dash-head h3 { margin: 0; font-size: 0.875rem; letter-spacing: -0.01em; }
+  .nut-dash-head .muted { font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+  .nut-dash-main { grid-area: main; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .nut-dash-pair { display: flex; gap: 16px; }
+  .nut-dash-micros {
+    grid-area: micros;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+  }
+  .nut-ring, .nut-macro { margin: 0; display: flex; align-items: center; gap: 10px; }
+  .nut-ring { flex-direction: column; gap: 4px; text-align: center; }
+  .nut-ring-track { fill: none; stroke: var(--fill-secondary); stroke-width: 6; }
+  .nut-ring--empty .nut-ring-track { stroke-dasharray: 2 4; stroke-linecap: round; }
+  .nut-ring-bar, .nut-macro-seg { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dasharray var(--dur-sheet) var(--ease); }
+  .nut-ring-bar { stroke: var(--text); animation: nut-ring-fill var(--dur-sheet) var(--ease) backwards; }
+  /* Estado frente al objetivo (el texto de estado lo repite: el color nunca va solo). */
+  .nut-ring { --ring-ink: var(--text); }
+  .nut-ring--ok, .nut-ring--cap-ok { --ring-ink: var(--ok); }
+  .nut-ring--over, .nut-ring--cap-over { --ring-ink: var(--danger); }
+  .nut-ring--partial { --ring-ink: var(--secondary); }
+  .nut-ring .nut-ring-bar { stroke: var(--ring-ink); }
+  .nut-ring-mark { stroke: var(--text); stroke-width: 2; stroke-linecap: round; }
+  .nut-ring-state { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .nut-ring figcaption .nut-ring-state { color: var(--ring-ink); }
+  .nut-ring--low figcaption .nut-ring-state, .nut-ring--partial figcaption .nut-ring-state { color: var(--accent-hover); }
+  .nut-macro-seg { stroke-linecap: butt; }
+  .nut-macro-seg--p { stroke: var(--macro-p); }
+  .nut-macro-seg--c { stroke: var(--macro-c); }
+  .nut-macro-seg--f { stroke: var(--macro-f); }
+  .nut-ring-value { fill: currentColor; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .nut-ring--empty .nut-ring-value, .nut-macro .nut-ring-value { fill: var(--secondary); }
+  .nut-ring figcaption { display: flex; flex-direction: column; line-height: 1.25; }
+  .nut-ring figcaption strong { font-size: 0.8125rem; letter-spacing: -0.01em; }
+  .nut-ring figcaption span, .nut-macro-legend span { font-size: 0.75rem; color: var(--secondary); font-variant-numeric: tabular-nums; }
+  /* Micros: fila compacta; la cifra sube en el viewBox para leerse a 52px. */
+  .nut-ring--sm .nut-ring-value { font-size: 14px; letter-spacing: -0.03em; }
+  .nut-ring--sm figcaption strong { font-size: 0.75rem; }
+  .nut-ring--sm figcaption span { font-size: 0.6875rem; white-space: nowrap; }
+  .nut-macro-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .nut-macro-legend li { display: grid; grid-template-columns: 8px auto; column-gap: 6px; align-items: center; line-height: 1.2; }
+  .nut-macro-legend strong { font-size: 0.75rem; }
+  .nut-macro-legend span { grid-column: 2; }
+  .nut-macro-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .nut-macro-dot--p { background: var(--macro-p); }
+  .nut-macro-dot--c { background: var(--macro-c); }
+  .nut-macro-dot--f { background: var(--macro-f); }
+  .nut-dash > .muted { grid-area: note; margin: 0; font-size: 0.75rem; text-align: right; }
+  /* Sin perfil: aviso + acción en lugar de la nota. */
+  .nut-dash-goal { grid-area: note; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+  .nut-dash-goal p { margin: 0; font-size: 0.8125rem; color: var(--accent-hover); }
+  .nut-dash-goal .btn { min-height: 36px; padding: 6px 14px; font-size: 0.8125rem; flex-shrink: 0; }
+  .nut-dash--side .nut-dash-goal { justify-content: space-between; }
+  .nut-dash--side { flex-direction: column; align-items: stretch; gap: 10px; }
+  .nut-dash--side > .muted { text-align: left; }
+  .nut-week-cell img { width: 36px; height: 36px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
+  .nut-dish { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .nut-dish-head {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  /* --secondary sobre tint no llega a 4.5:1: la línea secundaria va en --accent-hover. */
+  .nut-dish-rest { font-size: 0.6875rem; color: var(--accent-hover); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Celda alta (franjas vacías colapsadas): el plato se lee entero en vez de dejar hueco. */
+  .nut-week-cell.nut-cat { container-type: size; }
+  @container (min-height: 96px) {
+    .nut-dish { gap: 3px; }
+    .nut-dish-head { -webkit-line-clamp: 3; }
+    .nut-dish-rest { display: -webkit-box; white-space: normal; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+  }
+
+  .nut-week-row--snack .nut-week-slot--snack {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--secondary);
+    text-transform: none;
+    letter-spacing: 0;
+    line-height: 1.2;
+  }
+  .nut-week-cell--snack {
+    min-height: 32px;
+    padding: 3px 6px;
+    font-size: 0.72rem;
+  }
+
+  .nut-modal .nut-details { background: transparent; border: 0; box-shadow: none; }
+  .nut-modal .meal-form .nut-menu-photo { max-height: 260px; border-radius: var(--radius-sm); }
+
+  /* Ficha: panel opaco anclado a la derecha de la zona de trabajo, encima de la semana (no la empuja). */
+  .nut-drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    animation: drawer-in var(--dur-sheet) var(--ease);
+  }
+  .nut-drawer:focus { outline: none; }
+  .nut-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 12px 10px 16px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .nut-drawer-head h2 { margin: 0; min-width: 0; font-size: 0.9375rem; line-height: 1.3; letter-spacing: -0.02em; }
+  .nut-drawer-head .icon-btn { flex-shrink: 0; }
+  .nut-drawer-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 20px; }
+  .nut-drawer .nut-actions .btn { min-height: 44px; }
+}

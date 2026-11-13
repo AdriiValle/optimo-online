@@ -1,0 +1,20 @@
+/* —— Login —— */
+.login-page {
+  max-width: 420px;
+  padding-top: clamp(16px, 10vh, 88px);
+}
+.login-card { padding: 28px 20px 20px; }
+.login-card h1 {
+  font-size: 2rem;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+}
+.login-card label { margin-bottom: 8px; }
+.login-card input { min-height: 48px; margin-bottom: 16px; }
+.login-submit {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 4px;
+  font-size: 1.0625rem;
+}

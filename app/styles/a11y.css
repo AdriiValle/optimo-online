@@ -1,0 +1,85 @@
+/* —— Accesibilidad: una sola salida por preferencia (compartido) —— */
+@media (prefers-reduced-transparency: reduce) {
+  body { background-image: none; }
+  .card {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--line);
+    box-shadow: var(--shadow-sm);
+  }
+  .doc-header-viewport {
+    background: var(--bg);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .dash-tabs,
+  .session-item,
+  .nut-details,
+  .an-chips button,
+  .video-embed-shell,
+  .video-embed-close {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--line);
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --cat-carne-tint: var(--surface);
+    --cat-pescado-tint: var(--surface);
+    --cat-huevos-tint: var(--surface);
+    --cat-legumbres-tint: var(--surface);
+    --cat-none-tint: var(--surface);
+    --cat-rule: 4px;
+  }
+  .nut-week-cell.nut-cat,
+  .nut-week-cell.nut-cat:hover { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1px var(--text); }
+  .nut-ficha-hero { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1px var(--text); }
+  .card {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 1px solid var(--text);
+  }
+  input, select, textarea {
+    border: 1px solid var(--text);
+  }
+  .doc-header-viewport {
+    background: var(--bg);
+    border-bottom-color: var(--text);
+  }
+  .dash-tabs,
+  .session-item,
+  .nut-details {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 1px solid var(--text);
+  }
+  .session-section,
+  .session-item-info,
+  .muted { color: var(--accent-hover); }
+}
+
+/* Press y sheets leen los tokens: a 1 / 0ms no hay movimiento. Las animaciones quedan en fundido instantáneo. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --press-scale: 1;
+    --press-scale-lg: 1;
+    --dur-press: 0ms;
+    --dur: 0ms;
+    --dur-sheet: 0ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .session-video:active { transform: none; }
+  /* La ficha entra en fundido corto, sin desplazamiento. */
+  .nut-drawer { animation-name: scrim-in; animation-duration: 160ms !important; }
+}

@@ -1,0 +1,49 @@
+:root {
+  --bg: #F5F5F7;
+  --surface: #FFFFFF;
+  --text: #1D1D1F;
+  --secondary: #86868B;
+  --line: #D2D2D7;
+  --fill-secondary: #E8E8ED;
+  --accent: #1D1D1F;
+  --accent-hover: #424245;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.08);
+  --radius: 12px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", sans-serif;
+  --glass: rgba(255, 255, 255, 0.62);
+  --glass-strong: rgba(255, 255, 255, 0.86);
+  --glass-row: rgba(255, 255, 255, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-blur: blur(20px) saturate(180%);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  --header-offset: env(safe-area-inset-top, 0px);
+  --header-block: 58px;
+  --header-gap: 12px;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --dur-press: 100ms;
+  --dur: 200ms;
+  --dur-sheet: 320ms;
+  --press-scale: 0.97;
+  --press-scale-lg: 0.985;
+  --focus-ring: 2px solid var(--text);
+  --focus-offset: 2px;
+  --radius-sm: 10px;
+  --scrim: rgba(0, 0, 0, 0.28);
+  --danger: #c41e3a;
+  --ok: #248a3d;
+  /* Categoría de proteína: tierra desaturada. Ink = filete/punto/etiqueta sobre blanco; tint = fondo de la celda y placeholder. */
+  --cat-carne: #9A5B45;      --cat-carne-tint: #F4EAE5;
+  --cat-pescado: #557083;    --cat-pescado-tint: #E7EDF1;
+  --cat-huevos: #8F7234;     --cat-huevos-tint: #F5EFE1;
+  --cat-legumbres: #687A4E;  --cat-legumbres-tint: #ECEFE4;
+  --cat-none: var(--secondary); --cat-none-tint: var(--fill-secondary);
+  --cat-rule: 3px;
+}
+
+/* Categoría → par ink/tint que leen la celda, el punto del mes y (O2) la ficha. */
+.nut-cat--carne { --cat-ink: var(--cat-carne); --cat-tint: var(--cat-carne-tint); }
+.nut-cat--pescado { --cat-ink: var(--cat-pescado); --cat-tint: var(--cat-pescado-tint); }
+.nut-cat--huevos { --cat-ink: var(--cat-huevos); --cat-tint: var(--cat-huevos-tint); }
+.nut-cat--legumbres { --cat-ink: var(--cat-legumbres); --cat-tint: var(--cat-legumbres-tint); }
+.nut-cat--none { --cat-ink: var(--cat-none); --cat-tint: var(--cat-none-tint); }
