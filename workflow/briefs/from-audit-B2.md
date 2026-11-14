@@ -1,0 +1,8 @@
+- Veredicto: PASA
+- Bloqueantes (maximo 5): ninguno
+- Notas no bloqueantes (maximo 3, opcional):
+  1. Estado «molestias» con datos NO verificado: ningun deportista de desarrollo tiene `dietNote` y no se crean datos de prueba. Solo se vieron «Sin molestias registradas» (vista rango y vista dia) y el estado vacio global `an-empty` (Francisco Gago: «Sin registros todavia»). Capturas: .tmp-verify/audit-B2/stats-1440.png, day-1440.png, other-3cf38036-806c-4da4-ab97-43ff211eb218.png
+  2. A 1440 el contenido de /a/<id> (Analisis) queda en una columna de ~576 px centrada (formato jugador), no en el ancho de admin (max 1080) que fija design-system.md; legible, pero los graficos van en 2 columnas estrechas. Captura: .tmp-verify/audit-B2/stats-1440.png
+  3. Los campos Desde/Hasta (16/09–14/11) no cambian al pulsar un preset (3 d … 60 d): son el rango personalizado y por defecto abarcan todos los datos. Comportamiento coherente con el codigo, solo puede confundir al verlos junto al titulo «16 oct – 14 nov».
+
+Comprobado: /a/9d27d850-d328-4633-bc33-56198a0e4181 (Ricardo Visus) como admin (`adriivalle`), pestaña Analisis. 1440/768/390: scrollWidth = ancho de ventana (sin scroll horizontal). Cambio de rango (3/7/10/15/30/60 d) y de dia (calendario, «Ver tendencias») funcionan; dia con datos (28 oct) y sin datos correctos. Foco visible con Tab (outline 2 px #0071E3) en los presets. Tactiles: Aplicar, Atras, Salir, Ver tendencias, campos de fecha = 44 px; el segmentado mide 32 px porque el headless solo emula `pointer: fine` (el CSS lo sube a 44 con `pointer: coarse`, no se pudo emular tactil). `npx tsc --noEmit`: limpio.
