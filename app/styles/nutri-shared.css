@@ -1,104 +1,351 @@
-/* —— Nutrición —— */
-.nut-wrap { display: flex; flex-direction: column; gap: 8px; }
-.nut-details {
-  margin: 0;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius);
-  background: var(--glass-row);
-  box-shadow: var(--shadow-sm);
+/* —— Nutrición (compartido: pestaña del jugador + ficha/panel de Amanda) ——
+   Dueño: rd-A5. Jugador = tarjeta «Menú del día» + listas agrupadas sobre el lienzo.
+   Amanda reutiliza .nut-details, .nut-body, .nut-actions, .meal-form y .nut-menu-photo:
+   esas clases quedan neutras (sin material ni sombra) para que su hoja las afine. */
+
+/* Contenedor de la pestaña: secciones separadas por aire, no por bordes. */
+.nut-pane { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+.nut-pane > .card { margin-bottom: 0; }
+.nut-wrap { display: flex; flex-direction: column; gap: var(--space-3); }
+.nut-pane .nut-title {
+  margin: 0 0 var(--space-1);
+  font: var(--t-title-3);
+  letter-spacing: var(--ls-title-3);
+  color: var(--label);
 }
-.nut-details summary {
-  font-size: 0.875rem;
+
+/* —— Menú del día: una fila por franja (foto · franja · plato) —— */
+.nut-menu-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.nut-menu-item {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  column-gap: var(--space-3);
+  align-items: start;
+  padding: var(--space-3) 0;
+}
+.nut-menu-item + .nut-menu-item { border-top: 1px solid var(--separator); }
+.nut-menu-item:first-child { padding-top: var(--space-2); }
+.nut-menu-item:last-child { padding-bottom: 0; }
+.nut-menu-photo { width: 72px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); display: block; }
+.nut-menu-thumb {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  background: var(--cat-tint, var(--fill-quaternary));
+}
+.nut-menu-item .nut-menu-photo { width: 64px; height: 64px; }
+.nut-menu-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-top: 2px; }
+.nut-menu-slot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-1);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+/* Categoría de proteína: punto de color + nombre (el color nunca va solo). */
+.nut-menu-cat { display: inline-flex; align-items: center; gap: var(--space-1); }
+.nut-menu-cat::before {
+  content: "";
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cat-ink);
+}
+.nut-menu-sep { color: var(--label-tertiary); }
+.nut-menu-dish {
+  font: var(--t-headline);
+  letter-spacing: var(--ls-headline);
+  color: var(--label);
+  overflow-wrap: anywhere;
+}
+.nut-menu-rest {
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--label-secondary);
+  overflow-wrap: anywhere;
+}
+.nut-skel-short { width: 40%; }
+
+/* Preparación plegable: botón plain azul de 44 de alto, el texto debajo. */
+.nut-menu-prep { margin: var(--space-1) 0 0; }
+.nut-menu-prep summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--tap-min);
+  margin: calc(var(--space-2) * -1) 0 calc(var(--space-2) * -1) calc(var(--space-2) * -1);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
   font-weight: 600;
-  letter-spacing: -0.01em;
-  min-height: 44px;
-  padding: 12px 14px;
-  border-radius: var(--radius);
+  color: var(--accent-text);
   list-style: none;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.nut-menu-prep summary::-webkit-details-marker,
+.nut-menu-prep summary::marker { display: none; content: ""; }
+.nut-menu-prep summary::after {
+  content: "";
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  margin: 0 0 3px 2px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--dur) var(--ease-out);
+}
+.nut-menu-prep[open] summary::after { transform: rotate(-135deg); margin-bottom: -3px; }
+.nut-menu-prep summary:active { background: var(--fill-quaternary); transition-duration: 0ms; }
+.nut-menu-prep summary:focus-visible { outline: var(--focus-ring); outline-offset: calc(var(--focus-offset) * -1); }
+@media (hover: hover) { .nut-menu-prep summary:hover { background: var(--fill-quaternary); } }
+.nut-menu-prep .nut-diet-text {
+  margin-top: var(--space-2);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--label);
+}
+
+/* Estados del menú: vacío y error (mismo esquema que «Día sin sesión»). */
+.nut-empty {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--space-3);
+  row-gap: 2px;
+  align-items: start;
+  padding-top: var(--space-1);
+}
+.nut-empty svg { grid-row: span 2; width: 28px; height: 28px; color: var(--label-tertiary); }
+.nut-empty strong { font: var(--t-headline); letter-spacing: var(--ls-headline); color: var(--label); }
+.nut-empty span { font: var(--t-subhead); letter-spacing: var(--ls-subhead); color: var(--label-secondary); }
+.nut-empty--error {
+  grid-template-columns: minmax(0, 1fr);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--danger-tint);
+}
+.nut-empty--error strong { color: var(--danger); }
+.nut-empty--error span { color: var(--label-on-tint); }
+
+/* —— Listas agrupadas del jugador (suplementos, indicaciones) —— */
+.nut-group { min-width: 0; }
+.nut-pane .nut-group-title {
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--row-inset);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  font-weight: 400;
+  color: var(--label-secondary);
+}
+.nut-supp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+.nut-supp-list li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--row-inset);
+}
+.nut-supp-list li + li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--row-inset);
+  right: 0;
+  height: 1px;
+  background: var(--separator);
+}
+.nut-supp-main { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.nut-supp-name {
+  font: var(--t-body-row);
+  letter-spacing: var(--ls-body);
+  color: var(--label);
+  overflow-wrap: anywhere;
+}
+.nut-supp-note {
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--label-secondary);
+  overflow-wrap: anywhere;
+}
+.nut-supp-time {
+  flex-shrink: 0;
+  max-width: 45%;
+  text-align: right;
+  font: var(--t-body-row);
+  letter-spacing: var(--ls-body);
+  color: var(--label-secondary);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.nut-diet-card {
+  padding: var(--space-4) var(--row-inset);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.nut-diet-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.nut-diet-card .nut-diet-text { font: var(--t-body); letter-spacing: var(--ls-body); color: var(--label); }
+/* Vacío de grupo: una fila gris dentro del grupo, como iOS. */
+.nut-group-empty {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: var(--space-3) var(--row-inset);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font: var(--t-body-row);
+  letter-spacing: var(--ls-body);
+  color: var(--label-secondary);
+}
+
+/* —— Plegables (edición de suplementos/dieta; Amanda: franjas y «Editar plato») —— */
+.nut-details {
+  margin: 0;
+  border: 1px solid var(--separator-soft);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: none;
+}
+.nut-details summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--row-inset);
+  border-radius: calc(var(--radius-md) - 1px);
+  font: var(--t-headline);
+  letter-spacing: var(--ls-headline);
+  color: var(--label);
+  list-style: none;
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: opacity var(--dur) var(--ease);
+  transition: background-color var(--dur-fast) var(--ease-out);
 }
-.nut-details summary:active { opacity: 0.6; transition-duration: var(--dur-press); }
-.nut-details summary:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+.nut-details summary:active { background: var(--fill-quaternary); transition-duration: 0ms; }
+@media (hover: hover) { .nut-details summary:hover { background: var(--fill-quaternary); } }
+.nut-details summary:focus-visible { outline: var(--focus-ring); outline-offset: calc(var(--focus-offset) * -1); }
 .nut-details summary::-webkit-details-marker,
 .nut-details summary::marker { display: none; content: ""; }
 .nut-details summary::after {
   content: "";
   flex-shrink: 0;
-  width: 7px;
-  height: 7px;
-  border-right: 2px solid var(--secondary);
-  border-bottom: 2px solid var(--secondary);
+  width: 8px;
+  height: 8px;
+  margin: 0 var(--space-1) 4px 0;
+  border-right: 2px solid var(--label-tertiary);
+  border-bottom: 2px solid var(--label-tertiary);
   transform: rotate(45deg);
-  transition: transform var(--dur) var(--ease);
+  transition: transform var(--dur) var(--ease-out);
 }
-.nut-details[open] summary::after {
-  transform: rotate(-135deg);
-  margin-top: 2px;
-}
-.nut-body { padding: 0 14px 14px; font-size: 0.8125rem; }
-.nut-supp-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.nut-supp-list li {
-  display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr);
-  gap: 10px;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-.nut-supp-time {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--secondary);
+.nut-details[open] summary::after { transform: rotate(-135deg); margin-bottom: -4px; }
+.nut-details-label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.nut-details-meta {
+  flex-shrink: 0;
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--label-secondary);
   font-variant-numeric: tabular-nums;
 }
-.nut-supp-edit { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.nut-body { padding: 0 var(--row-inset) var(--row-inset); font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
+.nut-body-empty { margin: 0 0 var(--space-3); color: var(--label-secondary); }
+
+/* Edición de suplementos: nombre | hora, debajo notas | quitar. */
+.nut-supp-edit { display: flex; flex-direction: column; margin-bottom: var(--space-3); }
 .nut-supp-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 4rem) var(--tap-min);
+  column-gap: var(--space-2);
   align-items: end;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--line);
+  padding: var(--space-3) 0 0;
 }
-.nut-supp-notes { grid-column: 1 / -1; }
-.nut-supp-rm { justify-self: end; color: var(--secondary); }
-.nut-diet-label { display: block; }
-.nut-diet-label textarea { width: 100%; min-height: 140px; }
-.nut-diet-text { margin: 0; white-space: pre-wrap; line-height: 1.45; overflow-wrap: anywhere; }
-.nut-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
-.nut-actions .ok, .nut-actions .error { margin: 2px 0 0; }
-.nut-menu h3 { font-size: 0.875rem; letter-spacing: -0.01em; margin: 0 0 6px; }
-.nut-menu-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.nut-menu-item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
-  padding: 10px 12px;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius);
-  background: var(--glass-row);
-  box-shadow: var(--shadow-sm);
-  font-size: 0.8125rem;
+.nut-supp-row + .nut-supp-row { border-top: 1px solid var(--separator); }
+.nut-supp-row:first-child { padding-top: 0; }
+.nut-supp-name-field { grid-column: 1; }
+.nut-supp-time-field { grid-column: 2 / 4; }
+.nut-supp-notes { grid-column: 1 / 3; }
+.nut-supp-rm {
+  grid-column: 3;
+  justify-self: end;
+  margin-bottom: var(--space-3);
+  color: var(--label-secondary);
 }
-.nut-menu-item > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.nut-menu-item strong { letter-spacing: -0.01em; }
-/* Misma voz que .dash-kicker: jerarquía por peso y tamaño, sin mayúsculas. */
-.nut-menu-slot { font-size: 0.6875rem; font-weight: 600; color: var(--secondary); }
-.nut-menu-photo { width: 72px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); display: block; }
-.meal-form { display: flex; flex-direction: column; gap: 4px; }
-.meal-form .nut-menu-photo { width: 100%; height: auto; max-height: 220px; margin-bottom: 6px; }
-.meal-form input, .meal-form textarea { width: 100%; margin-bottom: 8px; }
-.meal-form input[type="file"] { font-size: 0.8125rem; }
+.nut-supp-rm svg { width: 16px; height: 16px; }
+.nut-supp-rm:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-supp-add { min-height: var(--tap-min); }
+.nut-diet-label { display: block; margin: 0; }
+.nut-diet-label textarea { width: 100%; min-height: 160px; margin: var(--space-1) 0 0; }
+
+.nut-actions { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-1); }
+.nut-actions .ok, .nut-actions .error { margin: 0; }
+
+/* Formulario de plato (Amanda). */
+.meal-form { display: flex; flex-direction: column; gap: var(--space-1); }
+.meal-form .nut-menu-photo { width: 100%; height: auto; max-height: 220px; margin-bottom: var(--space-2); }
+.meal-form input, .meal-form textarea { width: 100%; margin-bottom: var(--space-2); }
+.meal-form input[type="file"] { font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+
+/* —— Amanda ≥1280: «Suplementos y dieta» al pie de la sidebar ——
+   nutri.css oculta la pila móvil (.nut-ws-mobile-menu) en el workspace, y con ella el editor.
+   Aquí solo se rescata el editor (la pila del menú sigue oculta: el menú lo lleva la semana). */
+@media (min-width: 1280px) {
+  .nut-desktop-athlete:has(> .nut-ws-mobile-menu .nut-edit) {
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "list main" "edit main";
+  }
+  .nut-desktop-athlete > .nut-ws-mobile-menu:has(.nut-edit) {
+    grid-area: edit;
+    display: flex;
+    max-height: 50vh;
+    max-height: 50dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-3);
+    background: var(--surface-sidebar);
+    border-top: 1px solid var(--separator-soft);
+    border-right: 1px solid var(--separator-soft);
+  }
+  .nut-desktop-athlete > .nut-ws-mobile-menu > .nut-day-stack { display: none; }
+  /* Columna de 300 px: rellenos compactos para que «Suplementación» no se parta. */
+  .nut-desktop-athlete > .nut-ws-mobile-menu .nut-edit { gap: var(--space-2); padding: var(--space-3); }
+  .nut-desktop-athlete > .nut-ws-mobile-menu .nut-title { font: var(--t-headline); letter-spacing: var(--ls-headline); }
+  .nut-desktop-athlete > .nut-ws-mobile-menu .nut-details summary { gap: var(--space-2); padding-inline: var(--space-3); }
+  .nut-desktop-athlete > .nut-ws-mobile-menu .nut-details-label { overflow-wrap: normal; }
+  .nut-desktop-athlete > .nut-ws-mobile-menu .nut-details-meta { font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+  .nut-desktop-athlete > .nut-ws-mobile-menu .nut-body { padding-inline: var(--space-3); }
+}
+
+/* —— Preferencias (al final de la hoja propia, no en a11y.css) —— */
+@media (prefers-reduced-motion: reduce) {
+  .nut-details summary,
+  .nut-details summary::after,
+  .nut-menu-prep summary,
+  .nut-menu-prep summary::after { transition: none; }
+}
+/* prefers-reduced-transparency: esta hoja no usa materiales (todo es --surface opaco); nada que cambiar. */
+@media (prefers-contrast: more) {
+  .nut-supp-list, .nut-diet-card, .nut-group-empty { border: 1px solid var(--label); }
+  .nut-supp-list li + li::before { background: var(--label); }
+  .nut-menu-item + .nut-menu-item,
+  .nut-supp-row + .nut-supp-row { border-top-color: var(--label); }
+  .nut-menu-slot, .nut-menu-rest, .nut-supp-note, .nut-supp-time,
+  .nut-details-meta, .nut-group-empty, .nut-pane .nut-group-title,
+  .nut-empty span { color: var(--label-on-tint); }
+  .nut-menu-thumb { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-details summary::after { border-color: var(--label); }
+}
