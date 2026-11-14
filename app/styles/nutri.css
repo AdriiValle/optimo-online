@@ -28,85 +28,140 @@
 .nut-index-placeholder { display: none; }
 .nut-index-empty { background: var(--surface); border-radius: var(--radius-lg); }
 
-/* Modal de comida / cuenta: sheet clínico (superficie opaca). Móvil anclado abajo; ≥720 centrado. */
-.nut-modal-root {
-  position: fixed;
-  inset: 0;
-  z-index: 1100;
-  background: var(--scrim);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: max(24px, env(safe-area-inset-top, 0px)) 0 0;
-  animation: scrim-in var(--dur-sheet) ease;
-}
-.nut-modal {
-  width: 100%;
-  max-width: 640px;
-  max-height: min(92vh, 720px);
-  max-height: min(92svh, 720px);
-  margin: 0;
-  border-radius: var(--radius) var(--radius) 0 0;
-  border: 1px solid var(--line);
-  border-bottom: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
-  background: var(--surface);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  box-shadow: var(--shadow-md);
-  animation: sheet-up var(--dur-sheet) var(--ease);
-}
-.nut-modal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
-  border-bottom: 1px solid var(--line);
-  flex-shrink: 0;
-}
-.nut-modal-head h2 { font-size: 1rem; line-height: 1.3; letter-spacing: -0.02em; margin: 0; min-width: 0; }
-.nut-modal-head .icon-btn { flex-shrink: 0; }
-.nut-modal-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding:
-    14px
-    max(16px, env(safe-area-inset-right, 0px))
-    calc(20px + env(safe-area-inset-bottom, 0px))
-    max(16px, env(safe-area-inset-left, 0px));
-  scroll-padding-block: 16px;
-  -webkit-overflow-scrolling: touch;
-}
-.nut-modal-body > .nut-body { padding: 0; }
-.nut-modal .nut-actions .btn { width: 100%; min-height: 50px; }
-@media (min-width: 720px) {
-  .nut-modal-root { align-items: center; padding: 24px; }
-  .nut-modal {
-    max-width: 480px;
-    max-height: min(88vh, 640px);
-    border-bottom: 1px solid var(--line);
-    border-radius: var(--radius);
-    animation-name: sheet-pop;
-  }
-  .nut-modal-body { padding: 14px 16px 20px; }
-}
+/* Bloqueo de scroll mientras hay un sheet de Amanda abierto (lo pone NutModal / NutSheet en <body>). */
 body.nut-modal-open { overflow: hidden; }
-.nut-import { display: flex; flex-direction: column; gap: 10px; font-size: 0.875rem; }
-.nut-import p { margin: 0; }
-.nut-import input[type="date"] { margin: 6px 0 0; font-variant-numeric: tabular-nums; }
-.nut-import-file { font-weight: 600; overflow-wrap: anywhere; }
-.nut-import-check { display: flex; align-items: flex-start; gap: 8px; font-weight: 500; }
-.nut-import-check input { width: auto; margin: 3px 0 0; }
 /* Cabecera nutricionista: ajustes y salir a la misma altura (36px), cápsula + círculo. */
 .top-actions.nut-top-actions .btn { min-height: 36px; padding: 6px 14px; border-radius: 999px; }
-.nut-account-settings { display: flex; flex-direction: column; gap: 20px; }
-.nut-account-settings h2 { font-size: 0.95rem; margin: 0 0 4px; }
+
+/* —— Perfil, importar Word y cuenta (rd-C4): sheets con fondo agrupado y listas inset, como Ajustes de iOS —— */
+.sheet.nut-sheet--grouped,
+.sheet.nut-sheet:has(.nut-account-settings),
+.sheet.nut-sheet:has(.nut-prof) { background: var(--bg); }
+
+/* Fila de campo: etiqueta a la izquierda, valor sin borde alineado a la derecha (+ unidad). */
+.nut-field-row { gap: var(--space-3); cursor: text; }
+.nut-field-row--static { cursor: default; }
+.nut-field-label { flex: 0 0 auto; min-width: 6.5rem; color: var(--label); }
+.nut-field-input {
+  flex: 1 1 8rem;
+  min-width: 0;
+  min-height: 36px;
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--label);
+  font: var(--t-body-row);
+  letter-spacing: var(--ls-body);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.nut-field-input::-webkit-date-and-time-value { text-align: right; }
+.nut-field-input::-webkit-datetime-edit { display: inline-flex; justify-content: flex-end; }
+.nut-field-input:disabled { background: transparent; color: var(--label-secondary); }
+.nut-field-input[aria-invalid="true"] { color: var(--danger); }
+.nut-field-row:has(.nut-field-input[aria-invalid="true"]) .nut-field-label { color: var(--danger); }
+.nut-field-unit { flex-shrink: 0; margin-left: calc(var(--space-2) * -1); color: var(--label-secondary); }
+.nut-field-value { margin-left: auto; padding-right: var(--space-2); color: var(--label-secondary); font-variant-numeric: tabular-nums; }
+
+/* Perfil del deportista */
+.nut-prof { display: flex; flex-direction: column; min-width: 0; padding-top: var(--space-2); }
+.nut-prof .list-group { margin-bottom: var(--space-2); }
+.nut-prof .list-group-footer { margin-bottom: var(--space-5); }
+.nut-prof-error { margin: 0 0 var(--space-1); padding: 0 var(--row-inset); }
+.nut-prof-feedback:empty, .nut-import-feedback:empty { display: none; }
+.nut-prof-feedback .alert { margin: 0 0 var(--space-3); }
+.nut-prof-skel-title { width: 30%; height: 0.75rem; margin: 0 var(--row-inset) var(--space-2); }
+.nut-prof-skel { width: 60%; margin: 0; }
+
+/* Importar menú: archivo → semana → macros; resultado y error como estados */
+.nut-import { display: flex; flex-direction: column; min-width: 0; padding-top: var(--space-2); }
+.nut-import .list-group { margin-bottom: var(--space-6); }
+.nut-import .list-group:has(+ .list-group-footer) { margin-bottom: var(--space-2); }
+.nut-import .list-group-footer { margin-bottom: var(--space-6); }
+.nut-import-file { gap: var(--space-3); padding-block: var(--space-2); padding-right: var(--space-2); }
+.nut-import-doc { flex-shrink: 0; width: 28px; height: 28px; color: var(--label-secondary); }
+.nut-import-name { display: block; overflow-wrap: anywhere; }
+.btn.nut-import-change { flex-shrink: 0; padding-inline: var(--space-3); }
+.nut-import-toggle { gap: var(--space-3); padding-block: var(--space-2); cursor: pointer; }
+.nut-import-feedback .alert { margin: 0 0 var(--space-2); }
+.nut-import-state { margin: var(--space-2) 0; }
+.nut-import-state .state-icon { width: 44px; height: 44px; }
+.nut-import-state--ok { border-radius: var(--radius-md); background: var(--surface); }
+.nut-import-state--ok .state-icon { color: var(--ok); }
+.nut-import-state .state-text { overflow-wrap: anywhere; }
+
+/* Cuenta de Amanda: UsernameForm/PasswordForm (variante "card", marcado fijo) como grupos inset.
+   Cada etiqueta + campo forman una celda blanca (etiqueta Footnote encima, valor debajo). */
+.nut-account-settings { display: flex; flex-direction: column; gap: 0; min-width: 0; padding-top: var(--space-2); }
+.nut-account-settings > h2 {
+  margin: 0 0 2px;
+  padding: 0 var(--row-inset);
+  font: var(--t-headline);
+  letter-spacing: var(--ls-headline);
+  color: var(--label);
+}
+.nut-account-settings > h2:not(:first-child) { margin-top: var(--space-8); }
+.nut-account-settings > h2 + form { margin-top: var(--space-2); }
+.nut-account-settings > .muted {
+  margin: 0 0 var(--space-3);
+  padding: 0 var(--row-inset);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+.nut-account-settings > :is(.ok, .error) {
+  margin: var(--space-2) 0 var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+}
+.nut-account-settings > .ok { background: var(--ok-tint); }
+.nut-account-settings > .error { background: var(--danger-tint); }
+.nut-account-settings form { display: flex; flex-direction: column; min-width: 0; margin: 0; }
+.nut-account-settings form > label {
+  position: relative;
+  margin: 0;
+  padding: var(--space-2) var(--row-inset) 0;
+  background: var(--surface);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+.nut-account-settings form > input + label::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--row-inset);
+  right: 0;
+  height: 1px;
+  background: var(--separator);
+}
+.nut-account-settings form > input {
+  min-height: 40px;
+  margin: 0;
+  padding: 2px var(--row-inset) var(--space-2);
+  border: none;
+  border-radius: 0;
+  background: var(--surface);
+}
+.nut-account-settings form > input:focus { outline: var(--focus-ring); outline-offset: -2px; }
+.nut-account-settings form > label:first-of-type { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+.nut-account-settings form > input:last-of-type { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+.nut-account-settings form > input[aria-invalid="true"] { color: var(--danger); }
+.nut-account-settings form > label:has(+ input[aria-invalid="true"]) { color: var(--danger); }
+/* Sin acción principal en ajustes: los dos envíos son tintados y a lo ancho. */
+.nut-account-settings form > .btn {
+  width: 100%;
+  margin-top: var(--space-3);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+}
+@media (hover: hover) {
+  .nut-account-settings form > .btn:hover { background: var(--accent-tint); filter: brightness(0.96); }
+}
 
 /* —— Ficha del plato (rd-C2): drawer ≥1280 y sheet debajo. Fondo agrupado + tarjetas blancas, estilo Salud. —— */
 /* Scrim por encima de la cabecera fija del shell (z 1000). */
@@ -769,9 +824,6 @@ body.nut-modal-open { overflow: hidden; }
   .nut-week-cell--snack { min-height: 32px; padding: 3px 6px; }
   .nut-week-cell--snack .nut-dish-head { font: var(--t-caption); font-weight: 600; }
 
-  .nut-modal .nut-details { background: transparent; border: 0; box-shadow: none; }
-  .nut-modal .meal-form .nut-menu-photo { max-height: 260px; border-radius: var(--radius-sm); }
-
   /* Ficha: panel anclado a la derecha de la zona de trabajo, encima de la semana (no la empuja). */
   .nut-drawer {
     position: absolute;
@@ -1032,4 +1084,49 @@ body.nut-modal-open { overflow: hidden; }
   .nut-ring--cap-over, .nut-micro--cap-over { --state-ink: var(--danger); }
   .nut-dash-meta, .nut-dash-sub, .nut-dash-note, .nut-ring-figure, .nut-ring-detail, .nut-micro-value { color: var(--label); }
   .nut-dash-goal { box-shadow: inset 0 0 0 1px var(--label); }
+}
+
+/* —— <1280: «Perfil» e «Importar menú Word» siguen a mano (rd-C4) ——
+   Viven en el toolbar de la vista semana, que en la pila no se pinta. Aquí la tarjeta solo muestra esas
+   dos acciones, en una fila de dos botones a lo ancho entre el calendario y «Menú del día». */
+@media (max-width: 1279.98px) {
+  .nut-week {
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .nut-week > :not(.nut-toolbar),
+  .nut-week .nut-toolbar-start,
+  .nut-week .nut-view-switch { display: none; }
+  .nut-week .nut-toolbar-end {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .nut-week .nut-toolbar-end > .btn {
+    width: 100%;
+    min-width: 0;
+    min-height: var(--tap-min);
+    margin: 0;
+    padding: 0 var(--space-2);
+    font: var(--t-subhead);
+    font-weight: 600;
+    letter-spacing: var(--ls-subhead);
+    white-space: normal;
+  }
+}
+
+/* —— Preferencias del sistema: perfil, importar Word y cuenta (rd-C4) ——
+   Movimiento: los sheets ya funden en a11y.css (primitivo .sheet). Transparencia: sheets opacos, nada que ajustar. */
+@media (prefers-contrast: more) {
+  .nut-account-settings form > label:first-of-type { box-shadow: inset 0 1px 0 var(--label), inset 1px 0 0 var(--label), inset -1px 0 0 var(--label); }
+  .nut-account-settings form > label:not(:first-of-type),
+  .nut-account-settings form > input:not(:last-of-type) { box-shadow: inset 1px 0 0 var(--label), inset -1px 0 0 var(--label); }
+  .nut-account-settings form > input:last-of-type { box-shadow: inset 0 -1px 0 var(--label), inset 1px 0 0 var(--label), inset -1px 0 0 var(--label); }
+  .nut-account-settings > .muted, .nut-account-settings form > label,
+  .nut-field-unit, .nut-field-value, .nut-import-doc { color: var(--label-on-tint); }
+  .nut-import-state--ok { box-shadow: inset 0 0 0 1px var(--label); }
 }
