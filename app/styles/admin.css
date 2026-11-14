@@ -277,10 +277,313 @@
   .adm-fieldset .segmented > label { min-height: 40px; }
 }
 
-.nut-assign { border: 0; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.nut-assign legend { padding: 0; margin-bottom: 4px; font-size: 0.8125rem; }
-.nut-assign-item { display: flex; align-items: center; gap: 8px; min-height: 36px; margin: 0; font-weight: 500; }
-.nut-assign-item input { width: auto; margin: 0; }
+/* —— Ajustes de administrador (B3): secciones agrupadas, tabla de cuentas y asignaciones ——
+   Misma columna que el panel (max 1080). Escritorio: cuenta y alta en dos columnas, cuentas en tabla
+   con fila desplegable; <720 todo apilado. Los formularios compartidos (UsernameForm, PasswordForm)
+   se estilan solo dentro de .adm-set-card. */
+.adm-set { min-width: 0; }
+.adm-set-section { margin: 0 0 var(--space-8); }
+.adm-set-section:last-child { margin-bottom: 0; }
+.adm-set-head { margin: 0 0 var(--space-3); }
+.adm-set-title {
+  margin: 0;
+  font: var(--t-title-3);
+  letter-spacing: var(--ls-title-3);
+}
+.adm-set-desc {
+  margin: var(--space-1) 0 0;
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+
+.adm-set-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  min-width: 0;
+}
+@media (min-width: 960px) {
+  .adm-set-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .adm-set-cols--aside { grid-template-columns: minmax(0, 1fr) 22.5rem; align-items: start; }
+}
+
+/* Tarjeta de formulario (incluye los formularios compartidos) */
+.card.adm-set-card { display: flex; flex-direction: column; min-width: 0; margin: 0; }
+@media (min-width: 720px) {
+  .card.adm-set-card { padding: var(--space-6); }
+}
+.adm-set-card > h2,
+.adm-set-card-title {
+  margin: 0 0 var(--space-4);
+  font: var(--t-headline);
+  letter-spacing: var(--ls-headline);
+}
+.adm-set-card > h2:has(+ .muted) { margin-bottom: var(--space-1); }
+.adm-set-card > .muted {
+  margin: 0 0 var(--space-4);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+.adm-set-card > .ok,
+.adm-set-card > .error { margin: 0 0 var(--space-3); }
+.adm-set-card form { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.adm-set-card form > input { margin-bottom: var(--space-4); }
+.adm-set-card form > .btn { align-self: flex-start; }
+/* Sin acción principal en ajustes: el envío de PasswordForm pasa de relleno a tintado. */
+.adm-set-card form > .btn:not(.secondary) { background: var(--accent-tint); color: var(--accent-text); }
+@media (hover: hover) {
+  .adm-set-card form > .btn:not(.secondary):hover { background: var(--accent-tint); filter: brightness(0.96); }
+}
+.adm-set-new .field:last-of-type { margin-bottom: var(--space-4); }
+.adm-set-new > .btn { align-self: flex-start; }
+
+/* Línea de estado (live region siempre presente; vacía no ocupa hueco) */
+.adm-set-msg {
+  margin: 0;
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+.adm-set-msg.ok,
+.adm-set-msg.error { margin: 0; }
+.adm-set-msg:empty { position: absolute; }
+.adm-set-new > .adm-set-msg:not(:empty) { margin-bottom: var(--space-3); }
+
+/* Grupo (lista agrupada inset; tabla en escritorio) */
+.adm-set-group {
+  --adm-set-avatar: 40px;
+  position: relative;
+  min-width: 0;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.adm-set-thead { display: none; }
+.adm-set-list { list-style: none; margin: 0; padding: 0; }
+.adm-set-list > li { position: relative; margin: 0; }
+.adm-set-list > li + li::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  left: calc(var(--row-inset) + var(--adm-set-avatar) + var(--space-3));
+  height: 1px;
+  background: var(--separator);
+  pointer-events: none;
+}
+
+.adm-set-row {
+  display: grid;
+  grid-template-columns: var(--adm-set-avatar) minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  width: 100%;
+  min-height: 60px;
+  margin: 0;
+  padding: var(--space-2) var(--row-inset);
+  border: 0;
+  background: transparent;
+  color: var(--label);
+  font: var(--t-body-row);
+  letter-spacing: var(--ls-body);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+@media (hover: hover) {
+  .adm-set-row:hover { background: var(--fill-quaternary); }
+}
+.adm-set-row:active { background: var(--fill-quaternary); transition-duration: 0ms; }
+.adm-set-row:focus-visible { outline: var(--focus-ring); outline-offset: calc(var(--focus-offset) * -1); }
+
+.avatar.adm-set-avatar {
+  width: var(--adm-set-avatar);
+  height: var(--adm-set-avatar);
+  font: var(--t-subhead);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.adm-set-who { display: flex; flex-direction: column; min-width: 0; }
+.adm-set-name,
+.adm-set-sub,
+.adm-set-login {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.adm-set-name { font: var(--t-headline); letter-spacing: var(--ls-headline); }
+.adm-set-sub {
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+.adm-set-login { display: none; }
+
+.adm-set-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--accent-text);
+}
+.adm-set-chevron {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin: -4px var(--space-1) 0;
+  border-right: 2px solid var(--label-tertiary);
+  border-bottom: 2px solid var(--label-tertiary);
+  transform: rotate(45deg);
+  transition: transform var(--dur) var(--ease-out);
+}
+.adm-set-row[aria-expanded="true"] .adm-set-chevron { margin-top: 4px; transform: rotate(-135deg); }
+
+/* Panel desplegado: foto + campos en línea */
+.adm-set-panel {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0 var(--row-inset);
+  padding: var(--space-4) 0 var(--space-5);
+  border-top: 1px solid var(--separator);
+}
+.adm-set-panel[hidden] { display: none; }
+.adm-set-photo { display: flex; align-items: center; gap: var(--space-4); }
+.adm-set-fields { display: grid; gap: var(--space-4); min-width: 0; max-width: 40rem; }
+.adm-set-inline { margin: 0; min-width: 0; }
+.adm-set-inline-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.adm-set-inline-row > input { flex: 1 1 100%; min-width: 0; margin: 0; }
+.adm-set-inline-row > .btn { flex: 0 0 auto; }
+
+@media (min-width: 720px) {
+  .adm-set-group {
+    --adm-set-avatar: 36px;
+    --adm-set-cols: var(--adm-set-avatar) minmax(0, 1fr) minmax(0, 16rem) 6.5rem;
+  }
+  .adm-set-thead {
+    display: grid;
+    grid-template-columns: var(--adm-set-cols);
+    column-gap: var(--space-4);
+    align-items: center;
+    min-height: 36px;
+    padding: 0 var(--row-inset);
+    border-bottom: 1px solid var(--separator);
+    font: var(--t-footnote);
+    font-weight: 600;
+    letter-spacing: var(--ls-footnote);
+    color: var(--label-secondary);
+  }
+  .adm-set-col-who { grid-column: 1 / 3; }
+  .adm-set-col-login { grid-column: 3; }
+  .adm-set-row {
+    grid-template-columns: var(--adm-set-cols);
+    column-gap: var(--space-4);
+    min-height: 56px;
+  }
+  .adm-set-list > li + li::before { left: calc(var(--row-inset) + var(--adm-set-avatar) + var(--space-4)); }
+  .adm-set-name { font: var(--t-subhead); font-weight: 600; letter-spacing: var(--ls-subhead); }
+  .adm-set-sub--login { display: none; }
+  .adm-set-login {
+    display: block;
+    font: var(--t-subhead);
+    letter-spacing: var(--ls-subhead);
+    color: var(--label-secondary);
+  }
+  .adm-set-action { justify-self: end; }
+
+  .adm-set-panel {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-8);
+    margin-left: calc(var(--row-inset) + var(--adm-set-avatar) + var(--space-4));
+    padding: var(--space-5) 0 var(--space-6);
+  }
+  .adm-set-photo { flex-direction: column; align-items: center; gap: var(--space-3); }
+  .adm-set-inline-row { flex-wrap: nowrap; }
+  .adm-set-inline-row > input { flex: 1 1 auto; }
+  /* Ancho fijo con hueco para el spinner de «pendiente»: la etiqueta no salta de línea. */
+  .adm-set-inline-row > .btn { flex-basis: 14rem; white-space: nowrap; }
+}
+
+/* Estados */
+.state.adm-set-empty {
+  padding: var(--space-10) var(--space-6);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.adm-set-skel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 60px;
+  padding: var(--space-2) var(--row-inset);
+}
+.skeleton.adm-set-skel-avatar { flex-shrink: 0; width: var(--adm-set-avatar); height: var(--adm-set-avatar); }
+.adm-set-skel-lines { flex: 1; min-width: 0; }
+.adm-set-skel-lines .skeleton { width: 40%; }
+.adm-set-skel-lines .skeleton + .skeleton { width: 25%; margin-bottom: 0; }
+
+/* Nutricionistas: un grupo por cuenta, interruptor por deportista */
+.adm-set-nut-list { display: grid; gap: var(--space-4); min-width: 0; }
+.adm-set-nut-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 60px;
+  padding: var(--space-2) var(--row-inset);
+}
+.nut-assign { min-width: 0; margin: 0; padding: 0; border: 0; }
+.nut-assign-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: var(--space-2) var(--row-inset);
+  font: var(--t-body-row);
+  letter-spacing: var(--ls-body);
+  color: var(--label);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.nut-assign-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: var(--row-inset);
+  height: 1px;
+  background: var(--separator);
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .nut-assign-item:hover { background: var(--fill-quaternary); }
+}
+.nut-assign-name { min-width: 0; overflow-wrap: anywhere; }
+.adm-set-nut-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--row-inset);
+  border-top: 1px solid var(--separator);
+}
+.adm-set-nut-foot > .adm-set-msg { flex: 1 1 auto; min-width: 0; }
+@media (min-width: 720px) {
+  .nut-assign-item { font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
+}
 
 /* —— Análisis del deportista (B2): lenguaje Salud/Fitness ——
    Datos en tinta (sin azul decorativo: el acento solo marca lo que se pulsa).
@@ -613,4 +916,28 @@
   .an-day-hint { color: var(--label-on-tint); }
   .an-mol-list li + li,
   .an-day-mol { border-color: var(--label); }
+}
+
+/* —— Preferencias de ajustes (B3) —— */
+@media (prefers-reduced-motion: reduce) {
+  .adm-set-row,
+  .adm-set-chevron,
+  .nut-assign-item { transition: none; }
+}
+
+@media (prefers-contrast: more) {
+  .adm-set-group,
+  .state.adm-set-empty { box-shadow: inset 0 0 0 1px var(--label); }
+  .adm-set-list > li + li::before,
+  .nut-assign-item::before { background: var(--label); }
+  .adm-set-thead,
+  .adm-set-panel,
+  .adm-set-nut-foot { border-color: var(--label); }
+  .adm-set-desc,
+  .adm-set-sub,
+  .adm-set-login,
+  .adm-set-thead,
+  .adm-set-msg:not(.ok, .error),
+  .adm-set-card > .muted { color: var(--label-on-tint); }
+  .adm-set-chevron { border-color: var(--label-on-tint); }
 }

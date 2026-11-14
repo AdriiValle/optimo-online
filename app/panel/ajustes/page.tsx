@@ -17,7 +17,7 @@ export default async function PanelAjustesPage() {
         leading={<HeaderBackButton href="/panel" />}
         trailing={<LogoutButton />}
       />
-      <main className="page">
+      <main className="page adm-page">
         <AdminAjustesClient />
       </main>
     </>
