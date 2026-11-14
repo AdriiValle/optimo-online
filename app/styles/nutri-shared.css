@@ -330,12 +330,213 @@
   .nut-desktop-athlete > .nut-ws-mobile-menu .nut-body { padding-inline: var(--space-3); }
 }
 
+/* —— Jugador: navegación interna Hoy · Semana · Compra (rd-N1) —— */
+/* Pulgar a 36 en táctil; la zona de toque de cada pestaña se alarga a 44 sin crecer la pista. */
+.nut-seg { min-height: 36px; }
+.nut-seg > button { min-height: 32px; }
+.nut-seg > button::after { content: ""; position: absolute; inset: -6px 0; }
+.nut-seg > button:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-view { min-width: 0; }
+.nut-view:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); border-radius: var(--radius-md); }
+
+.nut-today { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.nut-today > .card { margin-bottom: 0; }
+.nut-today > .nut-group { margin-top: var(--space-3); }
+.card.nut-empty { padding: var(--space-4); }
+
+/* Tarjeta del día: tipo de día + MD, «nivel de combustible» con su color (y su texto), números opcionales, nota. */
+.nut-daycard { display: flex; flex-direction: column; gap: var(--space-3); }
+.nut-fuel--carga { --fuel-ink: var(--warn); --fuel-tint: var(--warn-tint); }
+.nut-fuel--normal { --fuel-ink: var(--ok); --fuel-tint: var(--ok-tint); }
+.nut-fuel--suave { --fuel-ink: var(--label-secondary); --fuel-tint: var(--fill-quaternary); }
+.nut-daycard-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-width: 0; }
+.nut-pane .nut-daycard-title {
+  margin: 0;
+  min-width: 0;
+  font: var(--t-title-3);
+  letter-spacing: var(--ls-title-3);
+  color: var(--label);
+  overflow-wrap: anywhere;
+}
+.nut-md {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--fill-tertiary);
+  color: var(--label);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.nut-fuel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--fuel-tint);
+}
+.nut-fuel-gauge { flex-shrink: 0; width: 28px; height: 28px; }
+.nut-fuel-gauge rect { fill: var(--fill); }
+.nut-fuel-gauge rect[data-on] { fill: var(--fuel-ink); }
+.nut-fuel-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nut-fuel-label { font: var(--t-callout); letter-spacing: var(--ls-callout); color: var(--label); }
+.nut-fuel-label strong { font-weight: 700; }
+.nut-fuel-hint { font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-on-tint); }
+.nut-pane .nut-numbers {
+  margin: 0;
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.nut-daynote { display: flex; flex-direction: column; gap: 2px; padding-top: var(--space-3); border-top: 1px solid var(--separator); }
+.nut-daynote-label { font: var(--t-footnote); letter-spacing: var(--ls-footnote); font-weight: 600; color: var(--label-secondary); }
+.nut-daynote .nut-diet-text { font: var(--t-body); letter-spacing: var(--ls-body); color: var(--label); }
+
+/* Franjas en orden: una tarjeta por franja; la siguiente crece, las pasadas se pliegan en una fila. */
+.nut-slots { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.nut-slot { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; margin-bottom: 0; }
+.nut-slot-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  column-gap: var(--space-3);
+  align-items: start;
+}
+.nut-slot-label { color: var(--label-secondary); }
+.nut-slot .nut-menu-slot { align-items: center; row-gap: var(--space-1); }
+.nut-slot-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  margin-right: var(--space-1);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-xs);
+  background: var(--label);
+  color: var(--surface);
+  font: var(--t-caption);
+  letter-spacing: var(--ls-caption);
+  font-weight: 600;
+}
+.nut-slot--next .nut-menu-dish { font: var(--t-title-3); letter-spacing: var(--ls-title-3); }
+.nut-slot--next .nut-slot-label { color: var(--label); font-weight: 600; }
+.nut-slot-hero {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--cat-tint, var(--fill-quaternary));
+}
+
+/* Pasadas: fila de 44 con franja y plato; al abrir, el plato completo. */
+.nut-slot--past { padding: 0; gap: 0; }
+.nut-slot--past > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  list-style: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.nut-slot--past[open] > summary { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.nut-slot--past > summary::-webkit-details-marker,
+.nut-slot--past > summary::marker { display: none; content: ""; }
+.nut-slot--past > summary::after {
+  content: "";
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin: 0 var(--space-1) 4px 0;
+  border-right: 2px solid var(--label-tertiary);
+  border-bottom: 2px solid var(--label-tertiary);
+  transform: rotate(45deg);
+  transition: transform var(--dur) var(--ease-out);
+}
+.nut-slot--past[open] > summary::after { transform: rotate(-135deg); margin-bottom: -4px; }
+.nut-slot--past > summary:active { background: var(--fill-quaternary); transition-duration: 0ms; }
+@media (hover: hover) { .nut-slot--past > summary:hover { background: var(--fill-quaternary); } }
+.nut-slot--past > summary:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-slot-past-text {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+}
+.nut-slot-past-text .nut-slot-label { flex-shrink: 0; }
+.nut-slot-past-dish { min-width: 0; color: var(--label); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.nut-slot-past-body { display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--space-4) var(--space-4); }
+
+/* Ingredientes: nombre a la izquierda, cantidad redondeada a la derecha. */
+.nut-ingr { list-style: none; margin: var(--space-1) 0 0; padding: 0; }
+.nut-ingr li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+}
+.nut-ingr li + li { border-top: 1px solid var(--separator-soft); }
+.nut-ingr-name { min-width: 0; color: var(--label); overflow-wrap: anywhere; }
+.nut-ingr-amount { flex-shrink: 0; color: var(--label-secondary); font-variant-numeric: tabular-nums; }
+.nut-ingr-fold .nut-ingr { margin-top: var(--space-2); }
+
+/* Suplementos dentro de su franja. */
+.nut-slot-supps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.nut-slot-supps li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--fill-quaternary);
+}
+.nut-slot-supps svg { flex-shrink: 0; width: 20px; height: 20px; color: var(--label-secondary); }
+.nut-slot-supp-name { font: var(--t-callout); letter-spacing: var(--ls-callout); font-weight: 600; color: var(--label); overflow-wrap: anywhere; }
+.nut-slot-supp-time {
+  flex-shrink: 0;
+  max-width: 40%;
+  text-align: right;
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--label-secondary);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.nut-slot-supps .nut-supp-note { color: var(--label-on-tint); }
+
+/* «Indicaciones de Amanda»: plegable al final. */
+.nut-indic { margin-top: var(--space-3); border-color: transparent; }
+.nut-indic .nut-diet-text { font: var(--t-body); letter-spacing: var(--ls-body); color: var(--label); }
+
+/* Semana y Compra (N2/N3): estado vacío. */
+.nut-soon { display: flex; flex-direction: column; gap: 2px; margin-bottom: 0; }
+.nut-soon strong { font: var(--t-headline); letter-spacing: var(--ls-headline); color: var(--label); }
+.nut-soon span { font: var(--t-subhead); letter-spacing: var(--ls-subhead); color: var(--label-secondary); }
+
 /* —— Preferencias (al final de la hoja propia, no en a11y.css) —— */
 @media (prefers-reduced-motion: reduce) {
   .nut-details summary,
   .nut-details summary::after,
   .nut-menu-prep summary,
-  .nut-menu-prep summary::after { transition: none; }
+  .nut-menu-prep summary::after,
+  .nut-slot--past > summary,
+  .nut-slot--past > summary::after { transition: none; }
 }
 /* prefers-reduced-transparency: esta hoja no usa materiales (todo es --surface opaco); nada que cambiar. */
 @media (prefers-contrast: more) {
@@ -348,4 +549,10 @@
   .nut-empty span { color: var(--label-on-tint); }
   .nut-menu-thumb { box-shadow: inset 0 0 0 1px var(--label); }
   .nut-details summary::after { border-color: var(--label); }
+  .nut-slot, .nut-fuel, .nut-slot-supps li, .nut-md { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-daynote, .nut-ingr li + li { border-top-color: var(--label); }
+  .nut-fuel-gauge rect:not([data-on]) { fill: var(--label-quaternary); }
+  .nut-slot-label, .nut-ingr-amount, .nut-slot-supp-time, .nut-daynote-label,
+  .nut-pane .nut-numbers, .nut-soon span { color: var(--label-on-tint); }
+  .nut-slot--past > summary::after { border-color: var(--label); }
 }

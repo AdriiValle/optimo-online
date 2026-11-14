@@ -1,0 +1,6 @@
+- Veredicto: PASA
+- Bloqueantes (maximo 5): ninguno. Verificado: segmentado Hoy/Semana/Compra con flechas; tarjeta del dia con combustible; franja "Ahora" destacada, pasadas plegadas; foto hero, ingredientes, suplementos en su franja y "Otros suplementos"; indicaciones plegables; sin kcal/macros por defecto y con show_numbers=true si (datos de prueba restaurados: show_numbers=false, suplementos [], diet_notes null, fotos null); dia sin menu y dia sin suplementos OK; Paco ve 404 en /a/<Ricardo> y 404 en la foto de un plato de Ricardo; scrollWidth=390 a 390 y 1280 a 1280; foco visible (outline 2px azul accent); summaries 44-46 px; `npx tsc --noEmit` limpio. Capturas: .tmp-verify/audit-N1/ricardo-390-hoy.png, ricardo-390-num.png, ricardo-390-supp.png, ricardo-390-empty.png, ricardo-1280-hoy.png, paco-390.png
+- Notas no bloqueantes (maximo 3, opcional):
+  1. Los botones del segmentado miden 32 px (pista 36): cumple design-system.md (segmentado 36 en tactil), pero queda por debajo de los 44 de la regla general.
+  2. El icono de suplemento (capsula girada) se lee como un eslabon de cadena a 390 (ricardo-390-supp.png).
+  3. Los dias MD-1..MD-4 salen con "Combustible: Normal"; solo el dia de partido sale "Carga". Comprobar que es la regla de producto prevista.
