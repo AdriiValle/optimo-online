@@ -13,7 +13,7 @@ import { NutritionPane } from "@/app/a/[id]/nutrition-pane";
 import { NutAthleteNav } from "../athlete-nav";
 import { MenuWordImportButton } from "./menu-word-import";
 import { AthleteProfileForm } from "./athlete-profile-form";
-import { CloseGlyph, MacroDonut, MealDrawer, MealFicha, type PhotoChange } from "./meal-drawer";
+import { CloseGlyph, MealDrawer, MealFicha, type PhotoChange } from "./meal-drawer";
 import { fmt, perDay, periodTotal, summarizeNutrition } from "./nutrition-summary";
 import { dayTypeFromMdTag } from "@/lib/nutrition/day-type";
 import { averageTargets, dailyTargets, ringStatus, type DailyTargets, type RingStatus, type Target, type TargetKey } from "@/lib/nutrition/targets";
@@ -738,8 +738,48 @@ const STATUS_TEXT: Record<RingStatus, string> = {
 };
 
 /**
- * Anillo KPI frente a un objetivo diario. Se rellena `valor / objetivo` (tope visual al 100 % con marca si se pasa);
- * el color sigue al estado y el estado también va en texto. Sin objetivo (perfil incompleto) solo muestra la cifra.
+ * Estado de un KPI frente a su objetivo diario: estado (color + texto), % de relleno y cifra formateada.
+ * Sin objetivo válido (perfil incompleto) no hay estado ni relleno; sin valor finito, «pendiente». Nunca NaN.
+ */
+function kpiState({
+  value,
+  goal,
+  partial,
+  approx,
+  digits,
+  emptyText,
+  partialText
+}: {
+  value: number | null;
+  goal: Target | null;
+  partial: boolean;
+  approx: boolean;
+  digits: number;
+  emptyText: string;
+  partialText?: string;
+}) {
+  const v = value !== null && Number.isFinite(value) ? value : null;
+  const g = goal && Number.isFinite(goal.target) && goal.target > 0 ? goal : null;
+  const status = v !== null && g ? ringStatus(v, g, partial || approx) : null;
+  const pct = v !== null && g ? v / g.target : 0;
+  const fill = Math.min(Math.max(pct, 0), 1);
+  let state = "";
+  if (v === null) state = emptyText;
+  else if (status === "partial") state = partialText ?? STATUS_TEXT.partial;
+  else if (status === "low" && g) state = `${STATUS_TEXT.low} ${fmt(g.target - v, digits)}`;
+  else if (status === "over" || status === "cap-over") state = `${STATUS_TEXT[status]} +${fmt((pct - 1) * 100)} %`;
+  else if (status) state = STATUS_TEXT[status];
+  const shown = v === null ? null : `${approx ? "≥" : ""}${fmt(v, digits)}`;
+  return { value: v, goal: g, status, pct, fill, state, shown };
+}
+
+const RING_R = 27;
+const RING_C = 2 * Math.PI * RING_R;
+
+/**
+ * Anillo KPI (lenguaje Actividad/Salud): el anillo se rellena `valor / objetivo` (tope visual al 100 %, marca a las 12
+ * si se pasa o si es un tope) y la cifra, el objetivo y el estado van al lado en texto: el color nunca va solo.
+ * `hero` = energía (anillo grande con % dentro). Sin objetivo (perfil incompleto) solo muestra la cifra.
  */
 function Ring({
   label,
@@ -751,8 +791,8 @@ function Ring({
   emptyText = "Pendiente",
   approx,
   digits = 0,
-  size = 64,
-  compact
+  detail,
+  hero
 }: {
   label: string;
   unit: string;
@@ -768,59 +808,95 @@ function Ring({
   /** Algún alimento no trae este valor: la cifra es un mínimo («≥»). */
   approx?: boolean;
   digits?: number;
-  size?: number;
-  /** Fila de micros: textos cortos. */
-  compact?: boolean;
+  /** Línea secundaria (p. ej. «47 g/día · 18 % kcal»). */
+  detail?: string;
+  hero?: boolean;
 }) {
-  const r = 26;
-  const c = 2 * Math.PI * r;
-  const status = value !== null && goal ? ringStatus(value, goal, !!partial || !!approx) : null;
-  const pct = value !== null && goal ? value / goal.target : 0;
-  const fill = Math.min(Math.max(pct, 0), 1);
-  const shown = value === null ? null : `${approx ? "≥" : ""}${fmt(value, digits)}`;
-  const goalText = goal ? `${goal.kind === "max" ? "tope " : "/ "}${fmt(goal.target, digits)} ${unit}` : unit;
-  let stateText = value === null ? emptyText : status ? STATUS_TEXT[status] : "";
-  if (status === "partial") stateText = partialText ?? STATUS_TEXT.partial;
-  else if (status === "low" && goal && !compact) stateText = `Falta ${fmt(goal.target - (value ?? 0), digits)}`;
-  else if (status === "over") stateText = `Pasado +${fmt((pct - 1) * 100)} %`;
-  const cls = ["nut-ring"];
-  if (value === null) cls.push("nut-ring--empty");
-  if (status) cls.push(`nut-ring--${status}`);
-  if (compact) cls.push("nut-ring--sm");
-  const aria = [
-    `${label}: ${shown === null ? "pendiente" : `${shown} ${unit}`}`,
-    goal ? `${goal.kind === "max" ? "tope" : "objetivo"} ${fmt(goal.target, digits)}` : "",
-    value !== null ? stateText : ""
-  ]
-    .filter(Boolean)
-    .join(", ");
+  const k = kpiState({ value, goal, partial: !!partial, approx: !!approx, digits, emptyText, partialText });
+  const cls = ["nut-ring", hero ? "nut-ring--hero" : "nut-ring--tile"];
+  cls.push(k.value === null ? "nut-ring--empty" : k.status ? `nut-ring--${k.status}` : "nut-ring--none");
   return (
     <figure className={cls.join(" ")}>
-      <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={aria}>
-        <circle className="nut-ring-track" cx="32" cy="32" r={r} />
-        {fill > 0 ? (
-          <circle className="nut-ring-bar" cx="32" cy="32" r={r} strokeDasharray={`${fill * c} ${c}`} transform="rotate(-90 32 32)" />
+      <svg className="nut-ring-svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <circle className="nut-ring-track" cx="32" cy="32" r={RING_R} />
+        {k.fill > 0 ? (
+          <circle
+            className="nut-ring-bar"
+            cx="32"
+            cy="32"
+            r={RING_R}
+            strokeDasharray={`${k.fill * RING_C} ${RING_C}`}
+            transform="rotate(-90 32 32)"
+          />
         ) : null}
         {/* Marca del objetivo a las 12: visible cuando se pasa o cuando es un tope. */}
-        {goal && (pct > 1 || goal.kind === "max") ? <line className="nut-ring-mark" x1="32" y1="1.5" x2="32" y2="10.5" /> : null}
-        <text x="32" y="33" textAnchor="middle" dominantBaseline="middle" className="nut-ring-value">
-          {shown ?? "—"}
-        </text>
+        {k.goal && (k.pct > 1 || k.goal.kind === "max") ? <line className="nut-ring-mark" x1="32" y1="0.5" x2="32" y2="9.5" /> : null}
+        {hero && k.goal && k.value !== null ? (
+          <text x="32" y="33" textAnchor="middle" dominantBaseline="middle" className="nut-ring-pct">
+            {fmt(k.pct * 100)} %
+          </text>
+        ) : null}
       </svg>
       <figcaption>
-        <strong>{label}</strong>
-        <span>{goalText}</span>
-        {stateText ? <span className="nut-ring-state">{stateText}</span> : null}
+        <span className="nut-ring-label">{label}</span>
+        {/* «931 / 3.408 kcal/día» (patrón Actividad); un tope se lee «tope 2.300». */}
+        <span className="nut-ring-figure">
+          <strong>{k.shown ?? "—"}</strong>{" "}
+          <span>
+            {k.goal ? `${k.goal.kind === "max" ? "tope" : "/"} ${fmt(k.goal.target, digits)} ` : ""}
+            {unit}
+          </span>
+        </span>
+        {detail ? <span className="nut-ring-detail">{detail}</span> : null}
+        {k.state ? <span className="nut-ring-state">{k.state}</span> : null}
       </figcaption>
     </figure>
   );
 }
+
+/** Micronutriente: fila compacta con barra de progreso (patrón Salud), mismo estado y textos que los anillos. */
+function MicroMeter({
+  label,
+  unit,
+  value,
+  goal,
+  partial,
+  approx,
+  digits
+}: {
+  label: string;
+  unit: string;
+  value: number | null;
+  goal: Target | null;
+  partial: boolean;
+  approx: boolean;
+  digits: number;
+}) {
+  const k = kpiState({ value, goal, partial, approx, digits, emptyText: "Pendiente" });
+  const tone = k.value === null ? "empty" : (k.status ?? "none");
+  return (
+    <li className={`nut-micro nut-micro--${tone}`}>
+      <span className="nut-micro-label">{label}</span>
+      <span className="nut-micro-value">
+        <strong>{k.shown ?? "—"}</strong>
+        {k.goal ? ` ${k.goal.kind === "max" ? "tope" : "/"} ${fmt(k.goal.target, digits)}` : ""} {unit}
+      </span>
+      <span className="nut-micro-meter" aria-hidden="true">
+        <i style={{ "--fill": k.fill } as CSSProperties} />
+      </span>
+      <span className="nut-micro-state">{k.state}</span>
+    </li>
+  );
+}
+
+const MACRO_KCAL_PER_G = { p: 4, c: 4, f: 9 } as const;
 
 /**
  * Resumen nutricional del periodo visible (día / semana / mes), estimado del menú planificado.
  * Solo suman los platos cuantificados (ingredientes vigentes confirmados con alimento y gramos);
  * sin ninguno, los KPIs siguen pendientes en lugar de inventar cifras. Cada anillo mide la media por día con datos
  * frente al objetivo diario medio de esos días (`lib/nutrition/targets.ts`, tipo de día MD / MD±n / descanso).
+ * Jerarquía: energía (grande) → macros (anillos) → micros (filas con barra). En «Día» va como panel lateral.
  */
 function WeekPanel({
   days,
@@ -839,6 +915,7 @@ function WeekPanel({
   athleteId: string;
   onProfileSaved: () => void;
 }) {
+  const titleId = useId();
   const [profileOpen, setProfileOpen] = useState(false);
   useEffect(() => {
     if (!profileOpen) return;
@@ -870,34 +947,46 @@ function WeekPanel({
       .map((d) => dailyTargets(totals.profile, dayTypeFromMdTag(byDate[d]?.mdTag)))
       .filter((t): t is DailyTargets => t !== null)
   );
-  const kg = totals.profile.weightKg;
+  const kg = totals.profile.weightKg && totals.profile.weightKg > 0 ? totals.profile.weightKg : null;
   const perKg = (t: Target | undefined): Target | null =>
     t && kg ? { kind: t.kind, target: t.target / kg, min: t.min && t.min / kg, max: t.max && t.max / kg } : null;
+  // Reparto de energía por macro (4/4/9 kcal por g); solo con los tres valores.
+  const macroKcal = prot && carb && fat ? prot.value * MACRO_KCAL_PER_G.p + carb.value * MACRO_KCAL_PER_G.c + fat.value * MACRO_KCAL_PER_G.f : 0;
+  const share = (g: number, perG: number) => (macroKcal > 0 ? `${fmt(((g * perG) / macroKcal) * 100)} % kcal` : null);
+  const macroDetail = (g: number, perG: number) => [`${fmt(g)} g/día`, share(g, perG)].filter(Boolean).join(" · ");
+  const title = view === "day" ? "Resumen del día" : view === "month" ? "Resumen mensual" : "Resumen semanal";
+  const periodWord = view === "month" ? "en el mes" : "en la semana";
   return (
-    <section className={side ? "nut-dash nut-dash--side" : "nut-dash"} aria-label="Resumen nutricional">
+    <section className={side ? "nut-dash nut-dash--side" : "nut-dash"} aria-labelledby={titleId}>
       <header className="nut-dash-head">
-        <h3>{view === "day" ? "Resumen del día" : view === "month" ? "Resumen mensual" : "Resumen semanal"}</h3>
-        <span className="muted">
-          {!p.planned
-            ? "Sin platos"
-            : has && total
-              ? `${view === "day" ? "" : `${total.approx ? "≥" : ""}${fmt(total.value)} kcal · `}${coverage}`
-              : `Pendiente · ${coverage}`}
-        </span>
+        <h3 id={titleId}>{title}</h3>
+        <p className="nut-dash-meta">
+          {view !== "day" && has && total ? (
+            <span>
+              {total.approx ? "≥" : ""}
+              {fmt(total.value)} kcal {periodWord}
+            </span>
+          ) : null}
+          <span className={!p.planned ? "nut-dash-cover" : partial ? "nut-dash-cover nut-dash-cover--partial" : "nut-dash-cover nut-dash-cover--full"}>
+            {!p.planned ? "Sin platos" : `${coverage} con datos`}
+          </span>
+        </p>
       </header>
-      <div className="nut-dash-main">
-        <Ring
-          label="Energía"
-          unit="kcal/día"
-          value={kcal?.value ?? null}
-          approx={kcal?.approx}
-          goal={goals?.kcal ?? null}
-          partial={partial}
-          partialText={coverage}
-          size={side ? 84 : 92}
-        />
-        <MacroDonut grams={prot && carb && fat ? { p: prot.value, c: carb.value, f: fat.value } : null} />
-        <div className="nut-dash-pair">
+      <div className="nut-dash-body">
+        <div className="nut-dash-energy">
+          <Ring
+            label="Energía"
+            unit="kcal/día"
+            value={kcal?.value ?? null}
+            approx={kcal?.approx}
+            goal={goals?.kcal ?? null}
+            partial={partial}
+            partialText={`Parcial · ${coverage}`}
+            hero
+          />
+        </div>
+        <div className="nut-dash-group nut-dash-macros" role="group" aria-label="Macronutrientes">
+          <h4 className="nut-dash-sub" aria-hidden="true">Macronutrientes</h4>
           <Ring
             label="Proteína"
             unit="g/kg"
@@ -906,6 +995,7 @@ function WeekPanel({
             goal={perKg(goals?.protein_g)}
             partial={partial}
             emptyText={prot && !kg ? "Falta peso" : undefined}
+            detail={prot ? macroDetail(prot.value, MACRO_KCAL_PER_G.p) : undefined}
             digits={1}
           />
           <Ring
@@ -916,38 +1006,48 @@ function WeekPanel({
             goal={perKg(goals?.carbs_g)}
             partial={partial}
             emptyText={carb && !kg ? "Falta peso" : undefined}
+            detail={carb ? macroDetail(carb.value, MACRO_KCAL_PER_G.c) : undefined}
             digits={1}
           />
-          <Ring label="Grasa" unit="g" value={fat?.value ?? null} approx={fat?.approx} goal={goals?.fat_g ?? null} partial={partial} />
+          <Ring
+            label="Grasa"
+            unit="g/día"
+            value={fat?.value ?? null}
+            approx={fat?.approx}
+            goal={goals?.fat_g ?? null}
+            partial={partial}
+            detail={fat ? (share(fat.value, MACRO_KCAL_PER_G.f) ?? undefined) : undefined}
+          />
+        </div>
+        <div className="nut-dash-group nut-dash-micro-group" role="group" aria-label="Micronutrientes">
+          <h4 className="nut-dash-sub" aria-hidden="true">Micronutrientes</h4>
+          <ul className="nut-dash-micros">
+            {MICROS.map((m) => {
+              const v = perDay(p, m.key);
+              return (
+                <MicroMeter
+                  key={m.key}
+                  label={m.label}
+                  unit={m.unit}
+                  value={v?.value ?? null}
+                  approx={!!v?.approx}
+                  goal={goals?.[m.key] ?? null}
+                  partial={partial}
+                  digits={m.digits}
+                />
+              );
+            })}
+          </ul>
         </div>
       </div>
-      <div className="nut-dash-micros">
-        {MICROS.map((m) => {
-          const v = perDay(p, m.key);
-          return (
-            <Ring
-              key={m.key}
-              label={m.label}
-              unit={m.unit}
-              value={v?.value ?? null}
-              approx={v?.approx}
-              goal={goals?.[m.key] ?? null}
-              partial={partial}
-              digits={m.digits}
-              size={52}
-              compact
-            />
-          );
-        })}
-      </div>
       {goals ? (
-        <p className="muted">
+        <p className="nut-dash-note">
           {has
             ? "Media por día con datos frente al objetivo del perfil y del tipo de día. Sodio sin sal de mesa; «≥» = falta el dato en algún alimento."
             : "Pendiente: confirma alimento y gramos de los ingredientes de cada plato para calcular."}
         </p>
       ) : (
-        <div className="nut-dash-goal">
+        <div className="nut-dash-goal" role="status">
           <p>Completa el perfil (nacimiento, altura y peso) para ver los objetivos.</p>
           <button type="button" className="btn secondary" onClick={() => setProfileOpen(true)}>
             Completar perfil
