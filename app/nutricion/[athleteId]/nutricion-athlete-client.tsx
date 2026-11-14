@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { addDays, dateKey, DOW_ES, DOW_FULL, DOW_SHORT, formatLongDate, MONTHS_ES, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
 import { MEAL_SLOTS, type DayPlan, type MealSlot, type MealSlotKind, type SupplementEntry } from "@/lib/types";
@@ -175,7 +175,7 @@ export function NutricionAthleteClient({
 
   const calBlock = (
     <>
-          <PlanCalendar
+      <PlanCalendar
             byDate={byDate}
             crests={crests}
             year={year}
@@ -186,23 +186,25 @@ export function NutricionAthleteClient({
               setYear(y);
               setMonth(m);
             }}
-            onSelect={selectDate}
-          />
+        onSelect={selectDate}
+      />
 
-          {plan?.matchOpponent ? (
-            <p className="muted">
-              Partido vs {plan.matchOpponent}
-              {plan.matchTime ? ` · ${plan.matchTime}` : ""}
-              {plan.matchVenue ? ` · ${plan.matchVenue === "casa" ? "en casa" : "fuera"}` : ""}
-            </p>
-          ) : plan?.title ? (
-            <p className="muted">{plan.title}</p>
-          ) : null}
+      {plan?.matchOpponent ? (
+        <p className="nut-ws-cal-note">
+          Partido vs {plan.matchOpponent}
+          {plan.matchTime ? ` · ${plan.matchTime}` : ""}
+          {plan.matchVenue ? ` · ${plan.matchVenue === "casa" ? "en casa" : "fuera"}` : ""}
+        </p>
+      ) : plan?.title ? (
+        <p className="nut-ws-cal-note">{plan.title}</p>
+      ) : null}
     </>
   );
 
   return (
-    <div className="dash nut-desktop">
+    <div className="nut-desktop nut-desktop-athlete">
+      {/* Título de la pantalla: Large Title en la pila (<1280); en el workspace lo lleva el toolbar. */}
+      <h1 className="nut-ws-title">{playerName}</h1>
       <BrandHeader
         wide
         player={playerName}
@@ -276,11 +278,13 @@ export function NutricionAthleteClient({
 
       {/* Móvil: menú del día apilado (sin drawer obligatorio en pantallas estrechas). */}
       <div className="nut-ws-mobile-menu">
-        <section className="card dash-pane nut-wrap">
-          <h2>Menú del día</h2>
-          <p className="muted">{formatLongDate(parseDateLocal(center))}</p>
+        <section className="card nut-wrap nut-day-stack" aria-labelledby="nut-day-stack-title">
+          <header className="nut-day-stack-head">
+            <h2 id="nut-day-stack-title">Menú del día</h2>
+            <p>{formatLongDate(parseDateLocal(center))}</p>
+          </header>
           {meals === null ? (
-            <p className="muted">Cargando menú…</p>
+            <p className="muted" role="status">Cargando menú…</p>
           ) : (
             MEAL_SLOTS.map(({ slot: kind, label }) => (
               <MealSlotForm
@@ -438,34 +442,40 @@ function WeekGrid({
     { key: "week", label: "Semana" },
     { key: "month", label: "Mes" }
   ];
+  const viewIndex = VIEWS.findIndex((v) => v.key === view);
 
   return (
-    <section className="card nut-week" aria-label="Menú semanal">
-      {/* Toolbar: título | segmentado | paso + import (patrón Calendario de Apple). */}
+    <section className="card nut-week" aria-label={view === "day" ? "Menú del día" : view === "month" ? "Menú del mes" : "Menú semanal"}>
+      {/* Toolbar: paso + título | segmentado | acciones (patrón Calendario de Apple). */}
       <div className="nut-toolbar">
-        <h2>{title}</h2>
-        <div className="nut-view-switch" role="group" aria-label="Vista">
+        <div className="nut-toolbar-start">
+          <div className="nut-stepper" role="group" aria-label={`Cambiar de ${unit.toLowerCase()}`}>
+            <button type="button" className="nut-step-btn" aria-label={`${unit} anterior`} onClick={() => onStep(-1)}>
+              <svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M7.5 1.5 1.5 7.5l6 6" />
+              </svg>
+            </button>
+            <button type="button" className="nut-step-btn" aria-label={`${unit} siguiente`} onClick={() => onStep(1)}>
+              <svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="m1.5 1.5 6 6-6 6" />
+              </svg>
+            </button>
+          </div>
+          <h2 aria-live="polite">{title}</h2>
+        </div>
+        <div
+          className="segmented nut-view-switch"
+          role="group"
+          aria-label="Vista"
+          style={{ "--seg-count": VIEWS.length, "--seg-index": viewIndex } as CSSProperties}
+        >
           {VIEWS.map((v) => (
-            <button
-              key={v.key}
-              type="button"
-              className={v.key === view ? "nut-view-btn on" : "nut-view-btn"}
-              aria-pressed={v.key === view}
-              onClick={() => onView(v.key)}
-            >
+            <button key={v.key} type="button" aria-pressed={v.key === view} onClick={() => onView(v.key)}>
               {v.label}
             </button>
           ))}
         </div>
         <div className="nut-toolbar-end">
-          <div className="nut-stepper">
-            <button type="button" className="icon-btn" aria-label={`${unit} anterior`} onClick={() => onStep(-1)}>
-              ‹
-            </button>
-            <button type="button" className="icon-btn" aria-label={`${unit} siguiente`} onClick={() => onStep(1)}>
-              ›
-            </button>
-          </div>
           <AthleteProfileButton athleteId={athleteId} onSaved={onProfileSaved} />
           <MenuWordImportButton athleteId={athleteId} onImported={onMenuImported} />
         </div>
@@ -510,11 +520,11 @@ function WeekGrid({
               gridTemplateColumns: `76px repeat(${days.length}, minmax(0, 1fr))`,
               /* Filas elásticas: las franjas reparten el alto libre (principal 3 : snack 2); sin platos, fila fina. */
               gridTemplateRows: `auto ${MEAL_SLOTS.map((s) =>
-                thin.has(s.slot) ? "24px" : s.tier === "snack" ? "minmax(32px, 2fr)" : "minmax(44px, 3fr)"
+                thin.has(s.slot) ? "28px" : s.tier === "snack" ? "minmax(32px, 2fr)" : "minmax(44px, 3fr)"
               ).join(" ")}`
             }}
           >
-            <div />
+            <div aria-hidden="true" />
             {days.map((iso) => {
               const d = parseDateLocal(iso);
               const p = byDate[iso];
@@ -522,12 +532,19 @@ function WeekGrid({
               if (iso === center) cls.push("on");
               if (iso === today) cls.push("today");
               return (
-                <button key={iso} type="button" className={cls.join(" ")} onClick={() => onDay(iso)}>
+                <button
+                  key={iso}
+                  type="button"
+                  className={cls.join(" ")}
+                  aria-pressed={iso === center}
+                  aria-current={iso === today ? "date" : undefined}
+                  onClick={() => onDay(iso)}
+                >
                   <strong>
                     {DOW_SHORT[d.getDay()]} <span className="nut-dnum">{d.getDate()}</span>
                   </strong>
                   {p?.mdTag ? <span className="md-tag">{p.mdTag}</span> : null}
-                  {p?.matchOpponent ? <span className="muted">vs {p.matchOpponent}</span> : null}
+                  {p?.matchOpponent ? <span className="nut-week-vs">vs {p.matchOpponent}</span> : null}
                 </button>
               );
             })}
@@ -632,7 +649,11 @@ function DishCell({
           </span>
         </>
       ) : (
-        <span className="nut-week-add" aria-hidden="true">+</span>
+        <span className="nut-week-add" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <path d="M7 2v10M2 7h10" />
+          </svg>
+        </span>
       )}
     </button>
   );
@@ -683,6 +704,7 @@ function MonthCalendar({
             type="button"
             className={cls.join(" ")}
             aria-label={`${formatLongDate(d)}: ${meals === null ? "cargando" : count ? `${count} de ${MEAL_SLOTS.length} platos` : "sin platos"}`}
+            aria-current={iso === today ? "date" : undefined}
             onClick={() => onOpen(iso)}
           >
             <span className="nut-month-top">

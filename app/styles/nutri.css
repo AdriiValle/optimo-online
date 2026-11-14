@@ -1,7 +1,32 @@
-/* —— Nutricionista: workspace clínico desktop (≥1280px); debajo, flujo v1 apilado —— */
+/* —— Nutricionista (Amanda) ——
+   <1280: pila de navegación (la lista es una pantalla; el deportista se abre encima con «atrás»).
+   ≥1280: toolbar + sidebar (calendario + deportistas) + zona de trabajo fluida con tarjetas. */
 .nut-ws-list, .nut-week { display: none; }
-.nut-ws-cal, .nut-ws-main, .nut-ws-mobile-menu { display: flex; flex-direction: column; gap: 8px; }
-.nut-ws-mobile-menu { gap: 12px; }
+.nut-desktop { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.nut-ws-cal, .nut-ws-main, .nut-ws-mobile-menu { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.nut-ws-mobile-menu { gap: var(--space-4); }
+/* El hueco lo marca el gap de la pila: sin margen extra en mis tarjetas. */
+.nut-ws-cal > .card, .nut-ws-mobile-menu > .card { margin-bottom: 0; }
+.nut-ws-title, .nut-index-title {
+  margin: 0;
+  font: var(--t-large-title);
+  letter-spacing: var(--ls-large-title);
+  color: var(--label);
+  overflow-wrap: anywhere;
+}
+.nut-ws-cal-note {
+  margin: 0;
+  padding: 0 var(--space-1);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+.nut-day-stack-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-3); }
+.nut-day-stack-head h2 { margin: 0; font: var(--t-title-3); letter-spacing: var(--ls-title-3); color: var(--label); }
+.nut-day-stack-head p { margin: 0; font: var(--t-subhead); letter-spacing: var(--ls-subhead); color: var(--label-secondary); }
+.nut-index-list { margin-top: 0; }
+.nut-index-placeholder { display: none; }
+.nut-index-empty { background: var(--surface); border-radius: var(--radius-lg); }
 
 /* Modal de comida / cuenta: sheet clínico (superficie opaca). Móvil anclado abajo; ≥720 centrado. */
 .nut-modal-root {
@@ -180,201 +205,265 @@ body.nut-modal-open { overflow: hidden; }
 .nut-ficha .nut-macro-dot--f { background: var(--macro-f); }
 
 @media (min-width: 1280px) {
-  .page.nut-page { max-width: none; width: 100%; padding-left: 24px; padding-right: 24px; padding-bottom: 16px; }
-  /* Workspace a alto fijo de viewport: rail + zona de trabajo caben sin scroll de página. */
+  /* Workspace a alto de viewport, pegado a la toolbar: sidebar y zona de trabajo hacen scroll por su cuenta. */
+  .page.nut-page { max-width: none; width: 100%; margin: 0; padding: 0; }
   .nut-desktop {
-    --nut-top: calc(var(--header-offset) + var(--header-block) + var(--header-gap));
     display: grid;
-    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
     grid-template-areas: "list main";
     grid-template-rows: minmax(0, 1fr);
-    gap: 16px;
-    align-items: stretch;
-    height: calc(100vh - var(--nut-top) - 16px);
-    height: calc(100dvh - var(--nut-top) - 16px);
+    gap: 0;
+    margin-top: calc(-1 * var(--header-gap));
+    height: calc(100vh - var(--header-offset) - var(--header-block));
+    height: calc(100dvh - var(--header-offset) - var(--header-block));
   }
-  .nut-ws-index { grid-area: main; max-width: 720px; }
-  .nut-ws-index .athlete-list { display: none; }
+  /* En el workspace el contexto lo dan la toolbar y la sidebar: el h1 queda solo para lectores de pantalla. */
+  .nut-ws-title, .nut-index-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .nut-ws-mobile-menu, .nut-ws-main > .nut-ws-cal, .nut-index-count, .nut-index-list { display: none; }
 
+  /* —— Sidebar —— */
+  .nut-ws-list {
+    grid-area: list;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--surface-sidebar);
+    border-right: 1px solid var(--separator-soft);
+  }
+  .nut-ws-list-above {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-3) 0;
+  }
+  /* Calendario compartido (player.css): versión compacta dentro de la sidebar. */
+  .nut-ws-list-above .cal-compact {
+    margin: 0;
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: none;
+  }
+  .nut-ws-list-above .cal-compact--month .cal-day { min-height: 40px; }
+  .nut-ws-list-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-3);
+  }
+  .nut-ws-list-body h2 {
+    margin: 0;
+    padding: 0 var(--space-2);
+    font: var(--t-footnote);
+    font-weight: 600;
+    letter-spacing: var(--ls-footnote);
+    color: var(--label-secondary);
+  }
+  .nut-ws-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--fill-tertiary);
+    color: var(--label-secondary);
+  }
+  .nut-ws-search:focus-within { outline: var(--focus-ring); outline-offset: 0; }
+  .nut-ws-search svg { flex-shrink: 0; width: 15px; height: 15px; }
+  .nut-ws-search input,
+  .nut-ws-search input:focus {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    min-height: 36px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    outline: none;
+    font: var(--t-subhead);
+    letter-spacing: var(--ls-subhead);
+    color: var(--label);
+  }
+  .nut-ws-search input::-webkit-search-decoration { -webkit-appearance: none; }
+  .nut-ws-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  .nut-ws-list a {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: center;
+    min-height: var(--tap-min);
+    padding: 6px var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--label);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+  .nut-ws-list a:hover { background: var(--fill-quaternary); }
+  .nut-ws-list a:active { transform: scale(var(--press-scale-lg)); }
+  .nut-ws-list a.on, .nut-ws-list a.on:hover { background: var(--accent); color: var(--on-accent); }
+  .nut-ws-list a.on .nut-ws-list-sub { color: var(--on-accent); }
+  .nut-ws-list a:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  .nut-ws-list .avatar { width: 32px; height: 32px; }
+  .nut-ws-list a > span { display: flex; flex-direction: column; min-width: 0; }
+  .nut-ws-list a strong {
+    font: var(--t-subhead);
+    font-weight: 600;
+    letter-spacing: var(--ls-subhead);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .nut-ws-list-sub {
+    font: var(--t-footnote);
+    letter-spacing: var(--ls-footnote);
+    color: var(--label-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .nut-ws-list-note { margin: 0; padding: var(--space-2); font: var(--t-footnote); color: var(--label-secondary); }
+
+  /* —— Zona de trabajo —— */
   .nut-ws-main {
     grid-area: main;
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
-    gap: 16px;
     min-width: 0;
     min-height: 0;
+    margin: var(--space-4) var(--space-6) var(--space-6);
+  }
+  /* Índice: el panel derecho invita a elegir deportista. */
+  .nut-ws-index {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    margin: var(--space-4) var(--space-6) var(--space-6);
+  }
+  .nut-ws-index > .state {
+    display: grid;
+    flex: 1;
+    align-content: center;
+    margin: 0;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
   }
 
-  .nut-ws-mobile-menu { display: none; }
-
-  .nut-desktop .card {
+  .nut-week {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin: 0;
+    padding: var(--space-4);
+    border: 0;
+    border-radius: var(--radius-lg);
     background: var(--surface);
+    box-shadow: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    border: 1px solid var(--line);
-    box-shadow: var(--shadow-sm);
-    padding: 12px 14px;
-    margin-bottom: 0;
   }
-
-  .nut-ws-list {
-    grid-area: list;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    padding: 0;
-    background: var(--fill-secondary);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  .nut-ws-list-body {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    padding: 12px 8px;
-  }
-  .nut-ws-list-body ul { flex: 1; min-height: 0; overflow-y: auto; }
-  /* Campo de búsqueda HIG: lupa a la izquierda, 36px, radio de control. Lupa = --secondary (#86868B). */
-  .nut-ws-search {
-    width: 100%;
-    min-height: 36px;
-    margin: 0 0 8px;
-    padding: 7px 10px 7px 32px;
-    font-size: 0.8125rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2386868B' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 11px center;
-  }
-  .nut-ws-search:focus { border-color: transparent; }
-  .nut-ws-list-above {
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 10px 10px 12px;
-    border-bottom: 1px solid var(--line);
-    background: var(--surface);
-  }
-  /* El calendario ya vive en la superficie del rail: sin segundo marco. */
-  .nut-ws-list-above .card { padding: 0; border: 0; box-shadow: none; background: transparent; }
-  .nut-ws-list-above > p { margin: 0; padding: 0 4px; font-size: 0.75rem; }
-
-  .nut-ws-list h2 {
-    padding: 0 8px 8px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--secondary);
-  }
-  .nut-ws-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-  .nut-ws-list a {
-    display: grid;
-    grid-template-columns: 32px minmax(0, 1fr);
-    gap: 10px;
-    align-items: center;
-    min-height: 44px;
-    padding: 6px 8px;
-    border-radius: var(--radius-sm);
-    color: inherit;
-    text-decoration: none;
-    font-size: 0.8125rem;
-    line-height: 1.3;
-    transition: transform var(--dur) var(--ease), background var(--dur) ease;
-  }
-  .nut-ws-list a:hover { background: var(--bg); }
-  .nut-ws-list a:active { transform: scale(var(--press-scale-lg)); transition-duration: var(--dur-press); }
-  .nut-ws-list a.on { background: var(--surface); box-shadow: var(--shadow-sm); }
-  .nut-ws-list a:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
-  .nut-ws-list .avatar { width: 32px; height: 32px; }
-  .nut-ws-list a > span { display: flex; flex-direction: column; min-width: 0; }
-  .nut-ws-list a strong, .nut-ws-list a .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .nut-ws-list a .muted { font-size: 0.75rem; }
-  .nut-ws-list > p { margin: 0; padding: 0 8px; font-size: 0.8125rem; }
-
-  .nut-ws-main > .nut-ws-cal { display: none; }
-
-  .nut-week { display: flex; flex-direction: column; min-height: 0; }
   /* Rejilla / lista / mes ocupan el alto libre; el resumen va debajo a su alto natural. */
   .nut-week-grid, .nut-day-layout, .nut-month { flex: 1; min-height: 0; }
-  /* Toolbar: título a la izquierda, segmentado al centro, paso + import a la derecha. Todo a 32px. */
+  /* Toolbar: paso + título a la izquierda, segmentado al centro, acciones a la derecha. */
   .nut-toolbar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
     flex-shrink: 0;
   }
+  .nut-toolbar-start { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
   .nut-toolbar h2 {
-    font-size: 1.0625rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    font-variant-numeric: tabular-nums;
+    margin: 0;
     min-width: 0;
+    font: var(--t-title-2);
+    letter-spacing: var(--ls-title-2);
+    color: var(--label);
+    font-variant-numeric: tabular-nums;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
   .nut-toolbar h2::first-letter { text-transform: uppercase; }
-  .nut-toolbar-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-  .nut-stepper { display: inline-flex; gap: 4px; }
-  .nut-stepper .icon-btn { width: 32px; height: 32px; font-size: 1.0625rem; }
-  .nut-toolbar .nut-menu-import {
-    min-height: 32px;
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
-    font-size: 0.8125rem;
-    white-space: nowrap;
-  }
-  .nut-week-grid {
-    display: grid;
-    grid-template-columns: 76px repeat(7, minmax(0, 1fr));
-    gap: 4px;
-    font-size: 0.78rem;
-  }
-  .nut-week-row { display: contents; }
-  /* Segmentado HIG: pista gris, pulgar blanco con sombra; radios concéntricos (10 − 2 = 8). */
-  .nut-view-switch {
-    display: inline-grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
-    gap: 2px;
-    padding: 2px;
-    border-radius: var(--radius-sm);
-    background: var(--fill-secondary);
-  }
-  .nut-view-btn {
-    font: inherit;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--text);
-    cursor: pointer;
+  .nut-stepper { display: inline-flex; flex-shrink: 0; gap: 2px; }
+  .nut-step-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--tap-min);
+    height: var(--tap-min);
+    padding: 0;
     border: 0;
+    border-radius: 50%;
     background: transparent;
-    min-height: 28px;
-    min-width: 72px;
-    padding: 4px 12px;
-    border-radius: 8px;
-    transition: transform var(--dur) var(--ease), background var(--dur) ease, box-shadow var(--dur) ease;
+    color: var(--accent-text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
   }
-  .nut-view-btn:hover:not(.on) { background: var(--glass); }
-  .nut-view-btn:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
-  .nut-view-btn:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
-  .nut-view-btn.on { background: var(--surface); font-weight: 600; box-shadow: var(--shadow-sm); }
+  .nut-step-btn:hover { background: var(--fill-quaternary); }
+  .nut-step-btn:active { transform: scale(var(--press-scale)); }
+  .nut-step-btn:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  .nut-step-btn svg { width: 18px; height: 18px; }
+  .nut-view-switch { min-width: 264px; }
+  /* 1280–1439: la zona es estrecha; título y segmentado ceden para que la fecha se lea entera. */
+  @media (max-width: 1439px) {
+    .nut-toolbar { grid-template-columns: minmax(0, 1fr) auto auto; }
+    .nut-toolbar h2 { font: var(--t-title-3); letter-spacing: var(--ls-title-3); }
+    .nut-view-switch { min-width: 240px; }
+  }
+  .nut-toolbar-end { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); min-width: 0; }
+  .nut-toolbar-end .btn { white-space: nowrap; }
+  /* Ratón: controles de toolbar compactos (32 px). Táctil conserva 44 px. */
+  @media (pointer: fine) {
+    .nut-step-btn { width: var(--tap-compact); height: var(--tap-compact); }
+    .nut-ws-list-above .cal-nav .cal-step { width: var(--tap-compact); height: var(--tap-compact); min-height: 0; }
+    .nut-toolbar-end .btn {
+      min-height: var(--tap-compact);
+      padding: 0 var(--space-3);
+      border-radius: var(--radius-sm);
+      font: var(--t-footnote);
+      font-weight: 600;
+      letter-spacing: var(--ls-footnote);
+    }
+  }
+
+  .nut-week-grid { display: grid; gap: var(--space-1); font: var(--t-footnote); }
+  .nut-week-row { display: contents; }
   /* Día: lista de franjas (izq.) + resumen del día (dcha.). */
   .nut-day-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
-    gap: 20px;
+    gap: var(--space-5);
     align-items: stretch;
   }
-  .nut-day-list { display: flex; flex-direction: column; gap: 4px; min-height: 0; font-size: 0.8125rem; }
-  .nut-day-row { flex: 3 1 0; display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; min-height: 56px; }
+  .nut-day-list { display: flex; flex-direction: column; gap: var(--space-1); min-height: 0; font: var(--t-footnote); }
+  .nut-day-row { flex: 3 1 0; display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: var(--space-2); min-height: 56px; }
   .nut-day-row--snack { flex: 2 1 0; min-height: 40px; }
   .nut-day-row--thin { flex: 0 0 24px; min-height: 24px; }
+  @media (pointer: coarse) { .nut-day-row--thin { flex-basis: var(--tap-min); min-height: var(--tap-min); } }
   .nut-day-row .nut-week-cell { min-height: 0; padding: 6px 10px; }
   .nut-dash.nut-dash--side {
     display: flex;
@@ -384,118 +473,121 @@ body.nut-modal-open { overflow: hidden; }
     border-left: 1px solid var(--line);
   }
   .nut-dash--side .nut-dash-main { gap: 12px 16px; }
-  /* Mes: calendario a ancho de zona; un punto por franja (relleno = con plato). */
+  /* Mes: calendario a ancho de zona; un punto por franja (relleno = con plato, color = proteína). */
   .nut-month {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     grid-template-rows: auto;
     grid-auto-rows: minmax(44px, 1fr);
-    gap: 4px;
-    font-size: 0.8125rem;
+    gap: var(--space-1);
+    font: var(--t-footnote);
   }
   .nut-month-dow {
-    padding: 0 0 4px;
-    font-size: 0.6875rem;
+    padding: 0 0 var(--space-1);
+    font: var(--t-caption);
     font-weight: 600;
-    color: var(--secondary);
+    color: var(--label-secondary);
     text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
   }
   .nut-month-day {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 4px;
+    gap: var(--space-1);
     min-width: 0;
     min-height: 0;
-    padding: 6px 8px 8px;
+    padding: 6px var(--space-2) var(--space-2);
     font: inherit;
-    color: inherit;
+    color: var(--label);
     text-align: left;
     cursor: pointer;
     border: 0;
     border-radius: var(--radius-sm);
     background: var(--surface);
-    box-shadow: inset 0 0 0 1px var(--line);
+    box-shadow: inset 0 0 0 1px var(--separator-soft);
     -webkit-tap-highlight-color: transparent;
-    transition: transform var(--dur) var(--ease), background var(--dur) ease, box-shadow var(--dur) ease;
+    transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
   }
-  .nut-month-day:hover { box-shadow: inset 0 0 0 1px var(--secondary); }
-  .nut-month-day:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+  .nut-month-day:hover { background: var(--fill-quaternary); }
+  .nut-month-day:active { transform: scale(var(--press-scale)); }
   .nut-month-day:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
   .nut-month-day.empty { background: var(--bg); box-shadow: none; }
-  .nut-month-day.empty:hover { background: var(--fill-secondary); }
-  .nut-month-day.on, .nut-month-day.on:hover { box-shadow: inset 0 0 0 1.5px var(--text); }
-  .nut-month-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .nut-month-day.empty:hover { background: var(--fill-tertiary); }
+  .nut-month-day.on, .nut-month-day.on:hover { box-shadow: inset 0 0 0 2px var(--accent); }
+  .nut-month-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-1); font-weight: 600; font-variant-numeric: tabular-nums; }
   .nut-month-top .nut-dnum { margin-left: -4px; }
-  .nut-month-top .md-tag { font-size: 0.625rem; font-weight: 600; color: var(--secondary); }
+  .nut-month-top .md-tag { font: var(--t-caption-2); font-weight: 600; color: var(--label-secondary); }
   .nut-month-dots { display: flex; gap: 3px; }
-  .nut-month-dots i { width: 6px; height: 6px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--secondary); opacity: 0.5; }
-  .nut-month-dots i.on { background: var(--text); box-shadow: none; opacity: 1; }
+  .nut-month-dots i { width: 6px; height: 6px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--label-tertiary); }
+  .nut-month-dots i.on { background: var(--label); box-shadow: none; }
   .nut-month-dots i.on[class*="nut-cat--"] { background: var(--cat-ink); }
-  /* Hoy: número en cápsula oscura (mismo gesto que Calendario de Apple, sin color nuevo). */
+  /* Hoy: número en cápsula oscura. La selección es del acento. */
   .nut-dnum {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.6em;
-    height: 1.6em;
+    min-width: 1.75em;
+    height: 1.75em;
     padding: 0 4px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
+    font-variant-numeric: tabular-nums;
   }
-  .nut-month-day.today .nut-dnum, .nut-week-day.today .nut-dnum { background: var(--text); color: var(--surface); }
+  .nut-month-day.today .nut-dnum, .nut-week-day.today .nut-dnum { background: var(--label); color: var(--surface); }
   .nut-week-day, .nut-week-cell {
     font: inherit;
-    color: inherit;
+    color: var(--label);
     text-align: left;
     cursor: pointer;
     min-width: 0;
     border-radius: var(--radius-sm);
     -webkit-tap-highlight-color: transparent;
-    transition: transform var(--dur) var(--ease), background var(--dur) ease, border-color var(--dur) ease;
+    transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
   }
-  .nut-week-day:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
-  .nut-week-cell:active { transform: scale(var(--press-scale-lg)); transition-duration: var(--dur-press); }
+  .nut-week-day:active { transform: scale(var(--press-scale)); }
+  .nut-week-cell:active { transform: scale(var(--press-scale-lg)); }
   .nut-week-day {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-    min-height: 44px;
-    padding: 6px 8px;
+    min-height: var(--tap-min);
+    padding: 6px var(--space-2);
     border: 0;
     background: transparent;
   }
-  .nut-week-day:hover { background: var(--bg); }
-  .nut-week-day strong { font-size: 0.8125rem; font-weight: 600; text-transform: capitalize; font-variant-numeric: tabular-nums; }
-  .nut-week-day .md-tag { font-size: 0.6875rem; font-weight: 600; color: var(--secondary); }
-  .nut-week-day .muted { max-width: 100%; font-size: 0.6875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .nut-week-day.on { background: var(--fill-secondary); }
+  .nut-week-day:hover { background: var(--fill-quaternary); }
+  .nut-week-day strong { font: var(--t-footnote); font-weight: 600; text-transform: capitalize; font-variant-numeric: tabular-nums; }
+  .nut-week-day .md-tag { font: var(--t-caption-2); font-weight: 600; color: var(--label-secondary); }
+  .nut-week-vs { max-width: 100%; font: var(--t-caption-2); color: var(--label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nut-week-day.on, .nut-week-day.on:hover { background: var(--accent-tint); color: var(--accent-text); }
+  .nut-week-day.on .md-tag, .nut-week-day.on .nut-week-vs { color: var(--accent-text); }
   .nut-week-slot {
     display: flex;
     align-items: center;
-    font-size: 0.75rem;
+    min-width: 0;
+    padding-right: var(--space-1);
+    font: var(--t-caption);
     font-weight: 600;
-    color: var(--secondary);
+    color: var(--label-secondary);
   }
-  /* Celda con plato = superficie con filete; vacía = hueco gris sin borde y «+» al pasar. */
+  .nut-week-slot--snack { font: var(--t-caption-2); font-weight: 600; }
+  /* Celda con plato = tarjeta teñida; vacía = hueco gris sin borde con «+» (al pasar; siempre en táctil). */
   .nut-week-cell {
     display: flex;
     align-items: center;
-    gap: 8px;
-    min-height: 44px;
-    padding: 4px 6px;
+    gap: var(--space-2);
+    min-height: var(--tap-min);
+    padding: var(--space-1) 6px;
     border: 0;
     background: var(--surface);
-    box-shadow: inset 0 0 0 1px var(--line);
+    box-shadow: inset 0 0 0 1px var(--separator-soft);
     line-height: 1.3;
   }
-  .nut-week-cell:hover { box-shadow: inset 0 0 0 1px var(--secondary); }
+  .nut-week-cell:hover { box-shadow: inset 0 0 0 1px var(--label-tertiary); }
   .nut-week-cell.empty { background: var(--bg); box-shadow: none; }
+  .nut-week-cell.empty:hover { background: var(--fill-tertiary); }
   .nut-week-cell.empty.col-on { background: var(--fill-secondary); }
-  .nut-week-cell.empty:hover { background: var(--fill-secondary); }
-  .nut-week-cell.on, .nut-week-cell.on:hover { box-shadow: inset 0 0 0 1.5px var(--text); }
+  .nut-week-cell.on, .nut-week-cell.on:hover { box-shadow: inset 0 0 0 2px var(--accent); }
   /* Plato = tarjeta teñida por su proteína con filete izquierdo en tinta. */
   .nut-week-cell.nut-cat {
     align-items: flex-start;
@@ -504,23 +596,25 @@ body.nut-modal-open { overflow: hidden; }
     box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink);
   }
   .nut-week-cell.nut-cat:hover { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1px var(--cat-ink); }
-  .nut-week-cell.nut-cat.on, .nut-week-cell.nut-cat.on:hover { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1.5px var(--text); }
+  .nut-week-cell.nut-cat.on, .nut-week-cell.nut-cat.on:hover { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 2px var(--accent); }
   /* Franja sin platos en la semana: fila fina, hueco transparente y «+» al pasar. */
   .nut-week-cell.thin { min-height: 0; padding-top: 0; padding-bottom: 0; }
   .nut-week-cell.thin.empty { background: transparent; }
-  .nut-week-cell.thin.empty:hover, .nut-week-cell.thin.empty.col-on { background: var(--fill-secondary); }
+  .nut-week-cell.thin.empty:hover, .nut-week-cell.thin.empty.col-on { background: var(--fill-tertiary); }
   .nut-week-add {
+    display: inline-flex;
     margin: auto;
-    font-size: 1rem;
     line-height: 1;
-    color: var(--secondary);
+    color: var(--label-tertiary);
     opacity: 0;
-    transition: opacity var(--dur) ease;
+    transition: opacity var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
   }
   .nut-week-cell:hover .nut-week-add,
   .nut-week-cell:focus-visible .nut-week-add,
   .nut-week-cell.on .nut-week-add,
   .nut-week-cell.col-on .nut-week-add { opacity: 1; }
+  .nut-week-cell:hover .nut-week-add, .nut-week-cell.on .nut-week-add { color: var(--accent-text); }
+  @media (hover: none) { .nut-week-add { opacity: 1; } }
   .nut-week-day:focus-visible, .nut-week-cell:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
   /* Resumen en una franja: cabecera + nota arriba; anillos principales | micros abajo. */
   .nut-dash {
@@ -596,18 +690,20 @@ body.nut-modal-open { overflow: hidden; }
   .nut-dash--side .nut-dash-goal { justify-content: space-between; }
   .nut-dash--side { flex-direction: column; align-items: stretch; gap: 10px; }
   .nut-dash--side > .muted { text-align: left; }
-  .nut-week-cell img { width: 36px; height: 36px; flex-shrink: 0; object-fit: cover; border-radius: 6px; }
+  .nut-week-cell img { width: 36px; height: 36px; flex-shrink: 0; object-fit: cover; border-radius: var(--radius-xs); }
   .nut-dish { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .nut-dish-head {
+    font: var(--t-footnote);
     font-weight: 600;
-    letter-spacing: -0.01em;
+    letter-spacing: var(--ls-footnote);
+    color: var(--label);
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
-  /* --secondary sobre tint no llega a 4.5:1: la línea secundaria va en --accent-hover. */
-  .nut-dish-rest { font-size: 0.6875rem; color: var(--accent-hover); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Texto secundario sobre tinte: --label-on-tint (4.5:1). */
+  .nut-dish-rest { font: var(--t-caption); color: var(--label-on-tint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* Celda alta (franjas vacías colapsadas): el plato se lee entero en vez de dejar hueco. */
   .nut-week-cell.nut-cat { container-type: size; }
   @container (min-height: 96px) {
@@ -615,20 +711,8 @@ body.nut-modal-open { overflow: hidden; }
     .nut-dish-head { -webkit-line-clamp: 3; }
     .nut-dish-rest { display: -webkit-box; white-space: normal; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
   }
-
-  .nut-week-row--snack .nut-week-slot--snack {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    color: var(--secondary);
-    text-transform: none;
-    letter-spacing: 0;
-    line-height: 1.2;
-  }
-  .nut-week-cell--snack {
-    min-height: 32px;
-    padding: 3px 6px;
-    font-size: 0.72rem;
-  }
+  .nut-week-cell--snack { min-height: 32px; padding: 3px 6px; }
+  .nut-week-cell--snack .nut-dish-head { font: var(--t-caption); font-weight: 600; }
 
   .nut-modal .nut-details { background: transparent; border: 0; box-shadow: none; }
   .nut-modal .meal-form .nut-menu-photo { max-height: 260px; border-radius: var(--radius-sm); }
@@ -664,4 +748,18 @@ body.nut-modal-open { overflow: hidden; }
   .nut-drawer-head .icon-btn { flex-shrink: 0; }
   .nut-drawer-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 20px; }
   .nut-drawer .nut-actions .btn { min-height: 44px; }
+}
+
+/* —— Preferencias del sistema (solo clases de este workspace) —— */
+@media (prefers-reduced-motion: reduce) {
+  .nut-ws-list a, .nut-step-btn, .nut-week-day, .nut-week-cell, .nut-month-day, .nut-week-add { transition: none; }
+  .nut-ws-list a:active, .nut-step-btn:active, .nut-week-day:active, .nut-week-cell:active, .nut-month-day:active { transform: none; }
+}
+/* Sin materiales translúcidos en este workspace (tarjetas y sidebar opacas): nada que ajustar con reduced-transparency. */
+@media (prefers-contrast: more) {
+  .nut-ws-list { border-right-color: var(--separator); }
+  .nut-ws-search { box-shadow: inset 0 0 0 1px var(--separator); }
+  .nut-month-day:not(.on), .nut-week-cell.empty:not(.on) { box-shadow: inset 0 0 0 1px var(--separator); }
+  .nut-ws-cal-note, .nut-ws-list-sub, .nut-week-slot, .nut-week-vs, .nut-month-dow, .nut-week-day .md-tag { color: var(--label); }
+  .nut-week-add { opacity: 1; color: var(--label-secondary); }
 }

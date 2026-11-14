@@ -12,7 +12,7 @@ type Props = {
   above?: ReactNode;
 };
 
-/** Lista persistente de deportistas asignados (columna izquierda del workspace desktop ≥1280px). */
+/** Sidebar de deportistas asignados (workspace desktop ≥1280px): selección de macOS/iPadOS. */
 export function NutAthleteNav({ athletes, activeId, above }: Props) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
@@ -23,19 +23,24 @@ export function NutAthleteNav({ athletes, activeId, above }: Props) {
       <div className="nut-ws-list-body">
         <h2>Deportistas</h2>
         {athletes.length > 0 ? (
-          <input
-            type="search"
-            className="nut-ws-search"
-            placeholder="Buscar deportista"
-            aria-label="Buscar deportista por nombre"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+          <div className="nut-ws-search">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input
+              type="search"
+              placeholder="Buscar"
+              aria-label="Buscar deportista por nombre"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
         ) : null}
         {athletes.length === 0 ? (
-          <p className="muted">Aún no tienes deportistas asignados.</p>
+          <p className="nut-ws-list-note">Aún no tienes deportistas asignados.</p>
         ) : shown.length === 0 ? (
-          <p className="muted">Sin resultados.</p>
+          <p className="nut-ws-list-note">Sin resultados para «{query.trim()}».</p>
         ) : (
           <ul>
             {shown.map((a) => (
@@ -48,7 +53,7 @@ export function NutAthleteNav({ athletes, activeId, above }: Props) {
                   <img className="avatar" src={athletePhoto(a)} alt="" />
                   <span>
                     <strong>{a.name}</strong>
-                    <span className="muted">{sportLine(a)}</span>
+                    <span className="nut-ws-list-sub">{sportLine(a)}</span>
                   </span>
                 </Link>
               </li>
