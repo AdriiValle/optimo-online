@@ -1,6 +1,6 @@
 "use client";
 
-import { dateKey, DOW_ES, MONTHS_ES } from "@/lib/dates";
+import { addDays, dateKey, DOW_ES, DOW_FULL, MONTHS_ES, parseDateLocal } from "@/lib/dates";
 import { LOAD_TINT_FROM, loadClassForDay } from "@/lib/plan";
 import type { DayPlan } from "@/lib/types";
 
@@ -17,6 +17,16 @@ const VENUE_SVG = {
   )
 };
 
+function Chevron({ dir }: { dir: "left" | "right" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={dir === "left" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"} />
+    </svg>
+  );
+}
+
+export type CalendarView = "week" | "month";
+
 type Props = {
   byDate: Record<string, DayPlan>;
   crests: Record<string, string>;
@@ -26,42 +36,74 @@ type Props = {
   today: string;
   onMonthChange: (year: number, month: number) => void;
   onSelect: (iso: string) => void;
+  /** Con `view` + `onViewChange` el calendario es una cinta semanal que se despliega a mes (jugador). Sin ellos, mes fijo (nutricionista). */
+  view?: CalendarView;
+  onViewChange?: (view: CalendarView) => void;
 };
 
-/** Calendario mensual MD/partidos/carga (ficha deportista y vista nutricionista). */
-export function PlanCalendar({ byDate, crests, year, month, center, today, onMonthChange, onSelect }: Props) {
+/** Calendario MD/partidos/carga (ficha deportista y vista nutricionista). */
+export function PlanCalendar({ byDate, crests, year, month, center, today, onMonthChange, onSelect, view, onViewChange }: Props) {
+  const collapsible = view !== undefined && onViewChange !== undefined;
+  const mode: CalendarView = collapsible ? view : "month";
+  const centerDate = parseDateLocal(center);
+  const navYear = mode === "week" ? centerDate.getFullYear() : year;
+  const navMonth = mode === "week" ? centerDate.getMonth() : month;
+  const cells = mode === "week" ? weekCells(center) : monthCells(year, month);
+  const title = `${MONTHS_ES[navMonth]} ${navYear}`;
+  const hasPlan = cells.some((c) => c && byDate[dateKey(c)]);
+
+  const step = (dir: -1 | 1) => {
+    if (mode === "week") {
+      onSelect(dateKey(addDays(centerDate, dir * 7)));
+      return;
+    }
+    if (dir === -1) {
+      if (month === 0) onMonthChange(year - 1, 11);
+      else onMonthChange(year, month - 1);
+    } else if (month === 11) onMonthChange(year + 1, 0);
+    else onMonthChange(year, month + 1);
+  };
+  const stepLabel = mode === "week" ? ["Semana anterior", "Semana siguiente"] : ["Mes anterior", "Mes siguiente"];
+
   return (
-    <section className="card cal-compact" aria-label="Calendario">
+    <section className={`card cal-compact cal-compact--${mode}`} aria-label="Calendario">
       <div className="cal-nav">
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label="Mes anterior"
-          onClick={() => (month === 0 ? onMonthChange(year - 1, 11) : onMonthChange(year, month - 1))}
-        >
-          ‹
+        {collapsible ? (
+          <button
+            type="button"
+            className="cal-title"
+            aria-expanded={mode === "month"}
+            onClick={() => onViewChange(mode === "week" ? "month" : "week")}
+          >
+            <span className="cal-title-text">{title}</span>
+            <span className="sr-only">{mode === "week" ? ", ver mes" : ", ver semana"}</span>
+            <Chevron dir="right" />
+          </button>
+        ) : (
+          <h2 className="cal-title">{title}</h2>
+        )}
+        <span className="cal-nav-spacer" />
+        {collapsible && center !== today ? (
+          <button type="button" className="cal-today" onClick={() => onSelect(today)}>
+            Hoy
+          </button>
+        ) : null}
+        <button type="button" className="icon-btn cal-step" aria-label={stepLabel[0]} onClick={() => step(-1)}>
+          <Chevron dir="left" />
         </button>
-        <h2>
-          {MONTHS_ES[month]} {year}
-        </h2>
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label="Mes siguiente"
-          onClick={() => (month === 11 ? onMonthChange(year + 1, 0) : onMonthChange(year, month + 1))}
-        >
-          ›
+        <button type="button" className="icon-btn cal-step" aria-label={stepLabel[1]} onClick={() => step(1)}>
+          <Chevron dir="right" />
         </button>
       </div>
-      <div className="cal-grid">
+      <div className="cal-grid" aria-hidden="true">
         {DOW_ES.map((d) => (
           <div key={d} className="cal-dow">
             {d}
           </div>
         ))}
       </div>
-      <div className="cal-grid">
-        {monthCells(year, month).map((cell, i) => {
+      <div className="cal-grid cal-days" key={`${mode}-${mode === "week" ? dateKey(cells[0] as Date) : `${year}-${month}`}`}>
+        {cells.map((cell, i) => {
           if (!cell) return <div key={`e-${i}`} className="cal-day empty" />;
           const iso = dateKey(cell);
           const p = byDate[iso];
@@ -74,22 +116,50 @@ export function PlanCalendar({ byDate, crests, year, month, center, today, onMon
             if (load) cls.push(load);
           }
           const crest = p?.matchOpponent ? crests[p.matchOpponent] : null;
+          const label = [
+            `${DOW_FULL[cell.getDay()]} ${cell.getDate()} de ${MONTHS_ES[cell.getMonth()].toLowerCase()}`,
+            iso === today ? "hoy" : null,
+            p?.mdTag ?? null,
+            p?.matchOpponent ? `partido contra ${p.matchOpponent}${p.matchVenue ? (p.matchVenue === "casa" ? ", en casa" : ", fuera") : ""}` : null
+          ]
+            .filter(Boolean)
+            .join(", ");
           return (
-            <button key={iso} type="button" className={cls.join(" ")} onClick={() => onSelect(iso)}>
-              {p?.mdTag ? <span className="md-tag">{p.mdTag}</span> : null}
-              <span className="day-num">{cell.getDate()}</span>
+            <button
+              key={iso}
+              type="button"
+              className={cls.join(" ")}
+              aria-label={label}
+              aria-pressed={iso === center}
+              onClick={() => onSelect(iso)}
+            >
+              <span className="cal-num">{cell.getDate()}</span>
+              <span className="cal-meta">
+                {crest ? (
+                  <img className="crest" src={crest} alt="" />
+                ) : p?.mdTag ? (
+                  <span className="md-tag">{p.mdTag}</span>
+                ) : null}
+              </span>
               {p?.matchVenue ? <span className="venue-icon">{VENUE_SVG[p.matchVenue]}</span> : null}
-              {crest ? (
-                <span className="crest-wrap">
-                  <img className="crest" src={crest} alt={p?.matchOpponent ?? ""} />
-                </span>
-              ) : null}
             </button>
           );
         })}
       </div>
+      {collapsible && !hasPlan ? (
+        <p className="cal-empty" role="status">
+          <strong>{mode === "week" ? "Semana sin plan" : "Mes sin plan"}</strong>
+          <span>{mode === "week" ? "Aún no hay sesiones programadas para esta semana." : "Aún no hay sesiones programadas para este mes."}</span>
+        </p>
+      ) : null}
     </section>
   );
+}
+
+function weekCells(center: string) {
+  const d = parseDateLocal(center);
+  const monday = addDays(d, -((d.getDay() + 6) % 7));
+  return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 }
 
 function monthCells(year: number, month: number) {

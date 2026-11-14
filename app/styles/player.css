@@ -1,197 +1,221 @@
-.recovery-strip {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-.recovery-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-  min-width: 56px;
-  min-height: 56px;
-  padding: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--fill-secondary);
-  border-radius: var(--radius);
-}
-
+/* —— Calendario (plan-calendar.tsx): cinta semanal del jugador que se despliega a mes; mes fijo en Amanda —— */
+.cal-compact { padding: var(--space-3) var(--space-3) var(--space-4); }
 .cal-nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 12px;
+  gap: var(--space-1);
+  min-height: var(--tap-min);
+  margin: 0 0 var(--space-1);
 }
+.cal-nav-spacer { flex: 1; }
+.cal-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--label);
+  font: var(--t-headline);
+  letter-spacing: var(--ls-headline);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+h2.cal-title { padding-left: var(--space-1); }
+button.cal-title {
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+button.cal-title svg {
+  width: 14px;
+  height: 14px;
+  color: var(--accent-text);
+  transition: transform var(--dur) var(--ease-out);
+}
+button.cal-title[aria-expanded="true"] svg { transform: rotate(90deg); }
+button.cal-title:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.cal-today {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--accent-text);
+  font: var(--t-subhead);
+  font-weight: 600;
+  letter-spacing: var(--ls-subhead);
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.cal-today:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.cal-nav .cal-step {
+  background: transparent;
+  color: var(--accent-text);
+}
+.cal-nav .cal-step svg { width: 18px; height: 18px; }
+@media (hover: hover) {
+  button.cal-title:hover,
+  .cal-today:hover,
+  .cal-nav .cal-step:hover { background: var(--fill-quaternary); }
+  .cal-day:not(.empty):not(.cal-highlight):hover .cal-num { background: var(--fill-tertiary); }
+}
+
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
-  font-size: 0.8125rem;
+  gap: 2px;
   text-align: center;
 }
 .cal-dow {
-  color: var(--secondary);
+  padding: 0 0 var(--space-1);
+  color: var(--label-secondary);
+  font: var(--t-caption-2);
   font-weight: 600;
-  padding: 4px 0 8px;
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--ls-caption-2);
 }
+.cal-days { animation: cal-in var(--dur) var(--ease-out); }
+@keyframes cal-in { from { opacity: 0; } }
+
+/* Día: número en círculo (seleccionado = acento) + fila de metadatos (MD o escudo). El tinte de carga es el fondo de la celda. */
 .cal-day {
+  --cal-num: 32px;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  padding: 6px 2px 8px;
+  gap: 2px;
+  min-width: 0;
   min-height: 60px;
+  margin: 0;
+  padding: var(--space-1) 0;
+  border: none;
+  border-radius: var(--radius-md);
   background: transparent;
-  color: var(--text);
+  color: var(--label);
   font: inherit;
   cursor: pointer;
-  transition: transform var(--dur) var(--ease);
+  transition: transform var(--dur) var(--ease-out);
 }
 .cal-day:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
-.cal-day:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+.cal-day:focus-visible { outline: var(--focus-ring); outline-offset: 0; }
 .cal-day.empty { visibility: hidden; cursor: default; }
-.cal-day .md-tag {
-  position: absolute;
-  top: 5px;
-  left: 6px;
-  font-size: 9px;
-  line-height: 1;
-  font-weight: 600;
-  color: var(--secondary);
-}
-.cal-day .day-num {
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-top: 12px;
+.cal-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cal-num);
+  height: var(--cal-num);
+  border-radius: 50%;
+  font: var(--t-callout);
+  letter-spacing: var(--ls-callout);
   font-variant-numeric: tabular-nums;
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
-.cal-day .crest-wrap {
-  flex: 1;
+.cal-meta {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 28px;
-  width: 100%;
+  min-height: 18px;
+  max-width: 100%;
 }
-.cal-day .crest { max-width: 30px; max-height: 30px; object-fit: contain; }
-.cal-day.today:not(.cal-highlight)::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  box-shadow: inset 0 0 0 1.5px var(--text);
-  pointer-events: none;
+.cal-day .md-tag {
+  color: var(--label-secondary);
+  font: var(--t-caption-2);
+  font-weight: 600;
+  letter-spacing: var(--ls-caption-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.cal-day.match { background: rgba(0, 0, 0, 0.03); }
-.cal-day.load-md-plus2 { background: rgba(52, 199, 89, 0.08); }
-.cal-day.load-md-minus2 { background: rgba(52, 199, 89, 0.17); }
-.cal-day.load-md-plus1 { background: rgba(168, 187, 72, 0.21); }
-.cal-day.load-md-minus3 { background: rgba(255, 149, 0, 0.21); }
-.cal-day.load-md-minus5 { background: rgba(255, 69, 58, 0.23); }
-.cal-day.load-md-minus4 { background: rgba(255, 59, 48, 0.28); }
-.cal-day.cal-highlight {
-  background: var(--fill-secondary);
-  box-shadow: inset 0 0 0 1.5px var(--text);
-}
+.cal-day .crest { width: 18px; height: 18px; object-fit: contain; }
+.cal-day:has(.venue-icon) .cal-meta { padding-right: 12px; }
+.cal-day.today .cal-num { font-weight: 700; color: var(--accent-text); }
+.cal-day.cal-highlight .cal-num { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.cal-day.cal-highlight .md-tag { color: var(--label); }
 
-.week-tape {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-.tape-segmented {
-  flex: 1;
-  min-width: 0;
-  background: var(--fill-secondary);
-  border-radius: var(--radius);
-  padding: 4px;
-}
-.tape-strip {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 2px;
-}
-.tape-day {
+/* Carga del día (MD±n): tintes de los colores semánticos, de suave a fuerte. */
+.cal-day.match { background: var(--fill-quaternary); }
+.cal-day.load-md-plus2 { background: color-mix(in srgb, var(--ok) 8%, transparent); }
+.cal-day.load-md-minus2 { background: color-mix(in srgb, var(--ok) 16%, transparent); }
+.cal-day.load-md-plus1 { background: color-mix(in srgb, color-mix(in srgb, var(--ok) 55%, var(--warn)) 14%, transparent); }
+.cal-day.load-md-minus3 { background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.cal-day.load-md-minus5 { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.cal-day.load-md-minus4 { background: color-mix(in srgb, var(--danger) 15%, transparent); }
+
+/* Mes: celdas más bajas para que quepan seis semanas (y el carril de Amanda). */
+.cal-compact--month .cal-day { --cal-num: 28px; min-height: 48px; padding: 2px 0; gap: 0; }
+.cal-compact--month .cal-num { font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
+.cal-compact--month .cal-meta { min-height: 14px; }
+.cal-compact--month .cal-day:has(.venue-icon) .cal-meta { padding-right: 10px; }
+.cal-compact--month .cal-day .crest { width: 14px; height: 14px; }
+.cal-compact--month .venue-icon { width: 10px; height: 10px; right: 2px; bottom: 2px; }
+
+.cal-empty {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 6px 2px 8px;
-  border: none;
-  border-radius: 9px;
-  background: transparent;
-  cursor: pointer;
-  color: var(--text);
-  min-height: 76px;
-  position: relative;
-  font: inherit;
-  transition: transform var(--dur) var(--ease), opacity var(--dur) ease;
+  gap: 2px;
+  margin: var(--space-3) var(--space-1) 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--separator-soft);
 }
-.tape-day:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
-.tape-day:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
-.tape-day.side { opacity: 0.55; transform: scale(0.94); }
-.tape-day.side:active { transform: scale(calc(0.94 * var(--press-scale))); }
-.tape-day.active {
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  transform: scale(1.02);
-  min-height: 82px;
-}
-.tape-day.active:active { transform: scale(calc(1.02 * var(--press-scale))); }
-.tape-dow { font-size: 0.625rem; font-weight: 600; color: var(--secondary); letter-spacing: 0.02em; }
-.tape-num { font-size: 0.8125rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-.tape-day.active .tape-num { font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.02em; }
-.tape-day .md-tag { font-size: 9px; font-weight: 600; color: var(--secondary); margin-top: 3px; }
-.tape-day.active .md-tag { color: var(--text); }
-.tape-day .crest { max-width: 22px; max-height: 22px; }
+.cal-empty strong { font: var(--t-headline); letter-spacing: var(--ls-headline); }
+.cal-empty span { color: var(--label-secondary); font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
 
 .venue-icon {
   position: absolute;
-  top: 3px;
-  right: 4px;
-  width: 13px;
-  height: 13px;
-  color: var(--secondary);
+  right: 3px;
+  bottom: 3px;
+  width: 12px;
+  height: 12px;
+  color: var(--label-tertiary);
 }
+.venue-icon svg { display: block; width: 100%; height: 100%; }
 
-.day-focus { margin-top: 16px; }
-.day-focus-heading {
+/* —— Foco del día: fecha + Large Title + chips de MD, partido y duración —— */
+.day-focus { padding: var(--space-2) var(--space-1) 0; }
+.day-focus-date {
+  margin: 0;
+  color: var(--label-secondary);
+  font: var(--t-subhead);
+  font-weight: 600;
+  letter-spacing: var(--ls-subhead);
+}
+.day-focus-title {
+  margin: 0;
+  font: var(--t-large-title);
+  letter-spacing: var(--ls-large-title);
+}
+.day-focus-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 12px;
-  margin-bottom: 12px;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
-.day-focus h3 {
-  font-size: clamp(1.25rem, 4.5vw, 1.5rem);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-  margin: 0;
-}
-.day-focus-md {
-  padding: 5px 11px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--fill-secondary);
-  border-radius: 8px;
-}
+.day-focus-md,
+.day-focus-match,
+.day-focus-plan,
 .day-focus-duration {
-  flex-basis: 100%;
-  margin: -2px 0 0;
-  font-size: 0.875rem;
-  color: var(--secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 28px;
+  max-width: 100%;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--label);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
+.day-focus-md { font-weight: 700; }
+.day-focus-match img { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; }
+.day-focus-duration { color: var(--label-secondary); }
 
 /* Portal a body: encima del header. Móvil: sheet anclado abajo (margin-top:auto deja scrollear si no cabe). ≥720: centrado. */
 .video-embed-overlay {
@@ -277,89 +301,154 @@
   .video-embed-frame:last-child { border-radius: calc(var(--radius) - 1px); }
 }
 
-.dash { display: flex; flex-direction: column; gap: 8px; }
-.dash .card { margin-bottom: 0; padding: 10px 12px; }
+/* —— Ficha del deportista (home-client.tsx) —— */
+.dash { display: flex; flex-direction: column; gap: var(--space-3); }
+.dash .card { margin-bottom: 0; }
 .dash-head {
   display: grid;
-  grid-template-columns: 36px 1fr auto;
-  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
   align-items: center;
 }
-.dash-photo { position: relative; width: 36px; height: 36px; cursor: pointer; }
-.dash-photo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.avatar-sm { width: 36px; height: 36px; }
-.dash-id { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
-.dash-id strong { font-size: 0.95rem; letter-spacing: -0.02em; overflow-wrap: anywhere; }
-.dash-id .muted, .dash-injury { font-size: 0.75rem; }
-.dash-injury { color: #9a3412; }
-.recovery-sm {
-  font-size: 1rem;
-  min-width: 40px;
-  min-height: 40px;
-  padding: 4px;
-}
-.cal-compact .cal-nav { margin-bottom: 4px; }
-.cal-compact .cal-nav h2 { font-size: 0.8rem; letter-spacing: -0.02em; }
-.cal-compact .cal-nav .icon-btn { width: 26px; height: 26px; font-size: 0.85rem; }
-.cal-compact .cal-grid { gap: 2px; }
-.cal-compact .cal-dow { padding: 0 0 2px; font-size: 0.625rem; }
-.cal-compact .cal-day { min-height: 34px; padding: 2px 0 3px; border-radius: 8px; }
-.cal-compact .cal-day .md-tag { top: 2px; left: 3px; font-size: 7px; }
-.cal-compact .cal-day .day-num { font-size: 0.75rem; margin-top: 8px; }
-.cal-compact .cal-day .crest { max-width: 14px; max-height: 14px; }
-.cal-compact .cal-day .crest-wrap { min-height: 12px; }
-.cal-compact .venue-icon { width: 8px; height: 8px; }
-.day-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 0.8125rem;
-  padding: 0 2px;
-}
-.dash-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-  padding: 3px;
-  background: var(--glass);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm), var(--glass-highlight);
-}
-.dash-tabs button {
-  border: 0;
-  background: transparent;
-  border-radius: 9px;
-  min-height: 36px;
-  padding: 8px 4px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--secondary);
-  font-family: inherit;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
-  transition: transform var(--dur) var(--ease), background var(--dur) ease, color var(--dur) ease;
-}
-.dash-tabs button:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
-.dash-tabs button:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
-.dash-tabs button.on {
+.dash-photo { position: relative; display: block; width: 56px; height: 56px; margin: 0; border-radius: 50%; }
+.dash-photo .avatar { display: block; width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+.dash-photo.is-editable { cursor: pointer; }
+.dash-photo input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.dash-photo:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.dash-photo-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-sm);
+  color: var(--label-secondary);
+  box-shadow: var(--elev-1);
+  pointer-events: none;
 }
-.dash-pane h2 { font-size: 0.95rem; }
+.dash-photo-badge svg { width: 14px; height: 14px; }
+.dash-id { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
+.dash-name { font: var(--t-headline); letter-spacing: var(--ls-headline); overflow-wrap: anywhere; }
+.dash-meta { color: var(--label-secondary); font: var(--t-subhead); letter-spacing: var(--ls-subhead); overflow-wrap: anywhere; }
+.dash-injury { color: var(--warn); font: var(--t-footnote); font-weight: 600; letter-spacing: var(--ls-footnote); }
+.dash-head .device-admin-chip {
+  margin-top: var(--space-1);
+  padding: 2px var(--space-2);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--fill-tertiary);
+  color: var(--label);
+  font: var(--t-caption);
+  letter-spacing: var(--ls-caption);
+}
+.dash-recovery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 56px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--fill-tertiary);
+}
+.dash-recovery-value { font: var(--t-title-3); letter-spacing: var(--ls-title-3); font-variant-numeric: tabular-nums; }
+.dash-recovery-label { color: var(--label-secondary); font: var(--t-caption-2); font-weight: 600; letter-spacing: var(--ls-caption-2); }
+
+.dash-seg { min-height: 36px; }
+.dash-seg > button { min-height: 32px; }
+.dash-panes { display: flex; flex-direction: column; gap: var(--space-3); animation: cal-in var(--dur) var(--ease-out); }
+.dash-pane h2 { font: var(--t-headline); letter-spacing: var(--ls-headline); }
 .dash-kicker {
-  margin: 8px 0 2px;
-  font-size: 0.6875rem;
+  margin: var(--space-2) 0 2px;
+  color: var(--label-secondary);
+  font: var(--t-footnote);
   font-weight: 600;
-  color: var(--secondary);
+  letter-spacing: var(--ls-footnote);
 }
-.dash .form-grid input, .dash .form-grid textarea { margin-bottom: 8px; }
+.dash .form-grid input, .dash .form-grid textarea { margin-bottom: var(--space-2); }
+
+/* Estado vacío del día: Headline + Subhead, alineado a la izquierda. */
+.day-empty {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--space-3);
+  row-gap: 2px;
+  align-items: start;
+}
+.day-empty svg { grid-row: span 2; width: 28px; height: 28px; color: var(--label-tertiary); }
+.day-empty strong { font: var(--t-headline); letter-spacing: var(--ls-headline); }
+.day-empty span { color: var(--label-secondary); font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
+
+/* —— Tab bar del jugador: fija abajo a todo ancho, contenido interior max 640 —— */
+.page.page--tabbar {
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + var(--space-6));
+}
+.tab-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90; /* bajo la cabecera (1000) y bajo sheets/modales (100+) */
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  background: var(--material-regular);
+  -webkit-backdrop-filter: var(--blur-regular);
+  backdrop-filter: var(--blur-regular);
+  border-top: 1px solid var(--separator-soft);
+}
+.tab-bar-inner {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  max-width: 640px;
+  height: var(--tabbar-h);
+  margin: 0 auto;
+  padding: 0 var(--space-2);
+}
+.tab-bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: var(--space-1) 0 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--label-secondary);
+  font: var(--t-caption-2);
+  font-weight: 600;
+  letter-spacing: var(--ls-caption-2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.tab-bar-item svg {
+  width: 24px;
+  height: 24px;
+  transition: transform var(--dur) var(--ease-out);
+}
+.tab-bar-item:active svg { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.tab-bar-item[aria-current="page"] { color: var(--accent); }
+.tab-bar-item:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+@media (hover: hover) {
+  .tab-bar-item:not([aria-current="page"]):hover { color: var(--label); }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .tab-bar { background: var(--surface); }
+}
+
+@media (min-width: 720px) {
+  .dash-head, .cal-compact { padding: var(--space-4) var(--space-6); }
+  .dash .dash-pane.card { padding: var(--space-6); }
+}
 
 .device-card { margin-bottom: 10px; }
 .device-card-title { margin: 0 0 8px; font-size: 1rem; }
@@ -455,4 +544,35 @@
 .session-video:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
+}
+
+/* —— Preferencias (A1: calendario, foco del día, ficha y tab bar) —— */
+@media (prefers-reduced-motion: reduce) {
+  .cal-days, .dash-panes { animation: none; }
+  .cal-day, .cal-day:active,
+  button.cal-title, button.cal-title:active,
+  .cal-today, .cal-today:active,
+  .tab-bar-item svg, .tab-bar-item:active svg { transition: none; transform: none; }
+  button.cal-title svg { transition: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .tab-bar {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-top-color: var(--separator);
+  }
+}
+@media (prefers-contrast: more) {
+  .tab-bar {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-top-color: var(--label);
+  }
+  .tab-bar-item, .cal-dow, .cal-day .md-tag, .day-focus-date, .day-focus-duration,
+  .dash-meta, .dash-recovery-label, .cal-empty span, .day-empty span { color: var(--label-on-tint); }
+  .tab-bar-item[aria-current="page"] { color: var(--accent-text); }
+  .cal-day.cal-highlight .cal-num { box-shadow: 0 0 0 2px var(--label); }
+  .day-focus-md, .day-focus-match, .day-focus-plan, .day-focus-duration { box-shadow: inset 0 0 0 1px var(--label); }
 }

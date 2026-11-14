@@ -1,0 +1,47 @@
+# from-rd-A1: ficha del deportista, calendario y tab bar (estilo Apple)
+
+- Hecho: sí
+- Qué cambió (rutas):
+  - `app/a/[id]/home-client.tsx`
+    - Ficha nueva: foto con un botón de cámara para cambiarla, nombre, datos, lesión, el chip de integración (solo admin) y un recuadro de «Recup.».
+    - Foco del día: fecha, un título grande (Hoy / Mañana / Ayer / «Viernes 13») y unas etiquetas pequeñas con el MD, el partido (escudo · hora · En casa/Fuera), el título del plan (solo si no repite el MD) y la duración aproximada.
+    - Jugador: barra de pestañas fija abajo, como en el iPhone: Entreno, Nutrición y Diario, con iconos SVG y `aria-current`.
+    - Admin: selector de pestañas (`role=tablist`) con Entrenamiento, Nutrición y Análisis. Se mantienen el botón de volver y el chip de integración.
+    - Estado vacío «Día sin sesión», con un texto distinto si es día de partido.
+    - Al elegir un día en la vista de mes, el calendario vuelve a la semana.
+  - `app/a/[id]/page.tsx`: añade `page--tabbar` para el jugador, que deja hueco abajo para la barra de pestañas.
+  - `app/components/plan-calendar.tsx`
+    - Vista semanal que se despliega a mes al pulsar el título. El mes sigue fijo en Amanda, que no pasa `view`.
+    - Botones «Hoy» y flechas para cambiar de semana o mes.
+    - Celdas con el número en círculo (el día elegido en color de acento) y el MD o el escudo debajo.
+    - Estado vacío «Semana sin plan» / «Mes sin plan».
+  - `app/styles/player.css`
+    - Estilos nuevos para el calendario, el foco del día, la ficha, las pestañas, el estado vacío y la barra de pestañas (fondo translúcido con desenfoque y un plan B si el navegador no lo soporta).
+    - Al final del archivo, ajustes para movimiento reducido, transparencia reducida y contraste alto.
+    - Eliminado el CSS que ya no se usaba: `.recovery-strip`, `.recovery-value`, `.recovery-sm`, `.week-tape`, `.tape-*`, `.dash-tabs`, `.day-line` y los `.cal-*`, `.day-focus*` y `.dash-head` antiguos.
+    - Los bloques de vídeo, dispositivo y sesiones no se han tocado.
+- Verificación:
+  - `npx tsc --noEmit` sin errores.
+  - Capturas en `.tmp-verify/rd-A1/`.
+  - Jugador a 390:
+    - Sin scroll horizontal (`scrollWidth`=390) en Entreno, Nutrición y Diario.
+    - Zonas de toque: pestañas 125×49, título del calendario 143×44, «Hoy» 53×44, flechas 44×44, días 46×60.
+    - El foco del teclado se ve en la barra de pestañas.
+  - Vista de mes, «Semana sin plan» (28 sep a 4 oct de 2026) y «Día sin sesión» se ven bien.
+  - Admin (adriivalle) a 1440 y a 390:
+    - El botón de volver y las pestañas funcionan, Análisis carga.
+    - No aparece la barra de pestañas de abajo.
+    - Sin scroll horizontal.
+  - Amanda (`/nutricion/<id>`) a 1280 y 390: el calendario de mes del lateral sigue bien y no hay scroll horizontal.
+  - Consola:
+    - No hay errores nuevos.
+    - Hay dos avisos que no salen de mis archivos: un error CORS que provoca mi propio script de capturas al cerrar sesión, y un aviso de React por falta de `key` en `HeaderMarkup` desde `NutricionAthletePage`.
+  - No he creado datos de prueba y he liberado `browse.lock`.
+- Duda: (vacío)
+- Notas para el master:
+  - `app/styles/a11y.css` (líneas 24 y 76) todavía nombra `.dash-tabs`, que ya no existe. No lo he tocado porque no es mío. Habría que borrar esas líneas al cerrar.
+  - Ningún deportista tiene un dispositivo conectado, así que el chip de integración solo lo he comprobado metiéndolo a mano en la página (sin tocar la BD).
+  - La vista de admin sigue con un ancho máximo de 640 px, aunque el sistema de diseño permite hasta 1080. No lo he cambiado porque lo decide la cabecera o la página, no esta ficha.
+  - En desarrollo, el botón «N» de Next tapa la esquina izquierda de la barra de pestañas. En producción no aparece.
+  - Dentro de la tarjeta del dispositivo, «Conectar Polar» y el «Guardar» del diario son dos botones rellenos, que pertenecen a A2/A3.
+- Bloquea a Adrián: no

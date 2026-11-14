@@ -47,7 +47,7 @@ export default async function AthleteHome({
         leading={isAdmin ? <HeaderBackButton href="/panel" /> : null}
         trailing={isAdmin ? <LogoutButton /> : <HeaderActions settingsHref="/ajustes" />}
       />
-      <main className="page">
+      <main className={isAdmin ? "page" : "page page--tabbar"}>
         <HomeClient
           athlete={data.home.athlete}
           plans={data.home.plans}
