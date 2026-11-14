@@ -1,11 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { DayPlan } from "@/lib/types";
 import { VideoEmbedModal } from "./video-embed-modal";
 
+type OpenVideo = { url: string; title: string; blurb: string | null };
+
+function PlayGlyph() {
+  return (
+    <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+      <path d="M3 1.8v8.4a.6.6 0 0 0 .9.52l7-4.2a.6.6 0 0 0 0-1.04l-7-4.2A.6.6 0 0 0 3 1.8z" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function SessionList({ plan }: { plan?: DayPlan }) {
-  const [openVideo, setOpenVideo] = useState<{ url: string; blurb: string | null } | null>(null);
+  const [openVideo, setOpenVideo] = useState<OpenVideo | null>(null);
+  const closeVideo = useCallback(() => setOpenVideo(null), []);
   const rows = plan?.blocks ?? [{ kind: "note" as const, text: "Sin bloque asignado para este día." }];
   return (
     <div className="session-list">
@@ -35,9 +46,12 @@ export function SessionList({ plan }: { plan?: DayPlan }) {
               <button
                 type="button"
                 className="session-video"
-                onClick={() => setOpenVideo({ url: row.video!, blurb: row.blurb ?? null })}
+                aria-haspopup="dialog"
+                aria-label={`Ver vídeo: ${row.label}`}
+                onClick={() => setOpenVideo({ url: row.video!, title: row.label, blurb: row.blurb ?? null })}
               >
-                Vídeo
+                <PlayGlyph />
+                <span>Vídeo</span>
               </button>
             ) : null}
           </div>
@@ -45,8 +59,9 @@ export function SessionList({ plan }: { plan?: DayPlan }) {
       })}
       <VideoEmbedModal
         videoUrl={openVideo?.url ?? null}
+        title={openVideo?.title ?? null}
         blurb={openVideo?.blurb ?? null}
-        onClose={() => setOpenVideo(null)}
+        onClose={closeVideo}
       />
     </div>
   );
