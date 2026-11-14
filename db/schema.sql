@@ -524,3 +524,287 @@ DROP POLICY IF EXISTS portion_templates_write ON portion_templates;
 CREATE POLICY portion_templates_write ON portion_templates FOR ALL
   USING (app_is_admin() OR (app_is_nutritionist() AND (athlete_id IS NULL OR app_nutritionist_assigned(athlete_id))))
   WITH CHECK (app_is_admin() OR (app_is_nutritionist() AND (athlete_id IS NULL OR app_nutritionist_assigned(athlete_id))));
+
+-- Pista N: nutrición (additive). Solo tablas/columnas nuevas; nada se borra ni cambia.
+-- Alimentos: datos de la lista de la compra (pasillo y unidad de compra).
+ALTER TABLE foods ADD COLUMN IF NOT EXISTS aisle text;
+ALTER TABLE foods ADD COLUMN IF NOT EXISTS unit_name text;
+ALTER TABLE foods ADD COLUMN IF NOT EXISTS unit_g numeric CHECK (unit_g > 0);
+ALTER TABLE foods ADD COLUMN IF NOT EXISTS pack_g numeric CHECK (pack_g > 0);
+ALTER TABLE foods ADD COLUMN IF NOT EXISTS staple boolean NOT NULL DEFAULT false;
+
+-- Perfil nutricional del deportista (lo edita la nutricionista vía RPC, no el deportista).
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS allergies text[] NOT NULL DEFAULT '{}';
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS intolerances text[] NOT NULL DEFAULT '{}';
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS show_numbers boolean NOT NULL DEFAULT false;
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS target_overrides jsonb;
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS diet_goal text;
+
+-- Lista de la compra: «ya lo tengo» por semana. food_key = foods.id o texto normalizado si no hay alimento.
+CREATE TABLE IF NOT EXISTS shopping_checks (
+  athlete_id uuid NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
+  week_start date NOT NULL,
+  food_key text NOT NULL CHECK (length(food_key) BETWEEN 1 AND 200),
+  checked boolean NOT NULL DEFAULT true,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (athlete_id, week_start, food_key)
+);
+
+-- Check de comidas del deportista: uno por franja (done ✓ / half ½ / missed ✕).
+CREATE TABLE IF NOT EXISTS meal_checks (
+  meal_slot_id uuid PRIMARY KEY REFERENCES meal_slots(id) ON DELETE CASCADE,
+  status text NOT NULL CHECK (status IN ('done', 'half', 'missed')),
+  note text CHECK (note IS NULL OR length(note) <= 280),
+  photo_bytes bytea,
+  photo_mime text,
+  checked_at timestamptz NOT NULL DEFAULT now(),
+  CHECK ((photo_bytes IS NULL) = (photo_mime IS NULL))
+);
+
+-- Peso y medidas (seguimiento de la nutricionista). El peso del perfil = último registro.
+CREATE TABLE IF NOT EXISTS body_measurements (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  athlete_id uuid NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  weight_kg numeric CHECK (weight_kg > 0),
+  body_fat_pct numeric CHECK (body_fat_pct >= 0 AND body_fat_pct <= 100),
+  skinfold_sum_mm numeric CHECK (skinfold_sum_mm >= 0),
+  waist_cm numeric CHECK (waist_cm > 0),
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (athlete_id, date)
+);
+
+-- Plantillas de menú globales (día o semana; md_tag p. ej. MD-1, MD, MD+1).
+CREATE TABLE IF NOT EXISTS menu_templates (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL CHECK (length(name) BETWEEN 1 AND 120),
+  kind text NOT NULL CHECK (kind IN ('day', 'week')),
+  md_tag text,
+  notes text,
+  created_by uuid REFERENCES accounts(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Franjas de una plantilla: day_offset 0 en plantillas de día; 0..6 (lunes..domingo) en las de semana.
+CREATE TABLE IF NOT EXISTS menu_template_slots (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id uuid NOT NULL REFERENCES menu_templates(id) ON DELETE CASCADE,
+  day_offset integer NOT NULL DEFAULT 0 CHECK (day_offset BETWEEN 0 AND 6),
+  slot meal_slot_kind NOT NULL,
+  title text NOT NULL DEFAULT '',
+  preparation text,
+  photo_bytes bytea,
+  photo_mime text,
+  UNIQUE (template_id, day_offset, slot)
+);
+
+CREATE TABLE IF NOT EXISTS menu_template_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_slot_id uuid NOT NULL REFERENCES menu_template_slots(id) ON DELETE CASCADE,
+  food_id uuid REFERENCES foods(id),
+  raw_text text NOT NULL,
+  role text NOT NULL CHECK (role IN ('veg', 'protein', 'carb', 'fat', 'other')),
+  grams numeric CHECK (grams >= 0),
+  position integer NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS menu_template_items_slot_idx ON menu_template_items (template_slot_id, position);
+
+-- Biblioteca de platos global («buscar en mis platos»). slot = franja sugerida, opcional.
+CREATE TABLE IF NOT EXISTS dishes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL CHECK (length(name) BETWEEN 1 AND 160),
+  slot meal_slot_kind,
+  preparation text,
+  photo_bytes bytea,
+  photo_mime text,
+  created_by uuid REFERENCES accounts(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS dishes_name_idx ON dishes (lower(name));
+
+CREATE TABLE IF NOT EXISTS dish_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  dish_id uuid NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
+  food_id uuid REFERENCES foods(id),
+  raw_text text NOT NULL,
+  role text NOT NULL CHECK (role IN ('veg', 'protein', 'carb', 'fat', 'other')),
+  grams numeric CHECK (grams >= 0),
+  position integer NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS dish_items_dish_idx ON dish_items (dish_id, position);
+
+-- Sustituciones aprobadas: gramos de swap_food = gramos de food × ratio.
+CREATE TABLE IF NOT EXISTS food_swaps (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  food_id uuid NOT NULL REFERENCES foods(id) ON DELETE CASCADE,
+  swap_food_id uuid NOT NULL REFERENCES foods(id) ON DELETE CASCADE,
+  ratio numeric NOT NULL DEFAULT 1 CHECK (ratio > 0),
+  approved_by uuid REFERENCES accounts(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (food_id, swap_food_id),
+  CHECK (food_id <> swap_food_id)
+);
+
+-- Nota de la nutricionista por día.
+CREATE TABLE IF NOT EXISTS meal_day_notes (
+  athlete_id uuid NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  note text NOT NULL CHECK (length(note) <= 2000),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (athlete_id, date)
+);
+
+ALTER TABLE shopping_checks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shopping_checks FORCE ROW LEVEL SECURITY;
+ALTER TABLE meal_checks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meal_checks FORCE ROW LEVEL SECURITY;
+ALTER TABLE body_measurements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE body_measurements FORCE ROW LEVEL SECURITY;
+ALTER TABLE menu_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE menu_templates FORCE ROW LEVEL SECURITY;
+ALTER TABLE menu_template_slots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE menu_template_slots FORCE ROW LEVEL SECURITY;
+ALTER TABLE menu_template_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE menu_template_items FORCE ROW LEVEL SECURITY;
+ALTER TABLE dishes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dishes FORCE ROW LEVEL SECURITY;
+ALTER TABLE dish_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dish_items FORCE ROW LEVEL SECURITY;
+ALTER TABLE food_swaps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE food_swaps FORCE ROW LEVEL SECURITY;
+ALTER TABLE meal_day_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meal_day_notes FORCE ROW LEVEL SECURITY;
+
+-- shopping_checks: admin, deportista dueño y nutricionista asignada leen y escriben.
+DROP POLICY IF EXISTS shopping_checks_all ON shopping_checks;
+CREATE POLICY shopping_checks_all ON shopping_checks FOR ALL
+  USING (app_is_admin() OR athlete_id = app_athlete_id() OR app_nutritionist_assigned(athlete_id))
+  WITH CHECK (app_is_admin() OR athlete_id = app_athlete_id() OR app_nutritionist_assigned(athlete_id));
+
+-- meal_checks: igual, a través de la franja (meal_slots) a la que pertenece.
+DROP POLICY IF EXISTS meal_checks_all ON meal_checks;
+CREATE POLICY meal_checks_all ON meal_checks FOR ALL
+  USING (EXISTS (
+    SELECT 1 FROM meal_slots ms
+    WHERE ms.id = meal_checks.meal_slot_id
+      AND (app_is_admin() OR ms.athlete_id = app_athlete_id() OR app_nutritionist_assigned(ms.athlete_id))
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM meal_slots ms
+    WHERE ms.id = meal_checks.meal_slot_id
+      AND (app_is_admin() OR ms.athlete_id = app_athlete_id() OR app_nutritionist_assigned(ms.athlete_id))
+  ));
+
+-- body_measurements y meal_day_notes: el deportista solo lee lo suyo; escriben admin y nutricionista asignada.
+DROP POLICY IF EXISTS body_measurements_select ON body_measurements;
+CREATE POLICY body_measurements_select ON body_measurements FOR SELECT
+  USING (app_is_admin() OR athlete_id = app_athlete_id() OR app_nutritionist_assigned(athlete_id));
+
+DROP POLICY IF EXISTS body_measurements_write ON body_measurements;
+CREATE POLICY body_measurements_write ON body_measurements FOR ALL
+  USING (app_is_admin() OR app_nutritionist_assigned(athlete_id))
+  WITH CHECK (app_is_admin() OR app_nutritionist_assigned(athlete_id));
+
+DROP POLICY IF EXISTS meal_day_notes_select ON meal_day_notes;
+CREATE POLICY meal_day_notes_select ON meal_day_notes FOR SELECT
+  USING (app_is_admin() OR athlete_id = app_athlete_id() OR app_nutritionist_assigned(athlete_id));
+
+DROP POLICY IF EXISTS meal_day_notes_write ON meal_day_notes;
+CREATE POLICY meal_day_notes_write ON meal_day_notes FOR ALL
+  USING (app_is_admin() OR app_nutritionist_assigned(athlete_id))
+  WITH CHECK (app_is_admin() OR app_nutritionist_assigned(athlete_id));
+
+-- Catálogos globales del panel (plantillas y platos): solo admin y nutricionista.
+DROP POLICY IF EXISTS menu_templates_all ON menu_templates;
+CREATE POLICY menu_templates_all ON menu_templates FOR ALL
+  USING (app_is_admin() OR app_is_nutritionist())
+  WITH CHECK (app_is_admin() OR app_is_nutritionist());
+
+DROP POLICY IF EXISTS menu_template_slots_all ON menu_template_slots;
+CREATE POLICY menu_template_slots_all ON menu_template_slots FOR ALL
+  USING (app_is_admin() OR app_is_nutritionist())
+  WITH CHECK (app_is_admin() OR app_is_nutritionist());
+
+DROP POLICY IF EXISTS menu_template_items_all ON menu_template_items;
+CREATE POLICY menu_template_items_all ON menu_template_items FOR ALL
+  USING (app_is_admin() OR app_is_nutritionist())
+  WITH CHECK (app_is_admin() OR app_is_nutritionist());
+
+DROP POLICY IF EXISTS dishes_all ON dishes;
+CREATE POLICY dishes_all ON dishes FOR ALL
+  USING (app_is_admin() OR app_is_nutritionist())
+  WITH CHECK (app_is_admin() OR app_is_nutritionist());
+
+DROP POLICY IF EXISTS dish_items_all ON dish_items;
+CREATE POLICY dish_items_all ON dish_items FOR ALL
+  USING (app_is_admin() OR app_is_nutritionist())
+  WITH CHECK (app_is_admin() OR app_is_nutritionist());
+
+-- food_swaps: catálogo global como foods (lo leen todos; escriben admin y nutricionista).
+DROP POLICY IF EXISTS food_swaps_select ON food_swaps;
+CREATE POLICY food_swaps_select ON food_swaps FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS food_swaps_write ON food_swaps;
+CREATE POLICY food_swaps_write ON food_swaps FOR ALL
+  USING (app_is_admin() OR app_is_nutritionist())
+  WITH CHECK (app_is_admin() OR app_is_nutritionist());
+
+-- El deportista puede actualizar su fila (athletes_update), pero no los campos que fija la nutricionista.
+CREATE OR REPLACE FUNCTION athletes_keep_nutrition_fields() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF current_setting('app.current_role', true) = 'athlete' THEN
+    NEW.allergies := OLD.allergies;
+    NEW.intolerances := OLD.intolerances;
+    NEW.show_numbers := OLD.show_numbers;
+    NEW.target_overrides := OLD.target_overrides;
+    NEW.diet_goal := OLD.diet_goal;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER athletes_keep_nutrition_fields
+  BEFORE UPDATE ON athletes
+  FOR EACH ROW EXECUTE FUNCTION athletes_keep_nutrition_fields();
+
+-- Función aparte: no se toca nutritionist_set_athlete_profile (lib/queries.ts la llama con 4 argumentos;
+-- añadirle parámetros con DEFAULT crearía una sobrecarga y esa llamada pasaría a ser ambigua).
+CREATE OR REPLACE FUNCTION nutritionist_set_athlete_diet_profile(
+  p_athlete_id uuid,
+  p_allergies text[],
+  p_intolerances text[],
+  p_show_numbers boolean,
+  p_target_overrides jsonb,
+  p_diet_goal text DEFAULT NULL
+)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+SET row_security = off
+AS $$
+BEGIN
+  IF NOT (app_is_admin() OR app_nutritionist_assigned(p_athlete_id)) THEN
+    RETURN false;
+  END IF;
+  IF p_target_overrides IS NOT NULL AND jsonb_typeof(p_target_overrides) <> 'object' THEN
+    RETURN false;
+  END IF;
+  UPDATE athletes SET
+    allergies = COALESCE(p_allergies, '{}'),
+    intolerances = COALESCE(p_intolerances, '{}'),
+    show_numbers = COALESCE(p_show_numbers, false),
+    target_overrides = p_target_overrides,
+    diet_goal = NULLIF(trim(p_diet_goal), '')
+  WHERE id = p_athlete_id;
+  RETURN FOUND;
+END;
+$$;

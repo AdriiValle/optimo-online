@@ -144,3 +144,37 @@ export type MealSlot = {
   hasPhoto: boolean;
   updatedAt: string;
 };
+
+/** Check del deportista por franja (tabla `meal_checks`): ✓ done · ½ half · ✕ missed. */
+export type MealCheckStatus = "done" | "half" | "missed";
+
+export type MealCheck = {
+  mealSlotId: string;
+  status: MealCheckStatus;
+  note: string | null;
+  hasPhoto: boolean;
+  checkedAt: string;
+};
+
+/** Registro de peso y medidas (tabla `body_measurements`); solo panel de la nutricionista. */
+export type BodyMeasurement = {
+  id: string;
+  athleteId: string;
+  date: string;
+  weightKg: number | null;
+  bodyFatPct: number | null;
+  skinfoldSumMm: number | null;
+  waistCm: number | null;
+  notes: string | null;
+};
+
+/** Perfil nutricional que fija la nutricionista (columnas nuevas de `athletes`). */
+export type AthleteDietProfile = {
+  allergies: string[];
+  intolerances: string[];
+  /** Si el jugador ve kcal y gramos de macros; por defecto no. */
+  showNumbers: boolean;
+  /** Objetivos editados sobre los calculados; null = usar los calculados. */
+  targetOverrides: Record<string, number> | null;
+  dietGoal: string | null;
+};
