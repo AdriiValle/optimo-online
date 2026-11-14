@@ -529,6 +529,199 @@
 .nut-soon strong { font: var(--t-headline); letter-spacing: var(--ls-headline); color: var(--label); }
 .nut-soon span { font: var(--t-subhead); letter-spacing: var(--ls-subhead); color: var(--label-secondary); }
 
+/* —— Semana (rd-N2): lunes a domingo, una fila por día con MD y una miniatura por franja —— */
+.nut-wk { --wk-col: 52px; display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+/* Cambio de semana: flecha · rango · flecha (como el mes de Calendario). */
+.nut-wk-nav {
+  display: grid;
+  grid-template-columns: var(--tap-min) minmax(0, 1fr) var(--tap-min);
+  align-items: center;
+  gap: var(--space-2);
+}
+.nut-wk-arrow { color: var(--label); }
+.nut-wk-arrow svg { width: 20px; height: 20px; }
+.nut-wk-arrow:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-wk-head { display: flex; flex-direction: column; align-items: center; min-width: 0; text-align: center; }
+.nut-pane .nut-wk-title {
+  margin: 0;
+  font: var(--t-title-3);
+  letter-spacing: var(--ls-title-3);
+  color: var(--label);
+  font-variant-numeric: tabular-nums;
+}
+.nut-wk-rel { font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); }
+/* Fuera de la semana actual: «La semana que viene · Ir a hoy»; el botón llega a 44 sin estirar la línea. */
+.nut-wk-sub { display: inline-flex; align-items: center; gap: var(--space-1); white-space: nowrap; }
+.nut-wk-today {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  margin: -13px calc(var(--space-2) * -1);
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  font-weight: 600;
+  color: var(--accent-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.nut-wk-today:active { background: var(--fill-quaternary); transition-duration: 0ms; }
+.nut-wk-today:focus-visible { outline: var(--focus-ring); outline-offset: calc(var(--focus-offset) * -1); }
+@media (hover: hover) { .nut-wk-today:hover { background: var(--fill-quaternary); } }
+
+/* Columnas de franja: mismo ancho en la leyenda y en cada fila, para leer en vertical. */
+.nut-wk-legend,
+.nut-wk-thumbs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, var(--wk-col)));
+  column-gap: var(--space-2);
+}
+.nut-wk-legend {
+  margin: 0 0 calc(var(--space-2) * -1);
+  padding: 0 var(--row-inset);
+  font: var(--t-caption);
+  letter-spacing: var(--ls-caption);
+  color: var(--label-secondary);
+}
+.nut-wk-legend span { justify-self: center; white-space: nowrap; }
+
+/* Lista agrupada inset: cada día es una fila pulsable (fondo al pulsar, sin escala). */
+.nut-wk-days {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+.nut-wk-days > li { position: relative; }
+.nut-wk-days > li + li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--row-inset);
+  right: 0;
+  height: 1px;
+  background: var(--separator);
+  z-index: 1;
+}
+.nut-wk-day {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "line chev" "thumbs chev";
+  align-items: center;
+  column-gap: var(--space-3);
+  row-gap: var(--space-2);
+  width: 100%;
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: var(--space-3) var(--row-inset);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--label);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+button.nut-wk-day:active { background: var(--fill-quaternary); transition-duration: 0ms; }
+@media (hover: hover) { button.nut-wk-day:hover { background: var(--fill-quaternary); } }
+.nut-wk-day:focus-visible { outline: var(--focus-ring); outline-offset: calc(var(--focus-offset) * -2); border-radius: var(--radius-md); }
+.nut-wk-day--skel { cursor: default; }
+
+.nut-wk-line { grid-area: line; display: flex; align-items: center; gap: var(--space-2); min-width: 0; min-height: 28px; }
+.nut-wk-date { display: inline-flex; align-items: center; gap: var(--space-1); min-width: 0; }
+.nut-wk-dow { font: var(--t-headline); letter-spacing: var(--ls-headline); color: var(--label); }
+/* Número del día: en círculo relleno si es el día abierto en «Hoy» (selección de Calendario). */
+.nut-wk-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  font: var(--t-headline);
+  letter-spacing: var(--ls-headline);
+  font-variant-numeric: tabular-nums;
+  color: var(--label);
+}
+.nut-wk-day.is-open .nut-wk-num { background: var(--label); color: var(--surface); }
+.nut-wk-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-xs);
+  background: var(--fill-tertiary);
+  color: var(--label);
+  font: var(--t-caption);
+  letter-spacing: var(--ls-caption);
+  font-weight: 600;
+}
+.nut-wk-md { margin-left: auto; }
+
+.nut-wk-thumbs { grid-area: thumbs; }
+.nut-wk-thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--cat-tint, var(--fill-quaternary));
+}
+/* Sin foto: celda teñida con el filete de su categoría (el plato va en texto para lector de pantalla). */
+.nut-wk-thumb--ph { border-left: var(--cat-rule) solid var(--cat-ink); }
+/* Franja sin plato: hueco con borde discontinuo, para que las columnas sigan alineadas. */
+.nut-wk-thumb--none { background: transparent; border: 1px dashed var(--separator); }
+.nut-wk-nomenu {
+  grid-area: thumbs;
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--label-secondary);
+}
+.nut-wk-skel-date { width: 7rem; margin: 0; }
+.nut-wk-chev {
+  grid-area: chev;
+  width: 8px;
+  height: 8px;
+  margin-right: var(--space-1);
+  border-top: 2px solid var(--label-tertiary);
+  border-right: 2px solid var(--label-tertiary);
+  transform: rotate(45deg);
+}
+@media (max-width: 359px) {
+  .nut-wk-legend { font: var(--t-caption-2); letter-spacing: var(--ls-caption-2); }
+}
+
+/* «Hoy» abierto desde «Semana»: qué día es y cómo volver al del calendario. */
+.nut-dayctx {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  column-gap: var(--space-3);
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-1);
+}
+.nut-dayctx-date { min-width: 0; font: var(--t-headline); letter-spacing: var(--ls-headline); color: var(--label); }
+.nut-dayctx .nut-dayctx-back {
+  margin-right: calc(var(--space-3) * -1);
+  padding-inline: var(--space-3);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  font-weight: 600;
+}
+.nut-dayctx-back:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
 /* —— Preferencias (al final de la hoja propia, no en a11y.css) —— */
 @media (prefers-reduced-motion: reduce) {
   .nut-details summary,
@@ -536,7 +729,9 @@
   .nut-menu-prep summary,
   .nut-menu-prep summary::after,
   .nut-slot--past > summary,
-  .nut-slot--past > summary::after { transition: none; }
+  .nut-slot--past > summary::after,
+  .nut-wk-day,
+  .nut-wk-today { transition: none; }
 }
 /* prefers-reduced-transparency: esta hoja no usa materiales (todo es --surface opaco); nada que cambiar. */
 @media (prefers-contrast: more) {
@@ -555,4 +750,12 @@
   .nut-slot-label, .nut-ingr-amount, .nut-slot-supp-time, .nut-daynote-label,
   .nut-pane .nut-numbers, .nut-soon span { color: var(--label-on-tint); }
   .nut-slot--past > summary::after { border-color: var(--label); }
+  .nut-wk-days { border: 1px solid var(--label); }
+  .nut-wk-days > li + li::before { background: var(--label); }
+  .nut-wk-rel, .nut-wk-legend, .nut-wk-nomenu { color: var(--label-on-tint); }
+  .nut-wk-thumb { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-wk-thumb--ph { border-left-width: 4px; }
+  .nut-wk-thumb--none { border-color: var(--label); box-shadow: none; }
+  .nut-wk-badge { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-wk-chev { border-color: var(--label); }
 }

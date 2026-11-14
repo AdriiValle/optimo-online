@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { startOfWeekMonday, todayKey } from "@/lib/dates";
 import type { SupplementEntry } from "@/lib/types";
 import { NutritionSegmented, NutritionSoon, panelId, tabId, type NutritionView } from "./nutrition/segments";
 import { TodayView } from "./nutrition/today-view";
+import { longDayLabel, WeekView } from "./nutrition/week-view";
 
 type Props = {
   athleteId: string;
@@ -29,6 +31,32 @@ export function NutritionPane({ athleteId, initialDietNotes, initialSupplements,
   const [view, setView] = useState<NutritionView>("today");
   /** Sube al guardar en el editor (admin): la vista «Hoy» vuelve a pedir suplementos e indicaciones. */
   const [reloadKey, setReloadKey] = useState(0);
+  /** Día abierto desde «Semana» (null = el día del calendario, `menuDate`). */
+  const [openDate, setOpenDate] = useState<string | null>(null);
+  const [weekStart, setWeekStart] = useState(() => startOfWeekMonday(menuDate ?? todayKey()));
+  const [today] = useState(todayKey);
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Si el jugador cambia de día en el calendario de arriba, «Hoy» vuelve a seguirlo.
+  const [seenMenuDate, setSeenMenuDate] = useState(menuDate);
+  if (menuDate !== seenMenuDate) {
+    setSeenMenuDate(menuDate);
+    setOpenDate(null);
+    if (menuDate) setWeekStart(startOfWeekMonday(menuDate));
+  }
+  const dayDate = openDate ?? menuDate;
+
+  function changeView(next: NutritionView) {
+    // «Semana» se abre en la semana del día que se está viendo.
+    if (next === "week" && dayDate) setWeekStart(startOfWeekMonday(dayDate));
+    setView(next);
+  }
+
+  function openDay(date: string) {
+    setOpenDate(date === menuDate ? null : date);
+    setView("today");
+    // El botón pulsado desaparece con la vista: el foco pasa al panel de «Hoy».
+    requestAnimationFrame(() => panelRef.current?.focus());
+  }
 
   async function save() {
     setBusy(true);
@@ -167,14 +195,37 @@ export function NutritionPane({ athleteId, initialDietNotes, initialSupplements,
 
   return (
     <div className="dash-pane nut-pane">
-      {menuDate ? (
+      {menuDate && dayDate ? (
         <>
-          <NutritionSegmented value={view} onChange={setView} />
-          <div className="nut-view" role="tabpanel" id={panelId(view)} aria-labelledby={tabId(view)}>
+          <NutritionSegmented value={view} onChange={changeView} />
+          <div className="nut-view" role="tabpanel" id={panelId(view)} aria-labelledby={tabId(view)} ref={panelRef} tabIndex={-1}>
             {view === "today" ? (
-              <TodayView athleteId={athleteId} date={menuDate} reloadKey={reloadKey} />
+              <>
+                {openDate ? (
+                  <div className="nut-dayctx">
+                    <span className="nut-dayctx-date">{longDayLabel(openDate)}</span>
+                    <button type="button" className="btn btn--plain nut-dayctx-back" onClick={() => {
+                        setOpenDate(null);
+                        panelRef.current?.focus();
+                      }}>
+                      {menuDate === today ? "Volver a hoy" : `Volver al ${longDayLabel(menuDate).toLocaleLowerCase("es")}`}
+                    </button>
+                  </div>
+                ) : null}
+                <TodayView athleteId={athleteId} date={dayDate} reloadKey={reloadKey} />
+              </>
+            ) : view === "week" ? (
+              <WeekView
+                athleteId={athleteId}
+                weekStart={weekStart}
+                today={today}
+                openDate={dayDate}
+                reloadKey={reloadKey}
+                onWeekChange={setWeekStart}
+                onOpenDay={openDay}
+              />
             ) : (
-              <NutritionSoon view={view} />
+              <NutritionSoon />
             )}
           </div>
         </>
