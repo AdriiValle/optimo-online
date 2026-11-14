@@ -26,6 +26,12 @@ function formatSync(iso: string | null): string {
   });
 }
 
+/** «13/11» a partir de una fecha YYYY-MM-DD. */
+function formatDay(iso: string): string {
+  const [, m, d] = iso.split("-");
+  return d && m ? `${d}/${m}` : "";
+}
+
 export function DeviceCard({
   athleteId,
   centerDate,
@@ -121,56 +127,116 @@ export function DeviceCard({
 
   const connected = integration.status === "connected";
   const errored = integration.status === "error";
+  const connectHref = `/api/integrations/polar/connect?athleteId=${athleteId}`;
+  const status = !configured
+    ? { tone: "off", text: "Pendiente de alta en el servidor" }
+    : connected
+      ? {
+          tone: "ok",
+          text: integration.lastSyncAt ? `Conectado · actualizado ${formatSync(integration.lastSyncAt)}` : "Conectado"
+        }
+      : errored
+        ? { tone: "error", text: integration.lastError?.slice(0, 120) || "Error de conexión" }
+        : { tone: "off", text: "No conectado" };
 
   return (
-    <section className="card device-card" aria-label="Dispositivo">
-      <h3 className="device-card-title">Pulsera</h3>
-      {!configured ? (
-        <p className="muted">Polar: pendiente de alta en el servidor.</p>
-      ) : connected ? (
-        <p className="device-card-status ok">
-          Polar conectado · última actualización {formatSync(integration.lastSyncAt)}
-        </p>
-      ) : errored ? (
-        <p className="device-card-status error">
-          Polar: {integration.lastError?.slice(0, 120) ?? "error de conexión"}
-        </p>
-      ) : (
-        <p className="muted">Conecta Polar para traer sueño y métricas de la noche.</p>
-      )}
-
-      {flash ? <p className="ok">{flash}</p> : null}
-      {err ? <p className="error">{err}</p> : null}
-
-      <div className="device-card-actions">
+    <section className="device-card" aria-labelledby="device-card-title">
+      <h2 id="device-card-title" className="list-group-title">
+        Pulsera
+      </h2>
+      <ul className="list-group device-list">
+        <li>
+          <div className="list-row device-row">
+            <WatchGlyph />
+            <span className="list-row-main">
+              Polar
+              <span className={`list-row-sub device-status device-status--${status.tone}`}>{status.text}</span>
+            </span>
+          </div>
+        </li>
         {configured && !connected && !errored ? (
-          <a className="btn" href={`/api/integrations/polar/connect?athleteId=${athleteId}`}>
-            Conectar Polar
-          </a>
+          <li>
+            <a className="list-row device-action" href={connectHref}>
+              Conectar Polar
+            </a>
+          </li>
         ) : null}
         {configured && connected ? (
-          <button type="button" className="btn" disabled={busy !== null} onClick={() => void refreshNight()}>
-            {busy === "refresh" ? "Actualizando…" : "Actualizar datos de esa noche"}
-          </button>
+          <li>
+            <button
+              type="button"
+              className="list-row device-action"
+              disabled={busy !== null}
+              aria-busy={busy === "refresh" || undefined}
+              onClick={() => void refreshNight()}
+            >
+              {busy === "refresh" ? <span className="spinner" aria-hidden="true" /> : null}
+              <span className="list-row-main">{busy === "refresh" ? "Actualizando…" : "Actualizar datos de la noche"}</span>
+              <span className="list-row-detail">{formatDay(centerDate)}</span>
+            </button>
+          </li>
         ) : null}
-        {configured && (connected || errored) ? (
-          <button
-            type="button"
-            className="btn btn-ghost"
-            disabled={busy !== null}
-            onClick={() => void (errored ? (window.location.href = `/api/integrations/polar/connect?athleteId=${athleteId}`) : disconnect())}
-          >
-            {errored ? "Volver a conectar" : busy === "disconnect" ? "…" : "Desconectar"}
-          </button>
+        {configured && errored ? (
+          <li>
+            <a className="list-row device-action" href={connectHref}>
+              Volver a conectar
+            </a>
+          </li>
         ) : null}
-        <button type="button" className="btn btn-ghost" disabled title="Próximamente">
-          Whoop · Próximamente
-        </button>
-        <button type="button" className="btn btn-ghost" disabled title="Próximamente">
-          Amazfit · Próximamente
-        </button>
+        {configured && connected ? (
+          <li>
+            <button
+              type="button"
+              className="list-row device-action list-row--danger"
+              disabled={busy !== null}
+              aria-busy={busy === "disconnect" || undefined}
+              onClick={() => void disconnect()}
+            >
+              {busy === "disconnect" ? <span className="spinner" aria-hidden="true" /> : null}
+              {busy === "disconnect" ? "Desconectando…" : "Desconectar"}
+            </button>
+          </li>
+        ) : null}
+        {(["Whoop", "Amazfit"] as const).map((name) => (
+          <li key={name}>
+            <div className="list-row device-row device-row--soon" aria-disabled="true">
+              <WatchGlyph />
+              <span className="list-row-main">{name}</span>
+              <span className="list-row-detail">Próximamente</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div className="device-feedback" aria-live="polite">
+        {flash ? (
+          <p className="alert alert--ok">
+            {flash}
+          </p>
+        ) : null}
+        {err && !(errored && err === integration.lastError) ? (
+          <p className="alert alert--danger">
+            {err}
+          </p>
+        ) : null}
       </div>
+      <p className="list-group-footer">
+        {connected
+          ? "El sueño y las métricas de la noche llegan solos de Polar al diario."
+          : errored
+            ? "Mientras Polar tenga error, puedes meter el sueño a mano en el diario."
+            : "Conecta Polar para traer el sueño y las métricas de la noche al diario."}
+      </p>
     </section>
+  );
+}
+
+/** Reloj de pulsera (trazo tipo SF Symbols, sin baldosa). */
+function WatchGlyph() {
+  return (
+    <svg className="device-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="6.5" y="6" width="11" height="12" rx="3" />
+      <path d="M9 6l.6-3h4.8L15 6M9 18l.6 3h4.8L15 18M12 9.5V12l1.5 1" />
+    </svg>
   );
 }
 
@@ -190,10 +256,12 @@ export function IntegrationAdminChip({ integration }: { integration: Integration
       hour: "2-digit",
       minute: "2-digit"
     });
+  const ok = integration.status === "connected";
+  const text = `${label} ${ok ? "conectado" : "con error"}${sync ? ` · ${sync}` : ""}`;
   return (
-    <span className="device-admin-chip">
-      {label} {integration.status === "connected" ? "conectado" : "error"}
-      {sync ? ` · sync ${sync}` : ""}
+    <span title={text} className={`device-admin-chip device-admin-chip--${ok ? "ok" : "error"}`}>
+      <span className="device-admin-chip-dot" aria-hidden="true" />
+      <span className="device-admin-chip-text">{text}</span>
     </span>
   );
 }

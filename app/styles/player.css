@@ -335,16 +335,6 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
 .dash-name { font: var(--t-headline); letter-spacing: var(--ls-headline); overflow-wrap: anywhere; }
 .dash-meta { color: var(--label-secondary); font: var(--t-subhead); letter-spacing: var(--ls-subhead); overflow-wrap: anywhere; }
 .dash-injury { color: var(--warn); font: var(--t-footnote); font-weight: 600; letter-spacing: var(--ls-footnote); }
-.dash-head .device-admin-chip {
-  margin-top: var(--space-1);
-  padding: 2px var(--space-2);
-  border: none;
-  border-radius: var(--radius-pill);
-  background: var(--fill-tertiary);
-  color: var(--label);
-  font: var(--t-caption);
-  letter-spacing: var(--ls-caption);
-}
 .dash-recovery {
   display: flex;
   flex-direction: column;
@@ -370,7 +360,6 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
   font-weight: 600;
   letter-spacing: var(--ls-footnote);
 }
-.dash .form-grid input, .dash .form-grid textarea { margin-bottom: var(--space-2); }
 
 /* Estado vacío del día: Headline + Subhead, alineado a la izquierda. */
 .day-empty {
@@ -450,35 +439,117 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
   .dash .dash-pane.card { padding: var(--space-6); }
 }
 
-.device-card { margin-bottom: 10px; }
-.device-card-title { margin: 0 0 8px; font-size: 1rem; }
-.device-card-status.ok { color: var(--secondary); margin: 0 0 8px; }
-.device-card-status.error { color: var(--danger, #b42318); margin: 0 0 8px; }
-.device-card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
+/* —— Diario y pulsera (A3): listas agrupadas inset al estilo Salud/Ajustes —— */
+.diary { display: flex; flex-direction: column; }
+.diary .list-group-title { display: block; margin: 0 0 var(--space-2); }
+.diary .list-group { margin: 0 0 var(--space-6); }
+
+/* Pulsera */
+.device-card .device-list { margin-bottom: var(--space-2); }
+.device-glyph { flex-shrink: 0; width: 22px; height: 22px; color: var(--label-secondary); }
+.device-row { min-height: 56px; }
+.device-status { display: flex; align-items: center; gap: var(--space-1); overflow-wrap: anywhere; }
+.device-status--ok { color: var(--ok); }
+.device-status--ok::before {
+  content: "";
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
 }
-.device-readonly {
+.device-status--error { color: var(--danger); }
+.device-row--soon { color: var(--label-secondary); }
+.device-row--soon .device-glyph { color: var(--label-tertiary); }
+.device-action:not(.list-row--danger) { color: var(--accent-text); }
+.device-action:disabled { cursor: default; }
+.device-action:disabled:not([aria-busy]) { opacity: 0.4; }
+.device-feedback:empty { display: none; }
+.device-feedback .alert { margin: 0 0 var(--space-2); }
+.device-card .list-group-footer { margin-bottom: var(--space-6); }
+
+/* Métricas: etiqueta a la izquierda, cifra alineada a la derecha, columna de unidad fija */
+.diary-row { cursor: text; }
+.diary-row--device { cursor: default; }
+.diary-input {
+  flex: 0 0 auto;
+  width: 5.5em;
+  min-height: 36px;
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--label);
+  font: var(--t-body-row);
+  letter-spacing: var(--ls-body);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.diary-input::-webkit-inner-spin-button,
+.diary-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.diary-input:focus { outline: var(--focus-ring); outline-offset: 0; }
+.diary-input:user-invalid { color: var(--danger); outline-color: var(--danger); }
+.diary-row:has(.diary-input:user-invalid) .list-row-sub { color: var(--danger); }
+.diary-value {
+  padding: 0 var(--space-2);
+  color: var(--label-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.diary-unit {
+  flex-shrink: 0;
+  width: 2.25em;
+  margin-left: calc(var(--space-1) * -1);
+  color: var(--label-secondary);
+}
+
+/* Notas: textarea a todo el grupo, sin borde propio */
+.diary .diary-note textarea {
+  display: block;
+  min-height: 88px;
+  margin: 0;
+  padding: var(--space-3) var(--row-inset);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+}
+.diary .diary-note textarea:focus { outline: var(--focus-ring); outline-offset: -2px; }
+
+.diary-feedback:empty { display: none; }
+.diary-feedback .alert { margin: 0 0 var(--space-3); }
+.diary-feedback .alert-icon { margin-top: 0; }
+.diary-loading {
   display: flex;
   align-items: center;
-  font-variant-numeric: tabular-nums;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm, 10px);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-row);
-  min-height: 42px;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-4);
+  color: var(--label-secondary);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
 }
+
+/* Chip de integración en la ficha (solo admin) */
 .device-admin-chip {
-  display: inline-block;
-  margin-top: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  border: 1px solid var(--glass-border);
-  background: var(--glass-row);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  margin-top: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--fill-tertiary);
+  color: var(--label);
+  font: var(--t-caption);
+  letter-spacing: var(--ls-caption);
+  font-variant-numeric: tabular-nums;
 }
+.device-admin-chip-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.device-admin-chip-dot { flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+.device-admin-chip--error { background: var(--danger-tint); color: var(--danger); }
+.device-admin-chip--error .device-admin-chip-dot { background: var(--danger); }
 
 /* —— Sesión del día (lista) —— */
 .session-list { display: flex; flex-direction: column; gap: 6px; font-size: 0.8125rem; }
@@ -575,4 +646,17 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
   .tab-bar-item[aria-current="page"] { color: var(--accent-text); }
   .cal-day.cal-highlight .cal-num { box-shadow: 0 0 0 2px var(--label); }
   .day-focus-md, .day-focus-match, .day-focus-plan, .day-focus-duration { box-shadow: inset 0 0 0 1px var(--label); }
+}
+
+/* —— Preferencias (A3: diario y pulsera) —— */
+@media (prefers-reduced-motion: reduce) {
+  .device-action, .diary-input { transition: none; }
+}
+@media (prefers-contrast: more) {
+  .diary .list-group { outline: 1px solid var(--label); outline-offset: -1px; }
+  .diary .list-group-title, .diary .list-group-footer, .diary .list-row-sub,
+  .diary-unit, .diary-value, .device-glyph, .device-row--soon, .diary-loading { color: var(--label-on-tint); }
+  .diary .device-status--ok { color: var(--ok); }
+  .diary .device-status--error { color: var(--danger); }
+  .device-admin-chip { outline: 1px solid currentColor; outline-offset: -1px; }
 }

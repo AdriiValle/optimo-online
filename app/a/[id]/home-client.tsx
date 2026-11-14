@@ -52,6 +52,36 @@ function daySubtitle(iso: string, relative: boolean) {
   return `${dow.charAt(0).toUpperCase()}${dow.slice(1)}, ${date}`;
 }
 
+type DeviceMetric = "sleepHours" | "sleepQuality" | "recovery" | "hrv" | "restingHr";
+type MetricSpec = {
+  name: DeviceMetric | "rpe" | "km" | "avgHr";
+  label: string;
+  hint?: string;
+  unit?: string;
+  unitName?: string;
+  min: number;
+  max: number;
+  step?: number;
+  decimal?: boolean;
+};
+
+const isDeviceMetric = (name: MetricSpec["name"]): name is DeviceMetric =>
+  name !== "rpe" && name !== "km" && name !== "avgHr";
+
+/** Rangos = los que valida `/api/diaries`, para avisar en línea antes de enviar. */
+const SLEEP_METRICS: MetricSpec[] = [
+  { name: "sleepHours", label: "Sueño", unit: "h", unitName: "horas", min: 0, max: 24, step: 0.1, decimal: true },
+  { name: "sleepQuality", label: "Calidad del sueño", hint: "De 1 a 100", min: 1, max: 100 },
+  { name: "recovery", label: "Recuperación", hint: "De 0 a 100", min: 0, max: 100 },
+  { name: "hrv", label: "HRV", unit: "ms", unitName: "milisegundos", min: 0, max: 400 },
+  { name: "restingHr", label: "Pulso en reposo", unit: "lpm", unitName: "latidos por minuto", min: 20, max: 220 }
+];
+const RUN_METRICS: MetricSpec[] = [
+  { name: "km", label: "Distancia", unit: "km", unitName: "kilómetros", min: 0, max: 400, step: 0.1, decimal: true },
+  { name: "avgHr", label: "Pulso medio", unit: "lpm", unitName: "latidos por minuto", min: 20, max: 220 }
+];
+const RPE_METRIC: MetricSpec = { name: "rpe", label: "Esfuerzo (RPE)", hint: "De 1 a 10", min: 1, max: 10 };
+
 type Props = {
   athlete: Athlete;
   plans: DayPlan[];
@@ -118,7 +148,8 @@ export function HomeClient({
   const [center, setCenter] = useState(initial);
   const [dayDiary, setDayDiary] = useState<Diary>(diary ?? emptyDiary(athlete.id, initial));
   const [photoMsg, setPhotoMsg] = useState<string | null>(null);
-  const [diaryMsg, setDiaryMsg] = useState<string | null>(null);
+  const [diaryMsg, setDiaryMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [diarySaving, setDiarySaving] = useState(false);
   const [photoKey, setPhotoKey] = useState(0);
   const [pane, setPane] = useState<Pane>("train");
   const [calView, setCalView] = useState<CalendarView>("week");
@@ -129,21 +160,51 @@ export function HomeClient({
   const polarConnected = polarIntegration.status === "connected";
   const deviceCaps = capabilitiesFor(polarConnected ? "polar" : null);
 
-  const deviceLabel = (field: "sleepHours" | "sleepQuality" | "recovery" | "hrv" | "restingHr") => {
-    if (polarConnected && isDeviceField("polar", field) && dayDiary.deviceSource === "polar") {
-      return " (Polar)";
+  /** Fila de lista agrupada: etiqueta a la izquierda, cifra a la derecha con teclado numérico. */
+  function metricRow(m: MetricSpec) {
+    const value = dayDiary[m.name];
+    if (isDeviceMetric(m.name) && polarConnected && deviceCaps[m.name]) {
+      const fromPolar = isDeviceField("polar", m.name) && dayDiary.deviceSource === "polar";
+      return (
+        <li key={m.name}>
+          <div className="list-row diary-row diary-row--device">
+            <span className="list-row-main">
+              {m.label}
+              <span className="list-row-sub">{fromPolar ? "De Polar" : "Llega de Polar"}</span>
+            </span>
+            <span className="diary-value">{value ?? "—"}</span>
+            <span className="diary-unit">{value !== null ? m.unit : null}</span>
+          </div>
+        </li>
+      );
     }
-    return "";
-  };
-
-  function readonlyMetric(label: string, value: string | number | null) {
+    const id = `diary-${m.name}`;
     return (
-      <label>
-        {label}
-        <div className="device-readonly" aria-readonly="true">
-          {value ?? "—"}
-        </div>
-      </label>
+      <li key={m.name}>
+        <label className="list-row diary-row" htmlFor={id}>
+          <span className="list-row-main">
+            {m.label}
+            {m.unitName ? <span className="sr-only">, en {m.unitName}</span> : null}
+            {m.hint ? <span className="list-row-sub">{m.hint}</span> : null}
+          </span>
+          <input
+            id={id}
+            className="diary-input"
+            name={m.name}
+            type="number"
+            inputMode={m.decimal ? "decimal" : "numeric"}
+            min={m.min}
+            max={m.max}
+            step={m.step}
+            placeholder="—"
+            autoComplete="off"
+            defaultValue={value ?? ""}
+          />
+          <span className="diary-unit" aria-hidden="true">
+            {m.unit}
+          </span>
+        </label>
+      </li>
     );
   }
 
@@ -229,8 +290,52 @@ export function HomeClient({
     setPhotoMsg("Foto actualizada.");
   }
 
+  async function saveDiary(form: HTMLFormElement) {
+    setDiaryMsg(null);
+    const fd = new FormData(form);
+    const num = (k: string) => {
+      const v = String(fd.get(k) ?? "").trim();
+      return v === "" ? null : Number(v);
+    };
+    const body: Record<string, unknown> = {
+      athleteId: athlete.id,
+      date: center,
+      rpe: num("rpe"),
+      dietNote: String(fd.get("molestias") ?? "").trim() || null,
+      freeNote: String(fd.get("freeNote") ?? "") || null
+    };
+    if (running) {
+      body.km = num("km");
+      body.avgHr = num("avgHr");
+    }
+    if (!polarConnected || !deviceCaps.sleepHours) body.sleepHours = num("sleepHours");
+    if (!polarConnected || !deviceCaps.sleepQuality) body.sleepQuality = num("sleepQuality");
+    if (!polarConnected || !deviceCaps.recovery) body.recovery = num("recovery");
+    if (!polarConnected || !deviceCaps.hrv) body.hrv = num("hrv");
+    if (!polarConnected || !deviceCaps.restingHr) body.restingHr = num("restingHr");
+    setDiarySaving(true);
+    try {
+      const res = await fetch("/api/diaries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        setDiaryMsg({ ok: false, text: "No se pudo guardar. Revisa los datos e inténtalo de nuevo." });
+        return;
+      }
+      const json = await res.json();
+      setDayDiary(json.data);
+      setDiaryMsg({ ok: true, text: "Guardado." });
+    } catch {
+      setDiaryMsg({ ok: false, text: "No se pudo guardar. Comprueba la conexión e inténtalo de nuevo." });
+    } finally {
+      setDiarySaving(false);
+    }
+  }
+
   const diaryForm = (
-    <>
+    <div className="diary">
       <DeviceCard
         athleteId={athlete.id}
         centerDate={center}
@@ -241,132 +346,75 @@ export function HomeClient({
         callbackDevice={callbackDevice}
         callbackMsg={callbackMsg}
       />
-      <section className="card">
-        <h2>Registro</h2>
-        {diaryMsg ? <p className={diaryMsg === "Guardado." ? "ok" : "error"}>{diaryMsg}</p> : null}
-        {dayDiary.date === center ? (
+      {dayDiary.date === center ? (
         <form
           key={center}
-          className="form-grid"
-          onSubmit={async (e) => {
+          className="diary-form"
+          aria-label="Diario del día"
+          onInput={() => {
+            if (diaryMsg?.ok) setDiaryMsg(null);
+          }}
+          onSubmit={(e) => {
             e.preventDefault();
-            setDiaryMsg(null);
-            const fd = new FormData(e.currentTarget);
-            const num = (k: string) => {
-              const v = String(fd.get(k) ?? "").trim();
-              return v === "" ? null : Number(v);
-            };
-            const body: Record<string, unknown> = {
-              athleteId: athlete.id,
-              date: center,
-              rpe: num("rpe"),
-              dietNote: String(fd.get("molestias") ?? "").trim() || null,
-              freeNote: String(fd.get("freeNote") ?? "") || null
-            };
-            if (running) {
-              body.km = num("km");
-              body.avgHr = num("avgHr");
-            }
-            if (!polarConnected || !deviceCaps.sleepHours) body.sleepHours = num("sleepHours");
-            if (!polarConnected || !deviceCaps.sleepQuality) body.sleepQuality = num("sleepQuality");
-            if (!polarConnected || !deviceCaps.recovery) body.recovery = num("recovery");
-            if (!polarConnected || !deviceCaps.hrv) body.hrv = num("hrv");
-            if (!polarConnected || !deviceCaps.restingHr) body.restingHr = num("restingHr");
-            const res = await fetch("/api/diaries", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(body)
-            });
-            if (!res.ok) {
-              setDiaryMsg("No se pudo guardar.");
-              return;
-            }
-            const json = await res.json();
-            setDayDiary(json.data);
-            setDiaryMsg("Guardado.");
+            if (!diarySaving) void saveDiary(e.currentTarget);
           }}
         >
-          {running ? (
-            <>
-              <label className="span-2">
-                Km
-                <input name="km" type="number" step="0.1" defaultValue={dayDiary.km ?? ""} key={`km-${center}`} />
-              </label>
-              <label>
-                Pulso medio
-                <input name="avgHr" type="number" defaultValue={dayDiary.avgHr ?? ""} key={`avg-${center}`} />
-              </label>
-            </>
-          ) : null}
-          {polarConnected && deviceCaps.sleepHours ? (
-            readonlyMetric(`Sueño (h)${deviceLabel("sleepHours")}`, dayDiary.sleepHours)
-          ) : (
-            <label>
-              Sueño (h)
-              <input name="sleepHours" type="number" step="0.1" defaultValue={dayDiary.sleepHours ?? ""} key={`sh-${center}`} />
-            </label>
-          )}
-          {polarConnected && deviceCaps.sleepQuality ? (
-            readonlyMetric(`Calidad 1–100${deviceLabel("sleepQuality")}`, dayDiary.sleepQuality)
-          ) : (
-            <label>
-              Calidad 1–100
-              <input name="sleepQuality" type="number" min={1} max={100} defaultValue={dayDiary.sleepQuality ?? ""} key={`sq-${center}`} />
-            </label>
-          )}
-          {polarConnected && deviceCaps.recovery ? (
-            readonlyMetric(`Recuperación 0–100${deviceLabel("recovery")}`, dayDiary.recovery)
-          ) : (
-            <label>
-              Recuperación 0–100
-              <input name="recovery" type="number" min={0} max={100} defaultValue={dayDiary.recovery ?? ""} key={`rc-${center}`} />
-            </label>
-          )}
-          {polarConnected && deviceCaps.hrv ? (
-            readonlyMetric(`HRV${deviceLabel("hrv")}`, dayDiary.hrv)
-          ) : (
-            <label>
-              HRV
-              <input name="hrv" type="number" defaultValue={dayDiary.hrv ?? ""} key={`hrv-${center}`} />
-            </label>
-          )}
-          {polarConnected && deviceCaps.restingHr ? (
-            readonlyMetric(`Pulso reposo${deviceLabel("restingHr")}`, dayDiary.restingHr)
-          ) : (
-            <label>
-              Pulso reposo
-              <input name="restingHr" type="number" defaultValue={dayDiary.restingHr ?? ""} key={`rhr-${center}`} />
-            </label>
-          )}
-          <label>
-            RPE 1–10
-            <input name="rpe" type="number" min={1} max={10} defaultValue={dayDiary.rpe ?? ""} key={`rpe-${center}`} />
-          </label>
-          <label className="span-2">
+          <h2 className="list-group-title" id="diary-sleep">
+            Sueño y recuperación
+          </h2>
+          <ul className="list-group" aria-labelledby="diary-sleep">
+            {SLEEP_METRICS.map(metricRow)}
+          </ul>
+
+          <h2 className="list-group-title" id="diary-session">
+            Sesión
+          </h2>
+          <ul className="list-group" aria-labelledby="diary-session">
+            {(running ? [...RUN_METRICS, RPE_METRIC] : [RPE_METRIC]).map(metricRow)}
+          </ul>
+
+          <label className="list-group-title" htmlFor="diary-molestias">
             Molestias
+          </label>
+          <div className="list-group diary-note">
             <textarea
+              id="diary-molestias"
               name="molestias"
               rows={3}
               placeholder="Qué te duele o molesta…"
               defaultValue={dayDiary.dietNote ?? ""}
-              key={`mol-${center}`}
             />
-          </label>
-          <label className="span-2">
-            Nota
-            <textarea name="freeNote" defaultValue={dayDiary.freeNote ?? ""} key={`fn-${center}`} />
-          </label>
-          <div className="span-2">
-            <button className="btn" type="submit">
-              Guardar diario
-            </button>
           </div>
+
+          <label className="list-group-title" htmlFor="diary-free-note">
+            Nota
+          </label>
+          <div className="list-group diary-note">
+            <textarea id="diary-free-note" name="freeNote" rows={3} placeholder="Cualquier otra cosa del día…" defaultValue={dayDiary.freeNote ?? ""} />
+          </div>
+
+          <div className="diary-feedback" aria-live="polite">
+            {diaryMsg ? (
+              <p className={`alert ${diaryMsg.ok ? "alert--ok" : "alert--danger"}`}>
+                <svg className="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  {diaryMsg.ok ? <path d="M8 12.5l2.7 2.7L16 9.8" /> : <path d="M12 7.5v5.5M12 16.5v.01" />}
+                </svg>
+                <span>{diaryMsg.text}</span>
+              </p>
+            ) : null}
+          </div>
+          <button className="btn btn--lg btn--block" type="submit" disabled={diarySaving} aria-busy={diarySaving || undefined}>
+            {diarySaving ? "Guardando…" : "Guardar diario"}
+          </button>
         </form>
-        ) : (
-          <p className="muted">Cargando el día…</p>
-        )}
-      </section>
-    </>
+      ) : (
+        <p className="diary-loading" role="status">
+          <span className="spinner" aria-hidden="true" />
+          Cargando el día…
+        </p>
+      )}
+    </div>
   );
 
   const nutrition = (
