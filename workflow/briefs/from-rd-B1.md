@@ -1,0 +1,21 @@
+# from-rd-B1 — Admin: panel de deportistas y shell de escritorio
+
+- Hecho: sí
+- Qué cambió (rutas, solo la lista SÍ; sin commit, lo hace el master):
+  - `app/panel/page.tsx`: large title, tabla densa (avatar o iniciales, nombre + deporte/equipo/dorsal, «Recuperación hoy», «Lesión abierta» con etiqueta de aviso, chevron). Cada fila es un enlace a `/a/<id>` como antes. Rec. y lesión van envueltas en `.adm-meta` para la versión móvil; etiquetas `.adm-meta-label` solo para lector de pantalla en escritorio (la cabecera de columnas ya las nombra).
+  - `app/panel/deportistas-section.tsx`: título + contador + botón «Añadir deportista» (relleno, acción principal). Alta en `.sheet` de F3 (scrim, cerrar con Esc, con clic fuera o con ✕; foco atrapado y devuelto al botón que lo abrió). Estado vacío «Sin deportistas» con botón tintado (regla de estados de design-system).
+  - `app/panel/create-form.tsx`: formulario en sheet (Nombre, Deporte segmentado, Email, Contraseña temporal), error 409 debajo del email, otros errores como alerta, botón pendiente con `aria-busy`.
+  - `app/styles/admin.css`: fuera `.create-*` y `.athlete-*` (solo los usaba el panel antiguo); nuevo bloque `.adm-*` (columna alineada con la toolbar, max 1080 + gutter; tabla ≥720; lista de 2 líneas <720; scrim por encima de la toolbar fija; sheet de 480 px en escritorio) y reglas de preferencias del panel al final de la hoja. `.nut-assign` y `.an-*` no se tocan.
+- Comprobado (capturas en `.tmp-verify/rd-B1/`):
+  - /panel a 1440, 768 y 390: scrollWidth 1440 / 768 / 390, sin scroll horizontal; también con el sheet abierto a 390.
+  - Alta real desde el sheet: se crea, el sheet se cierra, la lista se refresca (3 → 4) y el foco vuelve a «Añadir». Email repetido → «Ya existe una cuenta con este email.» en el campo. Esc cierra.
+  - Teclado: foco visible en filas y botones; Enter sobre una fila abre `/a/<id>`.
+  - Acciones táctiles: «Añadir» 44 de alto, ✕ 44×44, Cancelar y Crear 44 de alto.
+  - Estado vacío: forzado de forma temporal con `count={0}` y revertido en esta misma tarea (`empty-*.png`).
+  - Etiqueta de lesión y valor de recuperación: comprobados inyectando datos solo en el DOM del navegador, porque hoy ningún deportista tiene lesión abierta ni diario (`badge-*.png`).
+  - Datos de prueba: el deportista «Prueba RD B1» (`rd-b1-prueba@test.local`) se borró con `.tmp-verify/rd-B1/cleanup.ts` (1 athlete + 1 account). El panel vuelve a 3.
+  - `npx tsc --noEmit` limpio. Consola: sin errores nuevos. Solo aparece el CORS de `signout` que provoca el propio `shots.sh` al cerrar sesión, y ya pasaba antes.
+- Duda:
+- Recomendación:
+- Bloquea a Adrián: no
+- Nota para el master: `git status` también muestra `app/styles/nutri.css` y `app/styles/player.css` modificados. No son de B1 (otras pistas). En el commit de B1, añadir solo las 4 rutas de arriba.

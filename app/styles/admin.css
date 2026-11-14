@@ -1,81 +1,281 @@
-.create-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1050;
+/* —— Panel de administrador (B1): large title, lista densa de deportistas y alta en sheet ——
+   Escritorio primero. La columna de contenido se alinea con la toolbar (max 1080 + gutter). */
+.adm-page { max-width: calc(1080px + 2 * var(--gutter)); }
+.adm-section { margin: 0; }
+
+/* Large title + acción principal */
+.adm-titlebar {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
-  justify-content: center;
-  padding: max(24px, env(safe-area-inset-top, 0px)) 0 0;
-  background: var(--scrim);
-  animation: scrim-in var(--dur-sheet) ease;
-}
-.create-sheet {
-  width: 100%;
-  max-width: 640px;
-  max-height: min(92vh, 720px);
-  max-height: min(92svh, 720px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  margin: 0;
-  padding:
-    20px
-    max(16px, env(safe-area-inset-right, 0px))
-    calc(20px + env(safe-area-inset-bottom, 0px))
-    max(16px, env(safe-area-inset-left, 0px));
-  border-bottom: 0;
-  border-radius: var(--radius) var(--radius) 0 0;
-  background: var(--glass-strong);
-  -webkit-overflow-scrolling: touch;
-  scroll-padding-block: 16px;
-  animation: sheet-up var(--dur-sheet) var(--ease);
-}
-.create-sheet form .btn { width: 100%; min-height: 50px; margin-top: 4px; }
-@media (min-width: 720px) {
-  .create-overlay { align-items: center; padding: 24px; }
-  .create-sheet {
-    max-width: 520px;
-    padding: 20px;
-    border-bottom: 1px solid var(--glass-border);
-    border-radius: var(--radius);
-    animation-name: sheet-pop;
-  }
-}
-.create-form-head {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-2) 0 var(--space-5);
 }
-.create-form-head h2 {
+.adm-titles { min-width: 0; }
+.adm-title {
   margin: 0;
+  font: var(--t-large-title);
+  letter-spacing: var(--ls-large-title);
+}
+.adm-count {
+  margin: var(--space-1) 0 0;
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--label-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.adm-add { flex-shrink: 0; }
+.adm-add svg { flex-shrink: 0; }
+@media (max-width: 479.98px) {
+  .adm-add-extra { display: none; }
 }
 
-.athlete-list { display: grid; gap: 12px; }
-.athlete-card {
-  display: grid;
-  grid-template-columns: 56px 1fr auto;
-  gap: 12px;
-  align-items: center;
-  text-decoration: none;
-  color: inherit;
-  margin-bottom: 0;
+/* Lista agrupada (tabla densa ≥720) */
+.adm-table {
+  --adm-avatar: 44px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
 }
-@media (hover: hover) {
-  .athlete-card:hover { background: var(--glass-strong); }
-}
-.athlete-card strong { font-size: 1rem; letter-spacing: -0.02em; }
-.athlete-card .muted { font-size: 0.8125rem; line-height: 1.35; }
-.athlete-card::after {
+.adm-list { list-style: none; margin: 0; padding: 0; }
+.adm-list > li { position: relative; }
+/* Separador con sangría hasta el texto (sin separador tras la última fila). */
+.adm-list > li + li::before {
   content: "";
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  left: calc(var(--row-inset) + var(--adm-avatar) + var(--space-3));
+  height: 1px;
+  background: var(--separator);
+  pointer-events: none;
+}
+
+.adm-row {
+  display: grid;
+  grid-template-columns: var(--adm-avatar) minmax(0, 1fr) auto;
+  grid-template-areas:
+    "avatar who chevron"
+    "avatar meta chevron";
+  align-items: center;
+  column-gap: var(--space-3);
+  row-gap: var(--space-1);
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--row-inset);
+  color: var(--label);
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.adm-list > li:first-child .adm-row { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+.adm-list > li:last-child .adm-row { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+.adm-list > li:only-child .adm-row { border-radius: var(--radius-md); }
+@media (hover: hover) {
+  .adm-row:hover { background: var(--fill-quaternary); }
+}
+.adm-row:active { background: var(--fill-quaternary); }
+.adm-row:focus-visible {
+  position: relative;
+  z-index: 2;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.avatar.adm-avatar {
+  grid-area: avatar;
+  width: var(--adm-avatar);
+  height: var(--adm-avatar);
+  font: var(--t-subhead);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.adm-who {
+  grid-area: who;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.adm-name,
+.adm-sub {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.adm-name {
+  font: var(--t-headline);
+  letter-spacing: var(--ls-headline);
+}
+.adm-sub {
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+
+.adm-meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  min-width: 0;
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+.adm-rec,
+.adm-injury {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.adm-meta-label { flex-shrink: 0; white-space: nowrap; }
+.adm-rec-value {
+  font-weight: 600;
+  color: var(--label);
+  font-variant-numeric: tabular-nums;
+}
+.adm-rec-scale {
+  font-weight: 400;
+  color: var(--label-secondary);
+}
+.adm-none { color: var(--label-secondary); }
+.adm-rec .adm-none { color: var(--label-tertiary); }
+
+/* Lesión abierta: etiqueta de aviso (texto + punto; el color nunca va solo). */
+.adm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  max-width: 100%;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-xs);
+  background: var(--warn-tint);
+  color: var(--label);
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.adm-badge-dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warn);
+}
+
+/* Disclosure */
+.adm-chevron {
+  grid-area: chevron;
   width: 8px;
   height: 8px;
-  margin-right: 4px;
-  border-top: 2px solid var(--line);
-  border-right: 2px solid var(--line);
+  margin: 0 var(--space-1) 0 var(--space-2);
+  border-top: 2px solid var(--label-tertiary);
+  border-right: 2px solid var(--label-tertiary);
   transform: rotate(45deg);
 }
-.athlete-card .avatar { box-shadow: 0 0 0 2px var(--surface), var(--shadow-sm); }
+
+/* Cabecera de columnas: solo en la tabla de escritorio. */
+.adm-table-head { display: none; }
+/* Móvil: la lesión solo aparece si hay una abierta (fila de dos líneas, no tres). */
+@media (max-width: 719.98px) {
+  .adm-injury:not(.adm-injury--open) { display: none; }
+}
+
+@media (min-width: 720px) {
+  .adm-titlebar { padding: var(--space-4) 0 var(--space-6); }
+  .adm-table {
+    --adm-avatar: 40px;
+    --adm-cols: var(--adm-avatar) minmax(0, 1fr) 9rem 13rem 16px;
+  }
+  .adm-table-head {
+    display: grid;
+    grid-template-columns: var(--adm-cols);
+    column-gap: var(--space-4);
+    align-items: center;
+    min-height: 36px;
+    padding: 0 var(--row-inset);
+    border-bottom: 1px solid var(--separator);
+    font: var(--t-footnote);
+    font-weight: 600;
+    letter-spacing: var(--ls-footnote);
+    color: var(--label-secondary);
+  }
+  .adm-col-who { grid-column: 1 / 3; }
+  .adm-col-rec { grid-column: 3; }
+  .adm-col-injury { grid-column: 4; }
+  .adm-list > li:first-child .adm-row,
+  .adm-list > li:only-child .adm-row { border-radius: 0; }
+  .adm-list > li:last-child .adm-row { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+
+  .adm-row {
+    grid-template-columns: var(--adm-cols);
+    grid-template-areas: none;
+    column-gap: var(--space-4);
+    min-height: 60px;
+    padding-block: var(--space-2);
+  }
+  .adm-list > li + li::before { left: calc(var(--row-inset) + var(--adm-avatar) + var(--space-4)); }
+  .avatar.adm-avatar { grid-area: auto; grid-column: 1; }
+  .adm-who { grid-area: auto; grid-column: 2; }
+  .adm-name { font: var(--t-subhead); font-weight: 600; letter-spacing: var(--ls-subhead); }
+  .adm-meta { display: contents; }
+  .adm-rec { grid-column: 3; font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
+  .adm-injury { grid-column: 4; font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
+  .adm-chevron { grid-area: auto; grid-column: 5; justify-self: end; margin: 0 var(--space-1) 0 0; }
+  /* La cabecera de columnas ya nombra el dato: la etiqueta queda solo para lectores de pantalla. */
+  .adm-meta-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* Estado vacío */
+.state.adm-empty {
+  padding: var(--space-12) var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+/* Alta de deportista (sheet). El scrim cubre también la toolbar fija (z-index 1000, shell.css). */
+.adm-sheet-scrim { z-index: 1001; }
+@media (min-width: 720px) {
+  .adm-sheet { max-width: 480px; }
+}
+.adm-sheet .sheet-header { padding-top: var(--space-3); }
+.adm-sheet .sheet-body { padding-top: var(--space-2); }
+.adm-form .field:last-child { margin-bottom: 0; }
+.adm-form-alert { margin-bottom: var(--space-4); }
+.adm-fieldset {
+  min-width: 0;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  border: 0;
+}
+.adm-fieldset > legend {
+  padding: 0;
+  margin: 0 0 var(--space-1);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+.adm-fieldset .segmented > label { min-height: 32px; }
+@media (pointer: coarse) {
+  .adm-fieldset .segmented > label { min-height: 40px; }
+}
 
 .nut-assign { border: 0; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .nut-assign legend { padding: 0; margin-bottom: 4px; font-size: 0.8125rem; }
@@ -264,4 +464,29 @@
   font-size: 0.8125rem;
   line-height: 1.4;
   overflow-wrap: anywhere;
+}
+
+/* —— Preferencias del panel (B1) —— */
+@media (prefers-reduced-motion: reduce) {
+  .adm-row { transition: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .adm-sheet { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+@media (prefers-contrast: more) {
+  .adm-table,
+  .state.adm-empty { box-shadow: inset 0 0 0 1px var(--label); }
+  .adm-list > li + li::before { background: var(--label); }
+  .adm-table-head { border-bottom-color: var(--label); }
+  .adm-sub,
+  .adm-meta,
+  .adm-none,
+  .adm-rec .adm-none,
+  .adm-rec-scale,
+  .adm-count,
+  .adm-table-head { color: var(--label-on-tint); }
+  .adm-badge { box-shadow: inset 0 0 0 1px var(--warn); }
+  .adm-chevron { border-color: var(--label-on-tint); }
 }

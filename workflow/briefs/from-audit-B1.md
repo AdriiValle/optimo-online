@@ -1,0 +1,8 @@
+- Veredicto: PASA
+- Bloqueantes (maximo 5): ninguno
+- Notas no bloqueantes (maximo 3, opcional):
+  1. Estado vacío (0 deportistas) no verificado visualmente con datos reales (no se borran datos para probarlo). Solo revisado en código (`app/panel/deportistas-section.tsx`: icono, título «Sin deportistas», texto y botón tinted) y con una maqueta inyectada en el DOM: `.tmp-verify/audit-B1/admin390_empty_simulated.png` (sin icono, no es la pantalla real).
+  2. Crear un deportista de verdad (enviar el formulario) no se probó para no dejar datos de prueba. Sí verificado: el sheet abre con foco en Nombre, cierra con Escape y devuelve el foco al botón; a 390 y 768 el sheet funciona con campos y botones de 44 px de alto (`.tmp-verify/audit-B1/admin1440_sheet.png`, `admin768_sheet.png`, `admin390_sheet.png`).
+  3. A 390 la fila oculta «Lesión abierta» cuando es «Ninguna» y solo la muestra si hay lesión abierta (CSS `.adm-injury:not(.adm-injury--open)`). Todos los deportistas actuales tienen «Ninguna», así que el caso con lesión no se vio en pantalla.
+
+Comprobado: /panel (admin, usuario `adriivalle`) a 1440 con tabla densa Apple, título grande y botón «Añadir deportista» (`.tmp-verify/audit-B1/admin1440_panel.png`); a 768 y 390 sin romper (`admin768_panel.png`, `admin390_panel.png`). scrollWidth = ancho de pantalla en 1440, 768 y 390 (también con el sheet abierto). Filas y botón de añadir de 44 px o más de alto (filas de 60 y 86 px); botones de cabecera de 44 px. Foco visible con Tab (outline azul de 2 px en cabecera, botón añadir y filas). Clic en una fila lleva a `/a/<id>` como antes (`admin1440_athlete.png`). `npx tsc --noEmit` limpio. El círculo «N» de las capturas es el indicador de desarrollo de Next, no de la app.
