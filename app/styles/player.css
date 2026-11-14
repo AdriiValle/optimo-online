@@ -576,6 +576,68 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
   .session-list button.session-video:hover { background: var(--accent-tint); filter: brightness(0.96); }
 }
 
+/* —— Ajustes del jugador (A6): listas agrupadas inset al estilo Ajustes de iOS ——
+   Solo dentro de .pset: admin (.adm-set-card) y Amanda (.nut-account-settings) usan la variante "card"
+   de UsernameForm/PasswordForm y se estilan en su propia hoja. */
+.pset { display: flex; flex-direction: column; padding-top: var(--space-2); }
+.pset-title {
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  font: var(--t-large-title);
+  letter-spacing: var(--ls-large-title);
+}
+.pset-section { display: flex; flex-direction: column; margin: 0 0 var(--space-8); min-width: 0; }
+.pset-section:last-child { margin-bottom: 0; }
+.pset .list-group-title { display: block; margin: 0 0 var(--space-2); }
+.pset .list-group { margin: 0 0 var(--space-3); }
+.pset .list-group:has(+ .list-group-footer) { margin-bottom: var(--space-2); }
+.pset .list-group-footer { margin: 0 0 var(--space-4); }
+.pset-feedback:empty { display: none; }
+.pset-feedback .alert { margin: 0 0 var(--space-3); }
+
+/* Cabecera de perfil: avatar + nombre + usuario de acceso */
+.pset-id { min-height: 96px; padding-block: var(--space-3); gap: var(--space-4); }
+.pset-name {
+  display: block;
+  font: var(--t-title-3);
+  letter-spacing: var(--ls-title-3);
+  overflow-wrap: anywhere;
+}
+.pset-login { overflow-wrap: anywhere; }
+.pset-action { color: var(--accent-text); }
+.pset-action:disabled { cursor: progress; }
+.pset-action .spinner { color: var(--label-secondary); }
+
+/* Fila de campo: etiqueta a la izquierda, campo sin borde a la derecha; se apila si no cabe */
+.pset-field { flex-wrap: wrap; gap: var(--space-1) var(--space-3); cursor: text; }
+.pset-field-label { flex: 0 0 6.5rem; color: var(--label); }
+.pset-input {
+  flex: 1 1 10rem;
+  min-width: 0;
+  min-height: 36px;
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--label);
+  font: var(--t-body-row);
+  letter-spacing: var(--ls-body);
+}
+.pset-input:focus { outline: var(--focus-ring); outline-offset: 0; }
+.pset-input[aria-invalid="true"] { color: var(--danger); }
+.pset-input[aria-invalid="true"]:focus { outline-color: var(--danger); }
+.pset-field:has(.pset-input[aria-invalid="true"]) .pset-field-label { color: var(--danger); }
+
+/* Cuenta de Amanda (variante "card"; contenedor de nutri.css, pista C): la ayuda va en Footnote pegada al título,
+   como en .adm-set-card. El contenedor separa con gap de 20px. */
+.nut-account-settings > .muted {
+  margin: calc(var(--space-4) * -1) 0 0;
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+}
+.nut-account-settings > :is(.ok, .error) { margin: 0; }
+
 /* —— Preferencias (A1: calendario, foco del día, ficha y tab bar) —— */
 @media (prefers-reduced-motion: reduce) {
   .cal-days, .dash-panes { animation: none; }
@@ -632,4 +694,13 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
   .session-list .session-section { color: var(--label); }
   .session-item-info { color: var(--label-on-tint); }
   .session-list .session-video { box-shadow: inset 0 0 0 1px currentColor; }
+}
+
+/* —— Preferencias (A6: ajustes del jugador) —— */
+@media (prefers-reduced-motion: reduce) {
+  .pset-action, .pset-input { transition: none; }
+}
+@media (prefers-contrast: more) {
+  .pset .list-group-title, .pset .list-group-footer, .pset .list-row-sub { color: var(--label-on-tint); }
+  .pset-input::placeholder { color: var(--label-secondary); }
 }

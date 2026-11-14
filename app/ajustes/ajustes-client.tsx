@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { PasswordForm } from "@/app/components/password-form";
+import { useRef, useState } from "react";
+import { FormAlert, PasswordForm, type FormMsg } from "@/app/components/password-form";
 import { UsernameForm } from "@/app/components/username-form";
 
 type Props = {
@@ -12,104 +12,194 @@ type Props = {
   hasPhoto: boolean;
 };
 
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return parts
+    .slice(0, 2)
+    .map((p) => p[0]!.toUpperCase())
+    .join("");
+}
+
+function photoError(code: unknown) {
+  if (code === "PAYLOAD_TOO_LARGE") return "La foto pesa más de 400 KB. Prueba con una más pequeña.";
+  return "Usa una imagen JPG, PNG o WebP.";
+}
+
 export function AjustesClient({ athleteId, initialName, email, hasPhoto }: Props) {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(initialName);
+  const [savedName, setSavedName] = useState(initialName);
   const [loginUser, setLoginUser] = useState(email);
-  const [nameMsg, setNameMsg] = useState<string | null>(null);
-  const [photoMsg, setPhotoMsg] = useState<string | null>(null);
+  const [nameMsg, setNameMsg] = useState<FormMsg | null>(null);
+  const [namePending, setNamePending] = useState(false);
+  const [photoMsg, setPhotoMsg] = useState<FormMsg | null>(null);
+  const [photoPending, setPhotoPending] = useState(false);
   const [photoKey, setPhotoKey] = useState(0);
 
   async function saveName(e: React.FormEvent) {
     e.preventDefault();
     setNameMsg(null);
-    const res = await fetch(`/api/athletes/${athleteId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim() })
-    });
-    if (!res.ok) {
-      setNameMsg("No se pudo guardar el nombre.");
-      return;
+    setNamePending(true);
+    try {
+      const res = await fetch(`/api/athletes/${athleteId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim() })
+      });
+      if (!res.ok) {
+        setNameMsg({ ok: false, text: "No se pudo guardar el nombre." });
+        return;
+      }
+      setSavedName(name.trim());
+      setNameMsg({ ok: true, text: "Nombre guardado." });
+      router.refresh();
+    } catch {
+      setNameMsg({ ok: false, text: "No se pudo guardar el nombre. Revisa la conexión." });
+    } finally {
+      setNamePending(false);
     }
-    setNameMsg("Nombre guardado.");
-    router.refresh();
   }
 
   async function onPhoto(file: File) {
     setPhotoMsg(null);
-    const fd = new FormData();
-    fd.set("photo", file);
-    const res = await fetch(`/api/athletes/${athleteId}/photo`, { method: "POST", body: fd });
-    if (res.status === 422) {
-      const json = await res.json().catch(() => null);
-      setPhotoMsg(json?.error?.message ?? "La foto no es válida.");
-      return;
+    setPhotoPending(true);
+    try {
+      const fd = new FormData();
+      fd.set("photo", file);
+      const res = await fetch(`/api/athletes/${athleteId}/photo`, { method: "POST", body: fd });
+      if (res.status === 422) {
+        const json = await res.json().catch(() => null);
+        setPhotoMsg({ ok: false, text: photoError(json?.error?.code) });
+        return;
+      }
+      if (!res.ok) {
+        setPhotoMsg({ ok: false, text: "No se pudo subir la foto." });
+        return;
+      }
+      setPhotoKey((n) => n + 1);
+      setPhotoMsg({ ok: true, text: "Foto actualizada." });
+      router.refresh();
+    } catch {
+      setPhotoMsg({ ok: false, text: "No se pudo subir la foto. Revisa la conexión." });
+    } finally {
+      setPhotoPending(false);
     }
-    if (!res.ok) {
-      setPhotoMsg("No se pudo subir.");
-      return;
-    }
-    setPhotoKey((n) => n + 1);
-    setPhotoMsg("Foto actualizada.");
-    router.refresh();
   }
 
-  const photoSrc = hasPhoto || photoKey > 0 ? `/api/athletes/${athleteId}/photo?v=${photoKey}` : "/logo-optimo.png";
+  const showPhoto = hasPhoto || photoKey > 0;
+  const nameInvalid = (nameMsg && !nameMsg.ok) || undefined;
 
   return (
-    <div className="stack settings-stack">
-      <section className="card">
-        <h1>Ajustes</h1>
-        <p className="muted">Usuario de login: {loginUser}</p>
-      </section>
+    <div className="pset">
+      <h1 className="pset-title">Ajustes</h1>
 
-      <section className="card">
-        <UsernameForm initialUsername={email} onSaved={(u) => setLoginUser(u)} />
-      </section>
-
-      <section className="card">
-        <h2>Foto</h2>
-        {photoMsg ? <p className={photoMsg.includes("actualizada") ? "ok" : "error"}>{photoMsg}</p> : null}
-        <div className="photo-block">
-          <img className="avatar" src={photoSrc} alt="" />
-          <label className="btn secondary">
-            Elegir foto
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              hidden
-              onChange={(ev) => {
-                const file = ev.target.files?.[0];
-                if (file) void onPhoto(file);
-                ev.target.value = "";
-              }}
-            />
-          </label>
+      <section className="pset-section" aria-labelledby="pset-profile">
+        <h2 className="sr-only" id="pset-profile">
+          Perfil
+        </h2>
+        <ul className="list-group">
+          <li className="list-row pset-id">
+            {showPhoto ? (
+              <img className="avatar avatar--lg" src={`/api/athletes/${athleteId}/photo?v=${photoKey}`} alt="" />
+            ) : (
+              <span className="avatar avatar--lg" aria-hidden="true">
+                {initials(savedName)}
+              </span>
+            )}
+            <span className="list-row-main">
+              <span className="pset-name">{savedName}</span>
+              <span className="list-row-sub pset-login">
+                <span className="sr-only">Usuario de acceso: </span>
+                {loginUser}
+              </span>
+            </span>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="list-row pset-action"
+              onClick={() => fileRef.current?.click()}
+              disabled={photoPending}
+              aria-busy={photoPending || undefined}
+              aria-describedby="pset-photo-help"
+            >
+              {photoPending ? <span className="spinner" aria-hidden="true" /> : null}
+              <span className="list-row-main">
+                {photoPending ? "Subiendo foto…" : showPhoto ? "Cambiar foto" : "Añadir foto"}
+              </span>
+            </button>
+          </li>
+        </ul>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          hidden
+          tabIndex={-1}
+          onChange={(ev) => {
+            const file = ev.target.files?.[0];
+            if (file) void onPhoto(file);
+            ev.target.value = "";
+          }}
+        />
+        <p className="list-group-footer" id="pset-photo-help">
+          JPG, PNG o WebP, hasta 400 KB.
+        </p>
+        <div className="pset-feedback" aria-live="polite">
+          {photoMsg ? <FormAlert msg={photoMsg} /> : null}
         </div>
       </section>
 
-      <section className="card">
-        <h2>Nombre</h2>
-        {nameMsg ? <p className={nameMsg.includes("guardado") ? "ok" : "error"}>{nameMsg}</p> : null}
-        <form onSubmit={saveName}>
-          <label htmlFor="settings-name">Nombre visible en la ficha</label>
-          <input
-            id="settings-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            maxLength={120}
-          />
-          <button className="btn" type="submit">
-            Guardar nombre
-          </button>
-        </form>
-      </section>
+      <form className="pset-section" onSubmit={saveName} aria-labelledby="pset-name-heading">
+        <h2 className="list-group-title" id="pset-name-heading">
+          Nombre
+        </h2>
+        <ul className="list-group">
+          <li>
+            <label className="list-row pset-field" htmlFor="settings-name">
+              <span className="pset-field-label">Nombre</span>
+              <input
+                id="settings-name"
+                className="pset-input"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (nameMsg && !nameMsg.ok) setNameMsg(null);
+                }}
+                autoComplete="name"
+                required
+                maxLength={120}
+                aria-invalid={nameInvalid}
+                aria-describedby="pset-name-help"
+              />
+            </label>
+          </li>
+        </ul>
+        <p className="list-group-footer" id="pset-name-help">
+          Es el nombre que se ve en tu ficha.
+        </p>
+        <div className="pset-feedback" aria-live="polite">
+          {nameMsg ? <FormAlert msg={nameMsg} /> : null}
+        </div>
+        <button
+          className="btn btn--tinted btn--block"
+          type="submit"
+          disabled={namePending}
+          aria-busy={namePending || undefined}
+        >
+          Guardar nombre
+        </button>
+      </form>
 
-      <section className="card">
-        <PasswordForm />
-      </section>
+      <UsernameForm
+        variant="grouped"
+        heading="Usuario de acceso"
+        initialUsername={email}
+        onSaved={(u) => setLoginUser(u)}
+      />
+
+      <PasswordForm variant="grouped" />
     </div>
   );
 }

@@ -1,0 +1,8 @@
+- Veredicto: PASA
+- Bloqueantes (maximo 5): ninguno
+- Notas no bloqueantes (maximo 3, opcional):
+  1. Sesión desfasada al cambiar usuario (`/api/me/username`, ruta existente, no es del rediseño): tras renombrar, el JWT conserva el login antiguo; si en esa sesión se vuelve a pedir el nombre anterior, `username === user.email` devuelve 200 «Usuario de login actualizado» sin tocar la base. Se vio al restaurar `a b` → `ricardovisus` (hizo falta volver a entrar). Captura: .tmp-verify/audit-A6/ath390_user_ok.png
+  2. El validador acepta usuarios con espacios (`a b`), así que mi prueba de «error de validación» cambió de verdad el login de ricardovisus. Restaurado a `ricardovisus` y contraseña intacta (123456789); cuentas verificadas con `.tmp-verify/ids.ts`.
+  3. Botón de contraseña en el modal de Amanda es azul relleno, en `/ajustes` y `/panel/ajustes` es tinted; el de usuario es gris. Coherente por contexto (hoja propia de Amanda), solo se anota. Capturas: .tmp-verify/audit-A6/amanda1440_modal.png, admin1440_ajustes.png
+
+Comprobado: `/ajustes` (ricardovisus) a 390 y 1440, `/panel/ajustes` (adriivalle) a 390 y 1440, modal «Tu cuenta» de Amanda a 390 y 1440. scrollWidth = ancho de viewport en todas. Acciones primarias 44 px (filas de campo 52-60). Foco: anillo sólido 2 px #0071E3 en inputs y botones. Mensajes: error (contraseña no coincide, actual incorrecta; con aria-invalid en Repetir), éxito y estado pending (spinner, botón deshabilitado) correctos. Cambio de usuario y de contraseña funcionan (contraseña real no cambiada). `npx tsc --noEmit` limpio. Capturas en .tmp-verify/audit-A6/.
