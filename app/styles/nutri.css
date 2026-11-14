@@ -1130,3 +1130,286 @@ body.nut-modal-open { overflow: hidden; }
   .nut-field-unit, .nut-field-value, .nut-import-doc { color: var(--label-on-tint); }
   .nut-import-state--ok { box-shadow: inset 0 0 0 1px var(--label); }
 }
+
+/* —— Pestañas del deportista: Menú · Seguimiento · Perfil · Compra · Plantillas y platos · Informes (rd-N5) ——
+   Aspecto de segmentado. La pista se desliza por dentro cuando no cabe (la página nunca hace scroll lateral).
+   El contenedor del cliente (.nut-desktop) se disuelve (display: contents) para que las pestañas entren en
+   la misma rejilla/pila que el título, la sidebar y la zona de trabajo. */
+.nut-tabs { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.nut-tabs-track {
+  display: flex;
+  flex: 0 1 auto;
+  gap: 2px;
+  min-width: 0;
+  padding: 2px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  border-radius: var(--radius-md);
+  background: var(--fill-secondary);
+}
+.nut-tabs-track::-webkit-scrollbar { display: none; }
+.nut-tab {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--label);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: transform var(--dur) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.nut-tab[aria-current="page"] { font-weight: 600; background: var(--surface); box-shadow: var(--elev-1); }
+.nut-tab:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+/* La pista recorta por overflow: el anillo va por dentro para verse entero. */
+.nut-tab:focus-visible { outline: var(--focus-ring); outline-offset: -2px; border-radius: var(--radius-sm); }
+.nut-tabs-foods {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap-min);
+  margin-left: auto;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  color: var(--accent-text);
+  font: var(--t-subhead);
+  font-weight: 600;
+  letter-spacing: var(--ls-subhead);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: transform var(--dur) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.nut-tabs-foods:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.nut-tabs-foods:focus-visible { border-radius: var(--radius-pill); }
+@media (hover: hover) {
+  .nut-tab:not([aria-current="page"]):hover { background: var(--fill-quaternary); }
+  .nut-tabs-foods:hover { background: var(--fill-quaternary); }
+}
+
+/* Secciones aún vacías: estado vacío en tarjeta. */
+.nut-section-state { margin: 0; padding: var(--space-10) var(--space-5); border-radius: var(--radius-lg); background: var(--surface); }
+.nut-section-state .state-icon { width: 40px; height: 40px; }
+.nut-section-state .state-text { max-width: 42ch; }
+
+@media (max-width: 1279.98px) {
+  /* Pila: título grande, pestañas y luego el contenido. */
+  .nut-page--tabs { display: flex; flex-direction: column; gap: var(--space-4); }
+  .nut-page--tabs > .nut-desktop { display: contents; }
+  .nut-page--tabs .nut-ws-title { order: -2; }
+  .nut-page--tabs > .nut-tabs { order: -1; }
+}
+
+@media (min-width: 1280px) {
+  /* Workspace: las pestañas encabezan la zona de trabajo; la sidebar ocupa todo el alto. */
+  .page.nut-page--tabs {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: "list tabs" "list main";
+    margin-top: calc(-1 * var(--header-gap));
+    height: calc(100vh - var(--header-offset) - var(--header-block));
+    height: calc(100dvh - var(--header-offset) - var(--header-block));
+  }
+  .nut-page--tabs > .nut-desktop { display: contents; }
+  /* «Suplementos y dieta» al pie de la sidebar (nutri-shared.css): misma área «edit», con la fila de pestañas encima. */
+  .page.nut-page--tabs:has(.nut-ws-mobile-menu .nut-edit) {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas: "list tabs" "list main" "edit main";
+  }
+  .nut-page--tabs > .nut-tabs { grid-area: tabs; margin: var(--space-4) var(--space-6) 0; }
+  .nut-page--tabs .nut-ws-main,
+  .nut-page--tabs .nut-ws-index { margin-top: var(--space-3); }
+}
+@media (min-width: 1280px) and (pointer: fine) {
+  .nut-tab { min-height: calc(var(--tap-compact) - 4px); }
+  .nut-tabs-foods { min-height: var(--tap-compact); }
+}
+
+/* —— Alimentos: catálogo editable y bandeja «Sin alimento» (rd-N5) —— */
+.page.nut-foods-page { max-width: 1200px; }
+.nut-foods { display: flex; flex-direction: column; gap: var(--space-8); min-width: 0; }
+.nut-foods-intro { display: flex; flex-direction: column; gap: var(--space-1); }
+.nut-foods-title {
+  margin: 0;
+  font: var(--t-large-title);
+  letter-spacing: var(--ls-large-title);
+  color: var(--label);
+}
+.nut-foods-lead, .nut-foods-section-sub {
+  margin: 0;
+  max-width: 62ch;
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--label-secondary);
+}
+.nut-foods-section-sub { margin-top: var(--space-1); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-foods-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.nut-foods-section-head > div:first-child { flex: 1 1 280px; min-width: 0; }
+.nut-foods-section-head h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font: var(--t-title-3);
+  letter-spacing: var(--ls-title-3);
+  color: var(--label);
+}
+.nut-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--fill-tertiary);
+  color: var(--label-secondary);
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+  font-variant-numeric: tabular-nums;
+}
+.nut-foods .field-error { margin: 0; }
+.nut-food-field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; margin: 0; }
+.nut-food-label {
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+.nut-foods input:not([type="checkbox"]), .nut-foods select { margin-bottom: 0; }
+
+/* Bandeja */
+.nut-tray-done { margin-bottom: var(--space-3); }
+.nut-tray-done p { margin: 0; }
+.nut-tray-empty { border-radius: var(--radius-lg); background: var(--surface); }
+.nut-tray-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nut-orphan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.nut-orphan[aria-busy="true"] { opacity: 0.6; }
+.nut-orphan-head { display: flex; flex-direction: column; gap: 2px; }
+.nut-orphan-text { margin: 0; font: var(--t-headline); letter-spacing: var(--ls-headline); color: var(--label); overflow-wrap: anywhere; }
+.nut-orphan-meta { margin: 0; font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); }
+.nut-orphan-primary { align-self: flex-start; max-width: 100%; white-space: normal; }
+.nut-orphan-suggest { display: flex; flex-direction: column; gap: var(--space-1); }
+.nut-orphan-label { font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); }
+.nut-orphan-suggest .chips { min-height: 0; }
+.nut-orphan-chip { min-height: var(--tap-min); }
+.nut-orphan-chip:disabled { opacity: 0.4; cursor: default; }
+@media (hover: hover) { .nut-orphan-chip:not(:disabled):hover { background: var(--fill-secondary); } }
+.nut-orphan-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); }
+.nut-orphan-row > .btn--plain { grid-column: 1 / -1; justify-self: start; padding-inline: var(--space-3); }
+.nut-orphan-new {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--separator-soft);
+}
+.nut-orphan-new-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+
+/* Catálogo: tarjetas en la pila; tabla a partir de 1024. */
+.nut-catalog-search { flex: 1 1 240px; max-width: 360px; }
+.nut-catalog-head { display: none; }
+.nut-catalog-list { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.nut-food {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.nut-food-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); align-items: end; }
+.nut-food-name, .nut-food-aliases, .nut-food-end { grid-column: 1 / -1; }
+.nut-food-staple { justify-content: flex-end; min-height: var(--tap-min); cursor: pointer; }
+.nut-food-end { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.nut-food-meta { font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); font-variant-numeric: tabular-nums; }
+.nut-food-save { min-width: 112px; }
+
+@media (min-width: 1024px) {
+  .nut-catalog-head,
+  .nut-food-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 0.7fr) 84px minmax(0, 1.8fr) 56px 104px 104px;
+    gap: var(--space-2);
+    align-items: center;
+  }
+  .nut-catalog-head {
+    padding: 0 var(--space-3) var(--space-2);
+    font: var(--t-footnote);
+    font-weight: 600;
+    letter-spacing: var(--ls-footnote);
+    color: var(--label-secondary);
+  }
+  .nut-catalog-list { gap: 0; border-radius: var(--radius-lg); background: var(--surface); }
+  .nut-food { gap: var(--space-1); padding: var(--space-2) var(--space-3); border-radius: 0; background: none; }
+  .nut-food + .nut-food { border-top: 1px solid var(--separator-soft); }
+  .nut-food-name, .nut-food-aliases, .nut-food-end { grid-column: auto; }
+  .nut-food-end { display: contents; }
+  .nut-food-staple { align-items: center; justify-content: center; min-height: 0; }
+  .nut-food-save { min-width: 0; padding-inline: var(--space-3); }
+  /* En la tabla las columnas llevan el nombre: la etiqueta queda solo para lectores de pantalla. */
+  .nut-food-form .nut-food-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+@media (min-width: 1024px) and (pointer: fine) {
+  .nut-food input:not([type="checkbox"]) {
+    min-height: 36px;
+    padding: 6px var(--space-2);
+    font: var(--t-subhead);
+    letter-spacing: var(--ls-subhead);
+  }
+  .nut-food-save { min-height: 36px; font: var(--t-subhead); font-weight: 600; letter-spacing: var(--ls-subhead); }
+  .nut-orphan-chip { min-height: var(--tap-compact); }
+}
+
+/* —— Preferencias del sistema: pestañas y Alimentos (rd-N5) ——
+   Transparencia: nada translúcido en estas piezas, nada que ajustar. */
+@media (prefers-reduced-motion: reduce) {
+  .nut-tab, .nut-tabs-foods { transition: none; }
+  .nut-tab:active, .nut-tabs-foods:active { transform: none; }
+}
+@media (prefers-contrast: more) {
+  .nut-tabs-track { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-tab[aria-current="page"] { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-section-state, .nut-orphan, .nut-tray-empty, .nut-catalog-list { box-shadow: inset 0 0 0 1px var(--separator); }
+  .nut-foods-lead, .nut-foods-section-sub, .nut-count, .nut-food-label, .nut-food-meta,
+  .nut-orphan-meta, .nut-orphan-label, .nut-catalog-head { color: var(--label); }
+}

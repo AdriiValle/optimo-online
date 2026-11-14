@@ -7,6 +7,7 @@ import { assignedAthletesForNutritionist, athleteById, calendarPlansForAthlete }
 import { planData } from "@/lib/plan-data";
 import { HeaderBackButton } from "@/app/components/header-back-button";
 import { LogoutButton } from "@/app/logout-button";
+import { AthleteTabs } from "./athlete-tabs";
 import { NutricionAthleteClient } from "./nutricion-athlete-client";
 
 export default async function NutricionAthletePage({ params }: { params: Promise<{ athleteId: string }> }) {
@@ -28,7 +29,8 @@ export default async function NutricionAthletePage({ params }: { params: Promise
 
   return (
     <>
-      <main className="page nut-page">
+      <main className="page nut-page nut-page--tabs">
+        <AthleteTabs athleteId={data.athlete.id} />
         <NutricionAthleteClient
           accountLogin={user.email}
           athleteId={data.athlete.id}
