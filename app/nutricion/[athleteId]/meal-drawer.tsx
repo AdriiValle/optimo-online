@@ -87,9 +87,19 @@ function categoryName(label: string | null) {
 /** Plato cuya foto cambió (este y, con «platos iguales», los demás que la recibieron). */
 export type PhotoChange = { id: string; hasPhoto: boolean; updatedAt: string };
 
+/** Aspa de cerrar (mismo trazo que los sheets de la app). */
+export function CloseGlyph() {
+  return (
+    <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
+      <path d="M2.5 2.5l9 9M11.5 2.5l-9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /**
- * Héroe de la ficha: foto o placeholder, y zona de soltar (desktop) + «Elegir foto» (móvil).
+ * Héroe de la ficha: foto o placeholder, zona de soltar (desktop) y acciones sobre la foto.
  * La foto se reduce en el navegador (≤300 KB) y la vista previa sale antes de que acabe la subida.
+ * «Platos iguales»: interruptor debajo, solo si hay platos con el mismo texto todavía sin foto.
  */
 function PhotoHero({ meal, name, onChanged }: { meal: MealSlot; name: string; onChanged: (changes: PhotoChange[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -189,7 +199,7 @@ function PhotoHero({ meal, name, onChanged }: { meal: MealSlot; name: string; on
   return (
     <div className="nut-ficha-photo">
       <figure
-        className={`nut-ficha-hero${over ? " is-over" : ""}${busy ? " is-busy" : ""}`}
+        className={`nut-ficha-hero${src ? " has-photo" : ""}${over ? " is-over" : ""}${busy ? " is-busy" : ""}`}
         onDragOver={onDragOver}
         onDragLeave={() => setOver(false)}
         onDrop={onDrop}
@@ -197,19 +207,20 @@ function PhotoHero({ meal, name, onChanged }: { meal: MealSlot; name: string; on
         {src ? <img src={src} alt="" /> : <figcaption aria-hidden="true">{name}</figcaption>}
         {over || busy ? (
           <span className="nut-ficha-drop" aria-hidden="true">
+            {busy ? <span className="spinner" /> : null}
             {busy === "up" ? "Subiendo…" : busy === "del" ? "Quitando…" : "Suelta para poner la foto"}
           </span>
         ) : null}
-      </figure>
-      <div className="nut-ficha-photo-actions">
-        <button type="button" className="btn secondary" disabled={Boolean(busy)} onClick={() => inputRef.current?.click()}>
-          {meal.hasPhoto ? "Cambiar foto" : "Elegir foto"}
-        </button>
-        {meal.hasPhoto ? (
-          <button type="button" className="btn secondary" disabled={Boolean(busy)} onClick={() => void remove()}>
-            Quitar foto
+        <div className="nut-ficha-photo-actions">
+          {meal.hasPhoto ? (
+            <button type="button" className="nut-photo-btn" disabled={Boolean(busy)} onClick={() => void remove()}>
+              Quitar foto
+            </button>
+          ) : null}
+          <button type="button" className="nut-photo-btn" disabled={Boolean(busy)} onClick={() => inputRef.current?.click()}>
+            {meal.hasPhoto ? "Cambiar foto" : "Elegir foto"}
           </button>
-        ) : null}
+        </div>
         <input
           ref={inputRef}
           type="file"
@@ -221,15 +232,25 @@ function PhotoHero({ meal, name, onChanged }: { meal: MealSlot; name: string; on
             if (file) void upload(file);
           }}
         />
-      </div>
+      </figure>
       {same ? (
-        <label className="nut-ficha-same">
-          <input type="checkbox" checked={applySame} disabled={Boolean(busy)} onChange={(e) => setApplySame(e.target.checked)} />
-          Usar en {same === 1 ? "el plato igual" : `los ${same} platos iguales`}
+        <label className="toggle-row nut-ficha-same">
+          <span>
+            Usar también en {same === 1 ? "el plato igual" : `los ${same} platos iguales`}
+            <small>Mismo plato en otros días, todavía sin foto.</small>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            className="toggle"
+            checked={applySame}
+            disabled={Boolean(busy)}
+            onChange={(e) => setApplySame(e.target.checked)}
+          />
         </label>
       ) : null}
       {msg ? (
-        <p className={`nut-ficha-photo-msg ${msg.ok ? "ok" : "error"}`} role="status">
+        <p className={`nut-ficha-msg ${msg.ok ? "ok" : "error"}`} role="status">
           {msg.text}
         </p>
       ) : null}
@@ -257,7 +278,18 @@ export function MealFicha({
   onItemsChanged: () => void;
   onPhotoChanged: (changes: PhotoChange[]) => void;
 }) {
-  if (!meal) return <>{editForm}</>;
+  if (!meal) {
+    return (
+      <div className="nut-ficha">
+        <section className="nut-ficha-card" aria-labelledby="nut-ficha-new">
+          <h3 id="nut-ficha-new" className="nut-ficha-card-title">
+            Nuevo plato
+          </h3>
+          {editForm}
+        </section>
+      </div>
+    );
+  }
   const cat = splitCategory(meal.title);
   const lines = dishLines(cat.body);
   const name = categoryName(cat.label);
@@ -270,6 +302,7 @@ export function MealFicha({
         : nutrition.quantified
           ? "Cuenta en el total del día"
           : "Sin ingredientes";
+  const tone = nutrition?.quantified ? "ok" : nutrition?.missing ? "warn" : "none";
   return (
     <div className={`nut-ficha nut-cat nut-cat--${cat.key}`}>
       <PhotoHero key={meal.id} meal={meal} name={name} onChanged={onPhotoChanged} />
@@ -280,21 +313,28 @@ export function MealFicha({
         {lines.rest ? <p>{lines.rest}</p> : null}
       </header>
 
-      <section className="nut-ficha-macros" aria-label="Macros de esta comida">
-        <header className="nut-items-head">
-          <h3>Macros</h3>
-          <span className={nutrition?.quantified ? "ok" : "muted"}>{status}</span>
+      <section className="nut-ficha-card nut-ficha-macros" aria-labelledby="nut-ficha-macros-title">
+        <header className="nut-ficha-card-head">
+          <h3 id="nut-ficha-macros-title" className="nut-ficha-card-title">
+            Macros de esta comida
+          </h3>
+          <span className={`nut-badge nut-badge--${tone}`}>{status}</span>
         </header>
-        <p className="nut-ficha-kcal">
-          <strong>{macros ? `${macros.mark}${fmt(macros.kcal)}` : "—"}</strong> kcal
-        </p>
-        <MacroDonut grams={macros?.grams ?? null} unit="g" mark={macros?.mark} />
+        <div className="nut-ficha-macros-body">
+          <p className="nut-ficha-kcal">
+            <strong>{macros ? `${macros.mark}${fmt(macros.kcal)}` : "—"}</strong>
+            <span>kcal</span>
+          </p>
+          <MacroDonut grams={macros?.grams ?? null} unit="g" mark={macros?.mark} />
+        </div>
       </section>
 
       <MealItemsEditor athleteId={athleteId} meal={meal} onChanged={onItemsChanged} />
 
       <details className="nut-details nut-ficha-edit">
-        <summary>Editar plato</summary>
+        <summary>
+          <span className="nut-details-label">Editar plato</span>
+        </summary>
         {editForm}
       </details>
     </div>
@@ -343,10 +383,12 @@ export function MealDrawer({
 
   return (
     <aside ref={ref} className="nut-drawer" role="dialog" aria-labelledby="nut-drawer-title" tabIndex={-1} onKeyDown={trapTab}>
-      <div className="nut-drawer-head">
-        <h2 id="nut-drawer-title">{title}</h2>
-        <button type="button" className="icon-btn" aria-label="Cerrar ficha" onClick={onClose}>
-          ×
+      <div className="sheet-header nut-drawer-head">
+        <h2 id="nut-drawer-title" className="sheet-title">
+          {title}
+        </h2>
+        <button type="button" className="icon-btn sheet-close" aria-label="Cerrar ficha" onClick={onClose}>
+          <CloseGlyph />
         </button>
       </div>
       <div key={cellKey} className="nut-drawer-body">

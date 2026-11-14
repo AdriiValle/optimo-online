@@ -64,7 +64,19 @@ export function MealItemsEditor({ athleteId, meal, onChanged }: { athleteId: str
     };
   }, [meal.id, meal.title, meal.preparation, reload]);
 
-  if (items === null) return <p className="muted nut-items">Cargando ingredientes…</p>;
+  if (items === null) {
+    return (
+      <section className="nut-ficha-card nut-items" aria-label="Ingredientes" aria-busy="true">
+        <h3 className="nut-ficha-card-title">Ingredientes</h3>
+        <p className="sr-only" role="status">
+          Cargando ingredientes…
+        </p>
+        <span className="skeleton skeleton--line" aria-hidden="true" />
+        <span className="skeleton skeleton--line" aria-hidden="true" />
+        <span className="skeleton skeleton--line nut-items-skel-short" aria-hidden="true" />
+      </section>
+    );
+  }
 
   const current = items.filter((it) => !it.obsolete);
   const obsolete = items.filter((it) => it.obsolete);
@@ -149,92 +161,126 @@ export function MealItemsEditor({ athleteId, meal, onChanged }: { athleteId: str
   }
 
   return (
-    <section className="nut-items" aria-label="Ingredientes">
-      <header className="nut-items-head">
-        <h3>Ingredientes</h3>
-        <span className={counts ? "ok" : "muted"}>{status}</span>
+    <section className="nut-ficha-card nut-items" aria-labelledby="nut-items-title">
+      <header className="nut-ficha-card-head">
+        <h3 id="nut-items-title" className="nut-ficha-card-title">
+          Ingredientes
+        </h3>
+        {current.length ? (
+          <span className="nut-ficha-card-count">
+            {current.length} {current.length === 1 ? "ingrediente" : "ingredientes"}
+          </span>
+        ) : null}
       </header>
+      <p className={`nut-items-status${counts ? " is-ok" : pending ? " is-warn" : ""}`}>{status}</p>
 
-      {current.map((it) => {
-        const d = drafts[it.id];
-        if (!d) return null;
-        const warn = !ignored(d) && !complete(d);
-        return (
-          <div key={it.id} className="nut-item">
-            <p className="nut-item-raw">{it.rawText}</p>
-            <select aria-label="Alimento" value={d.foodId} disabled={busy} onChange={(e) => edit(it.id, { foodId: e.target.value })}>
-              <option value="">— Sin alimento —</option>
-              {foods.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-            <label className="nut-item-grams">
-              <input
-                aria-label="Gramos"
-                inputMode="decimal"
-                value={d.grams}
-                placeholder="—"
-                disabled={busy}
-                onChange={(e) => edit(it.id, { grams: e.target.value })}
-              />
-              <span>g</span>
-            </label>
-            <div className="nut-item-meta">
-              <select aria-label="Rol" value={d.role} disabled={busy} onChange={(e) => edit(it.id, { role: e.target.value as Role })}>
-                {ROLES.map((r) => (
-                  <option key={r.key} value={r.key}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
-              <label className="nut-item-ok">
-                <input
-                  type="checkbox"
-                  checked={d.confirmed}
-                  disabled={busy}
-                  onChange={(e) => edit(it.id, { confirmed: e.target.checked })}
-                />
-                Confirmado
-              </label>
-              {warn ? <span className="nut-item-warn">Falta {d.foodId ? "gramos" : "alimento"}</span> : null}
-            </div>
-          </div>
-        );
-      })}
+      {current.length ? (
+        <ul className="nut-item-list">
+          {current.map((it) => {
+            const d = drafts[it.id];
+            if (!d) return null;
+            const warn = !ignored(d) && !complete(d);
+            return (
+              <li key={it.id} className={`nut-item${d.confirmed ? " is-confirmed" : ""}`}>
+                <p className="nut-item-raw">{it.rawText}</p>
+                <div className="nut-item-fields">
+                  <select
+                    aria-label={`Alimento de «${it.rawText}»`}
+                    value={d.foodId}
+                    disabled={busy}
+                    onChange={(e) => edit(it.id, { foodId: e.target.value })}
+                  >
+                    <option value="">Sin alimento</option>
+                    {foods.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="nut-item-grams">
+                    <input
+                      aria-label={`Gramos de «${it.rawText}»`}
+                      inputMode="decimal"
+                      value={d.grams}
+                      placeholder="—"
+                      disabled={busy}
+                      onChange={(e) => edit(it.id, { grams: e.target.value })}
+                    />
+                    <span aria-hidden="true">g</span>
+                  </span>
+                </div>
+                <div className="nut-item-meta">
+                  <select
+                    aria-label={`Rol de «${it.rawText}»`}
+                    value={d.role}
+                    disabled={busy}
+                    onChange={(e) => edit(it.id, { role: e.target.value as Role })}
+                  >
+                    {ROLES.map((r) => (
+                      <option key={r.key} value={r.key}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </select>
+                  {warn ? <span className="nut-badge nut-badge--warn">Falta {d.foodId ? "gramos" : "alimento"}</span> : null}
+                  <label className="nut-item-ok">
+                    Confirmado
+                    <input
+                      type="checkbox"
+                      role="switch"
+                      className="toggle"
+                      checked={d.confirmed}
+                      disabled={busy}
+                      onChange={(e) => edit(it.id, { confirmed: e.target.checked })}
+                    />
+                  </label>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
 
       {obsolete.length ? (
-        <div className="nut-items-obsolete">
-          <p className="muted">El texto del plato cambió: estos ingredientes ya no cuentan. Genera borradores nuevos.</p>
-          {obsolete.map((it) => (
-            <p key={it.id} className="nut-item nut-item--obsolete">
-              <span className="nut-item-raw">{it.rawText}</span>
-              <span>
-                {(it.foodId && foodName.get(it.foodId)) || "Sin alimento"} · {it.grams == null ? "—" : `${it.grams} g`}
-                {it.confirmed ? " · confirmado" : ""}
-              </span>
-            </p>
-          ))}
+        <div className="alert alert--warn nut-items-obsolete">
+          <div>
+            <p className="alert-title">El texto del plato cambió</p>
+            <p>Estos ingredientes ya no cuentan. Genera borradores nuevos.</p>
+            <ul>
+              {obsolete.map((it) => (
+                <li key={it.id}>
+                  <span className="nut-item-raw">{it.rawText}</span>
+                  <span>
+                    {(it.foodId && foodName.get(it.foodId)) || "Sin alimento"} · {it.grams == null ? "—" : `${it.grams} g`}
+                    {it.confirmed ? " · confirmado" : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       ) : null}
 
-      <div className="nut-actions">
+      <div className="nut-actions nut-items-actions">
         {current.length ? (
           <>
-            <button type="button" className="btn" disabled={busy} onClick={() => void save(true)}>
+            <button type="button" className="btn btn--block" disabled={busy} aria-busy={busy || undefined} onClick={() => void save(true)}>
               {busy ? "Guardando…" : "Confirmar ingredientes"}
             </button>
-            <button type="button" className="btn secondary" disabled={busy} onClick={() => void save(false)}>
+            <button type="button" className="btn btn--plain btn--block" disabled={busy} onClick={() => void save(false)}>
               Guardar sin confirmar
             </button>
           </>
         ) : (
-          <button type="button" className="btn secondary" disabled={busy} onClick={() => void generate()}>
+          <button type="button" className="btn btn--tinted btn--block" disabled={busy} aria-busy={busy || undefined} onClick={() => void generate()}>
             {busy ? "Generando…" : "Generar borradores"}
           </button>
         )}
-        {msg ? <p className={msg.ok ? "ok" : "error"}>{msg.text}</p> : null}
+        {msg ? (
+          <p className={`nut-ficha-msg ${msg.ok ? "ok" : "error"}`} role="status">
+            {msg.text}
+          </p>
+        ) : null}
       </div>
     </section>
   );

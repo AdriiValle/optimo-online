@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { addDays, dateKey, DOW_ES, DOW_FULL, DOW_SHORT, formatLongDate, MONTHS_ES, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
 import { MEAL_SLOTS, type DayPlan, type MealSlot, type MealSlotKind, type SupplementEntry } from "@/lib/types";
@@ -12,8 +12,8 @@ import { UsernameForm } from "@/app/components/username-form";
 import { NutritionPane } from "@/app/a/[id]/nutrition-pane";
 import { NutAthleteNav } from "../athlete-nav";
 import { MenuWordImportButton } from "./menu-word-import";
-import { AthleteProfileButton, AthleteProfileForm } from "./athlete-profile-form";
-import { MacroDonut, MealDrawer, MealFicha, type PhotoChange } from "./meal-drawer";
+import { AthleteProfileForm } from "./athlete-profile-form";
+import { CloseGlyph, MacroDonut, MealDrawer, MealFicha, type PhotoChange } from "./meal-drawer";
 import { fmt, perDay, periodTotal, summarizeNutrition } from "./nutrition-summary";
 import { dayTypeFromMdTag } from "@/lib/nutrition/day-type";
 import { averageTargets, dailyTargets, ringStatus, type DailyTargets, type RingStatus, type Target, type TargetKey } from "@/lib/nutrition/targets";
@@ -93,17 +93,16 @@ export function NutricionAthleteClient({
     if (editor && !viewDays.includes(editor.date)) setEditor(null);
   }, [editor, viewDays]);
 
+  // Escape cierra el drawer (≥1280). Los sheets (NutModal) se cierran solos con su animación y paran
+  // el evento en `document`, así que con un sheet encima del drawer solo se cierra el sheet.
   useEffect(() => {
-    if (!editor && !settingsOpen) return;
+    if (!editor || !wide) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        if (editor) closeEditor();
-        else closeSettings();
-      }
+      if (e.key === "Escape") closeEditor();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [editor, settingsOpen, closeEditor, closeSettings]);
+  }, [editor, wide, closeEditor]);
 
   useEffect(() => {
     if (!editor && !settingsOpen) return;
@@ -295,6 +294,7 @@ export function NutricionAthleteClient({
                 label={label}
                 meal={meals.find((m) => m.date === center && m.slot === kind) ?? null}
                 onChange={(next) => updateMeal(center, kind, next)}
+                onOpenFicha={() => openCell(center, kind)}
               />
             ))
           )}
@@ -303,7 +303,7 @@ export function NutricionAthleteClient({
       </div>
 
       {editor && !wide ? (
-        <NutModal title={editorTitle} onClose={closeEditor}>
+        <NutModal title={editorTitle} onClose={closeEditor} ficha>
           {ficha}
         </NutModal>
       ) : null}
@@ -476,7 +476,7 @@ function WeekGrid({
           ))}
         </div>
         <div className="nut-toolbar-end">
-          <AthleteProfileButton athleteId={athleteId} onSaved={onProfileSaved} />
+          <ProfileSheetButton athleteId={athleteId} onSaved={onProfileSaved} />
           <MenuWordImportButton athleteId={athleteId} onImported={onMenuImported} />
         </div>
       </div>
@@ -971,27 +971,146 @@ const MICROS: { key: NutrientKey & TargetKey; label: string; unit: string; digit
   { key: "vit_d_ug", label: "Vit. D", unit: "µg", digits: 1 }
 ];
 
-function NutModal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+/** Botón «Perfil» del toolbar: la ficha física en el sheet de Amanda (scrim, X, Escape, foco). */
+function ProfileSheetButton({ athleteId, onSaved }: { athleteId: string; onSaved: () => void }) {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  useEffect(() => {
+    if (!open) return;
+    document.body.classList.add("nut-modal-open");
+    return () => document.body.classList.remove("nut-modal-open");
+  }, [open]);
+  return (
+    <>
+      <button type="button" className="btn secondary" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+        Perfil
+      </button>
+      {open ? (
+        <NutModal title="Perfil del deportista" onClose={close}>
+          <AthleteProfileForm athleteId={athleteId} onSaved={onSaved} />
+        </NutModal>
+      ) : null}
+    </>
+  );
+}
+
+/** Margen para desmontar el sheet si `animationend` no llega (animaciones desactivadas). */
+const SHEET_CLOSE_FALLBACK_MS = 600;
+const SHEET_FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Sheet de Amanda (primitivo `.sheet*`, superficie opaca): ficha <1280, cuenta y perfil.
+ * Móvil anclado abajo con asa; ≥720 centrado. Cierra con la X, Escape o tocando el fondo, y sale
+ * por donde entró. Tab queda dentro; al cerrar, el foco vuelve a quien lo abrió.
+ */
+function NutModal({ title, onClose, ficha, children }: { title: string; onClose: () => void; ficha?: boolean; children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const titleId = useId();
+  const closeBtn = useRef<HTMLButtonElement>(null);
+  const fallback = useRef<number | null>(null);
+  /** El clic cierra solo si empezó en el fondo (arrastrar una selección fuera no cierra). */
+  const downOnScrim = useRef(false);
+
   useEffect(() => setMounted(true), []);
+
+  const finishClose = useCallback(() => {
+    if (fallback.current) window.clearTimeout(fallback.current);
+    fallback.current = null;
+    onClose();
+  }, [onClose]);
+
+  const requestClose = useCallback(() => {
+    setClosing(true);
+    if (fallback.current) window.clearTimeout(fallback.current);
+    fallback.current = window.setTimeout(finishClose, SHEET_CLOSE_FALLBACK_MS);
+  }, [finishClose]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeBtn.current?.focus({ preventScroll: true });
+    return () => {
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted || closing) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      // En `document`: no llega al listener de `window` del drawer que pueda haber debajo.
+      e.stopPropagation();
+      requestClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mounted, closing, requestClose]);
+
+  useEffect(
+    () => () => {
+      if (fallback.current) window.clearTimeout(fallback.current);
+    },
+    []
+  );
+
+  function trapFocus(e: ReactKeyboardEvent<HTMLDivElement>) {
+    if (e.key !== "Tab") return;
+    const nodes = [...e.currentTarget.querySelectorAll<HTMLElement>(SHEET_FOCUSABLE)].filter((n) => n.getClientRects().length > 0);
+    if (!nodes.length) return;
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
   if (!mounted) return null;
 
   return createPortal(
-    <div className="nut-modal-root" role="presentation" onClick={onClose}>
+    <div
+      className={`sheet-scrim nut-sheet-scrim${closing ? " is-closing" : ""}`}
+      onPointerDown={(e) => {
+        downOnScrim.current = e.target === e.currentTarget;
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && downOnScrim.current && !closing) requestClose();
+        downOnScrim.current = false;
+      }}
+      onAnimationEnd={(e) => {
+        if (closing && e.target === e.currentTarget) finishClose();
+      }}
+    >
       <div
-        className="nut-modal card"
+        className={`sheet sheet--opaque nut-sheet${ficha ? " nut-sheet--ficha" : ""}`}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="nut-modal-title"
-        onClick={(e) => e.stopPropagation()}
+        aria-labelledby={titleId}
+        onKeyDown={trapFocus}
       >
-        <div className="nut-modal-head">
-          <h2 id="nut-modal-title">{title}</h2>
-          <button type="button" className="icon-btn" aria-label="Cerrar" onClick={onClose}>
-            ×
+        <div className="sheet-grabber" aria-hidden="true" />
+        <div className="sheet-header">
+          <h2 id={titleId} className="sheet-title">
+            {title}
+          </h2>
+          <button
+            ref={closeBtn}
+            type="button"
+            className="icon-btn sheet-close"
+            aria-label="Cerrar"
+            onClick={() => {
+              if (!closing) requestClose();
+            }}
+          >
+            <CloseGlyph />
           </button>
         </div>
-        <div className="nut-modal-body">{children}</div>
+        <div className="sheet-body">{children}</div>
       </div>
     </div>,
     document.body
@@ -1005,7 +1124,8 @@ function MealSlotForm({
   label,
   meal,
   bare,
-  onChange
+  onChange,
+  onOpenFicha
 }: {
   athleteId: string;
   date: string;
@@ -1014,6 +1134,8 @@ function MealSlotForm({
   meal: MealSlot | null;
   bare?: boolean;
   onChange: (meal: MealSlot | null) => void;
+  /** Menú del día (<1280): abre la ficha del plato (macros, ingredientes, foto, platos iguales) en sheet. */
+  onOpenFicha?: () => void;
 }) {
   // La categoría viene del Word y no se edita aquí: el campo muestra el plato sin corchete.
   const cat = meal ? splitCategory(meal.title) : null;
@@ -1021,6 +1143,7 @@ function MealSlotForm({
   const [preparation, setPreparation] = useState(meal?.preparation ?? "");
   const [file, setFile] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -1089,9 +1212,14 @@ function MealSlotForm({
   }
 
   const form = (
-    <div className="nut-body meal-form">
+    <div className={`nut-body meal-form${bare ? " meal-form--bare" : ""}`}>
       {meal?.hasPhoto && !bare ? (
         <img className="nut-menu-photo" src={`/api/meals/${meal.id}/photo?v=${encodeURIComponent(meal.updatedAt)}`} alt="" />
+      ) : null}
+      {meal && !bare && onOpenFicha ? (
+        <button type="button" className="btn btn--tinted btn--block meal-slot-ficha" aria-haspopup="dialog" onClick={onOpenFicha}>
+          Ficha del plato · macros e ingredientes
+        </button>
       ) : null}
       <label>
         Plato
@@ -1108,37 +1236,60 @@ function MealSlotForm({
       </label>
       {/* En la ficha, la foto de un plato ya creado se gestiona en el héroe (con «platos iguales»). */}
       {bare && meal ? null : (
-        <label>
-          Foto
+        <div className="meal-form-file">
+          <span className="meal-form-file-label" id={`${date}-${slot}-photo`}>
+            Foto
+          </span>
+          <div className="meal-form-file-row">
+            <button
+              type="button"
+              className="btn btn--tinted"
+              aria-describedby={`${date}-${slot}-photo`}
+              disabled={busy}
+              onClick={() => fileRef.current?.click()}
+            >
+              {file ? "Cambiar foto" : "Elegir foto"}
+            </button>
+            <span className="meal-form-file-name">{file ? file.name : "Sin foto"}</span>
+          </div>
           <input
             key={fileKey}
+            ref={fileRef}
             type="file"
             accept="image/*"
+            hidden
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
-        </label>
+        </div>
       )}
-      <div className="nut-actions">
-        <button type="button" className="btn" disabled={busy} onClick={() => void save()}>
+      <div className="nut-actions meal-form-actions">
+        <button type="button" className="btn btn--block" disabled={busy} aria-busy={busy || undefined} onClick={() => void save()}>
           {busy ? "Guardando…" : "Guardar plato"}
         </button>
         {meal ? (
-          <button type="button" className="btn secondary" disabled={busy} onClick={() => void remove()}>
-            Quitar
+          <button type="button" className="btn btn--plain btn--block meal-form-remove" disabled={busy} onClick={() => void remove()}>
+            Quitar plato
           </button>
         ) : null}
-        {msg ? <p className={msg === "Guardado." ? "ok" : "error"}>{msg}</p> : null}
+        {msg ? (
+          <p className={`nut-ficha-msg ${msg === "Guardado." ? "ok" : "error"}`} role="status">
+            {msg}
+          </p>
+        ) : null}
       </div>
     </div>
   );
 
   if (bare) return form;
 
+  const dish = meal ? dishLines(splitCategory(meal.title).body).headline : null;
   return (
     <details className="nut-details meal-slot" open>
       <summary>
-        {label}
-        {meal ? ` · ${meal.title}` : ""}
+        <span className="nut-details-label">
+          {label}
+          {dish ? <span className="meal-slot-dish">{dish}</span> : null}
+        </span>
       </summary>
       {form}
     </details>

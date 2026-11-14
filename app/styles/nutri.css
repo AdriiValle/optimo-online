@@ -103,106 +103,227 @@ body.nut-modal-open { overflow: hidden; }
 .nut-import-file { font-weight: 600; overflow-wrap: anywhere; }
 .nut-import-check { display: flex; align-items: flex-start; gap: 8px; font-weight: 500; }
 .nut-import-check input { width: auto; margin: 3px 0 0; }
-/* Ingredientes del plato (modal): alimento + g en una fila, rol + confirmar debajo. */
-.nut-items { display: flex; flex-direction: column; gap: 8px; margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 0.8125rem; }
-.nut-items-head { display: flex; flex-direction: column; gap: 2px; }
-.nut-items-head h3 { margin: 0; font-size: 0.875rem; letter-spacing: -0.01em; }
-.nut-items-head .ok, .nut-items-head .muted { font-size: 0.75rem; }
-.nut-item { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 6px 8px; margin: 0; padding: 8px 0; border-bottom: 1px solid var(--line); }
-.nut-item select, .nut-item input { width: 100%; margin: 0; }
-.nut-item-raw { grid-column: 1 / -1; margin: 0; color: var(--secondary); font-size: 0.75rem; overflow-wrap: anywhere; }
-.nut-item-grams { display: flex; align-items: center; gap: 4px; margin: 0; }
-.nut-item-grams input { text-align: right; font-variant-numeric: tabular-nums; }
-.nut-item-grams span { color: var(--secondary); }
-.nut-item-meta { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.nut-item-meta select { width: auto; flex: 0 1 140px; }
-.nut-item-ok { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 500; }
-.nut-item-ok input { width: auto; }
-.nut-item-warn { font-size: 0.75rem; font-weight: 600; color: var(--secondary); }
-.nut-items-obsolete { display: flex; flex-direction: column; gap: 4px; }
-.nut-items-obsolete > .muted { margin: 0; font-size: 0.75rem; }
-.nut-item--obsolete { display: flex; flex-direction: column; gap: 2px; opacity: 0.6; }
 /* Cabecera nutricionista: ajustes y salir a la misma altura (36px), cápsula + círculo. */
 .top-actions.nut-top-actions .btn { min-height: 36px; padding: 6px 14px; border-radius: 999px; }
 .nut-account-settings { display: flex; flex-direction: column; gap: 20px; }
 .nut-account-settings h2 { font-size: 0.95rem; margin: 0 0 4px; }
 
-/* legacy drawer hooks (mobile fallback unused) */
-.nut-drawer-root { display: none; }
-
-/* Ficha del plato (drawer ≥1280 y sheet debajo): héroe 16:10, titular, macros de la comida, ingredientes. */
+/* —— Ficha del plato (rd-C2): drawer ≥1280 y sheet debajo. Fondo agrupado + tarjetas blancas, estilo Salud. —— */
+/* Scrim por encima de la cabecera fija del shell (z 1000). */
+.sheet-scrim.nut-sheet-scrim { z-index: 1100; }
+.sheet.nut-sheet--ficha { background: var(--bg); }
 @keyframes drawer-in { from { opacity: 0; transform: translateX(24px); } }
-.nut-ficha {
-  --macro-p: var(--text);
-  --macro-c: #6E6E73;
-  --macro-f: #AEAEB2;
+.nut-ficha { display: flex; flex-direction: column; gap: var(--space-4); }
+.nut-ficha-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
 }
+.nut-ficha-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-width: 0; }
+.nut-ficha-card-title { margin: 0; min-width: 0; font: var(--t-headline); letter-spacing: var(--ls-headline); color: var(--label); }
+.nut-ficha-card-count { flex-shrink: 0; font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); font-variant-numeric: tabular-nums; }
+.nut-ficha-msg { margin: 0; font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+
+/* Héroe: foto a sangre con las acciones encima (material), o tinte liso de la categoría. */
+.nut-ficha-photo { display: flex; flex-direction: column; gap: var(--space-3); }
 .nut-ficha-hero {
   position: relative;
   margin: 0;
   aspect-ratio: 16 / 10;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--cat-tint);
+  transition: box-shadow var(--dur) var(--ease-out);
 }
 .nut-ficha-hero img { display: block; width: 100%; height: 100%; object-fit: cover; }
-/* Placeholder: tint liso + categoría en texto abajo a la izquierda (sin icono). */
 .nut-ficha-hero figcaption {
   position: absolute;
-  left: 12px;
-  bottom: 10px;
-  font-size: 0.8125rem;
+  left: var(--space-4);
+  top: var(--space-4);
+  font: var(--t-footnote);
   font-weight: 600;
-  color: var(--accent-hover);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-on-tint);
 }
-/* Subida de foto (Amanda): el héroe es zona de soltar; acciones y «platos iguales» debajo. */
-.nut-ficha-photo { display: flex; flex-direction: column; gap: 8px; }
-.nut-ficha-hero { transition: box-shadow var(--dur) var(--ease); }
-.nut-ficha-hero.is-over { box-shadow: inset 0 0 0 2px var(--cat-ink); }
+.nut-ficha-hero.is-over { box-shadow: inset 0 0 0 2px var(--accent); }
 .nut-ficha-drop {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.78);
-  font-size: 0.8125rem;
+  background: var(--material-thick);
+  -webkit-backdrop-filter: var(--blur-thick);
+  backdrop-filter: var(--blur-thick);
+  font: var(--t-footnote);
   font-weight: 600;
-  color: var(--text);
+  color: var(--label);
 }
-.nut-ficha-photo-actions { display: flex; gap: 8px; }
-.nut-ficha-photo-actions .btn { flex: 1; min-height: 36px; padding: 6px 12px; font-size: 0.8125rem; }
-.nut-ficha-same { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--text); cursor: pointer; }
-.nut-ficha-same input { width: 16px; height: 16px; margin: 0; accent-color: var(--text); }
-.nut-ficha-photo-msg { margin: 0; font-size: 0.75rem; }
-.nut-modal .nut-ficha-photo-actions .btn { min-height: 44px; }
-.nut-ficha-title { display: flex; flex-direction: column; gap: 4px; }
-.nut-ficha-cat { font-size: 0.75rem; font-weight: 600; color: var(--cat-ink); }
-.nut-ficha-title h3 { margin: 0; font-size: 1.25rem; line-height: 1.25; letter-spacing: -0.02em; }
-.nut-ficha-title p { margin: 0; font-size: 0.8125rem; color: var(--accent-hover); }
-.nut-ficha-macros { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
-.nut-ficha-kcal { margin: 0; font-size: 0.8125rem; color: var(--accent-hover); }
-.nut-ficha-kcal strong { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text); }
-.nut-ficha .nut-items { margin-top: 0; }
-.nut-ficha-edit { background: transparent; border: 0; box-shadow: none; }
-/* Donut de la ficha: mismas piezas que el resumen semanal, también en el sheet (<1280). */
-.nut-ficha .nut-macro { margin: 0; display: flex; align-items: center; gap: 10px; }
+.nut-ficha-photo-actions {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  left: var(--space-3);
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.nut-photo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--material-thick);
+  -webkit-backdrop-filter: var(--blur-thick);
+  backdrop-filter: var(--blur-thick);
+  color: var(--label);
+  font: var(--t-subhead);
+  font-weight: 600;
+  letter-spacing: var(--ls-subhead);
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease-out), opacity var(--dur) var(--ease-out);
+}
+.nut-photo-btn:active { transform: scale(var(--press-scale)); }
+.nut-photo-btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-photo-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+.nut-ficha-same {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.nut-ficha-same > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nut-ficha-same small { font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); }
+.nut-ficha-photo > .nut-ficha-msg { padding: 0 var(--space-4); }
+
+/* Titular: categoría (punto + nombre), plato en Title 2 y resto en subhead. */
+.nut-ficha-title { display: flex; flex-direction: column; gap: var(--space-1); padding: 0 var(--space-1); }
+.nut-ficha-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+  color: var(--cat-ink);
+}
+.nut-ficha-cat::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.nut-ficha-title h3 { margin: 0; font: var(--t-title-2); letter-spacing: var(--ls-title-2); color: var(--label); overflow-wrap: anywhere; }
+.nut-ficha-title p { margin: 0; font: var(--t-subhead); letter-spacing: var(--ls-subhead); color: var(--label-secondary); overflow-wrap: anywhere; }
+
+/* Estado del plato en los totales. */
+.nut-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  font: var(--t-caption);
+  font-weight: 600;
+  letter-spacing: var(--ls-caption);
+  white-space: nowrap;
+}
+.nut-badge--ok { background: var(--ok-tint); color: var(--ok); }
+.nut-badge--warn { background: var(--warn-tint); color: var(--warn); }
+.nut-badge--none { background: var(--fill-tertiary); color: var(--label-secondary); }
+
+/* Macros de la comida: kcal grande + donut con leyenda. */
+.nut-ficha-macros-body { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.nut-ficha-kcal { display: flex; align-items: baseline; gap: var(--space-1); margin: 0; color: var(--label-secondary); font: var(--t-subhead); }
+.nut-ficha-kcal strong { font: var(--t-title-1); letter-spacing: var(--ls-title-1); color: var(--label); font-variant-numeric: tabular-nums; }
+.nut-ficha .nut-macro { margin: 0; display: flex; align-items: center; gap: var(--space-3); }
+.nut-ficha .nut-macro svg { width: 80px; height: 80px; flex-shrink: 0; }
 .nut-ficha .nut-ring-track { fill: none; stroke: var(--fill-secondary); stroke-width: 6; }
 .nut-ficha .nut-macro-seg { fill: none; stroke-width: 6; stroke-linecap: butt; }
 .nut-ficha .nut-macro-seg--p { stroke: var(--macro-p); }
 .nut-ficha .nut-macro-seg--c { stroke: var(--macro-c); }
 .nut-ficha .nut-macro-seg--f { stroke: var(--macro-f); }
-.nut-ficha .nut-ring-value { fill: var(--secondary); font-size: 13px; font-weight: 600; letter-spacing: -0.02em; }
-.nut-ficha .nut-macro-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.nut-ficha .nut-macro-legend li { display: grid; grid-template-columns: 8px auto; column-gap: 6px; align-items: center; line-height: 1.2; }
-.nut-ficha .nut-macro-legend strong { font-size: 0.75rem; }
-.nut-ficha .nut-macro-legend span { grid-column: 2; font-size: 0.6875rem; color: var(--accent-hover); font-variant-numeric: tabular-nums; }
+.nut-ficha .nut-ring-value { fill: var(--label-secondary); font-size: 13px; font-weight: 600; letter-spacing: -0.02em; }
+.nut-ficha .nut-macro-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.nut-ficha .nut-macro-legend li { display: grid; grid-template-columns: 8px auto minmax(0, 1fr); column-gap: var(--space-2); align-items: center; }
+.nut-ficha .nut-macro-legend strong { font: var(--t-footnote); font-weight: 600; letter-spacing: var(--ls-footnote); }
+.nut-ficha .nut-macro-legend span { font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); font-variant-numeric: tabular-nums; }
 .nut-ficha .nut-macro-dot { width: 8px; height: 8px; border-radius: 50%; }
 .nut-ficha .nut-macro-dot--p { background: var(--macro-p); }
 .nut-ficha .nut-macro-dot--c { background: var(--macro-c); }
 .nut-ficha .nut-macro-dot--f { background: var(--macro-f); }
+
+/* Ingredientes: lista con separadores; alimento + gramos en una fila, rol + confirmado debajo. */
+.nut-items-status { margin: 0; font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); }
+.nut-items-status.is-ok { color: var(--ok); }
+.nut-items-status.is-warn { color: var(--warn); }
+.nut-items .skeleton--line { display: block; }
+.nut-items-skel-short { width: 60%; }
+.nut-item-list { list-style: none; margin: 0; padding: 0; }
+.nut-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--separator-soft);
+}
+.nut-item:first-child { border-top: 0; padding-top: 0; }
+.nut-item-raw { margin: 0; font: var(--t-subhead); font-weight: 600; letter-spacing: var(--ls-subhead); color: var(--label); overflow-wrap: anywhere; }
+.nut-item-fields { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: var(--space-2); }
+.nut-item select, .nut-item input:not(.toggle) { width: 100%; min-width: 0; margin: 0; }
+.nut-item-grams { position: relative; display: block; }
+.nut-item-grams input { padding-right: 28px; text-align: right; font-variant-numeric: tabular-nums; }
+.nut-item-grams span {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  transform: translateY(-50%);
+  font: var(--t-subhead);
+  color: var(--label-secondary);
+  pointer-events: none;
+}
+.nut-item-meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-3); }
+.nut-item-meta select { width: auto; flex: 0 1 160px; }
+.nut-item-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  margin: 0 0 0 auto;
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--label);
+  cursor: pointer;
+}
+.nut-items-obsolete ul { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.nut-items-obsolete li { display: flex; flex-direction: column; gap: 2px; font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); }
+.nut-items-obsolete .nut-item-raw { font: var(--t-footnote); font-weight: 600; }
+.nut-items-obsolete p { margin: 0; }
+.nut-items-actions { margin-top: var(--space-1); }
+
+/* Editar plato (plegable) dentro de la ficha: tarjeta blanca como el resto. */
+.nut-ficha .nut-ficha-edit { border-radius: var(--radius-lg); }
+
+/* Formulario del plato (ficha y «Menú del día» <1280). */
+.meal-slot-dish {
+  display: block;
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.meal-form-file { display: flex; flex-direction: column; gap: var(--space-1); margin-bottom: var(--space-3); }
+.meal-form-file-label { font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); }
+.meal-form-file-row { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.meal-form-file-row .btn { flex-shrink: 0; }
+.meal-slot-ficha { min-height: 44px; white-space: normal; text-align: center; }
+.meal-form-file-name { min-width: 0; font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meal-form .meal-form-remove { color: var(--danger); }
+.nut-ficha-card .meal-form { gap: 0; }
 
 @media (min-width: 1280px) {
   /* Workspace a alto de viewport, pegado a la toolbar: sidebar y zona de trabajo hacen scroll por su cuenta. */
@@ -717,7 +838,7 @@ body.nut-modal-open { overflow: hidden; }
   .nut-modal .nut-details { background: transparent; border: 0; box-shadow: none; }
   .nut-modal .meal-form .nut-menu-photo { max-height: 260px; border-radius: var(--radius-sm); }
 
-  /* Ficha: panel opaco anclado a la derecha de la zona de trabajo, encima de la semana (no la empuja). */
+  /* Ficha: panel anclado a la derecha de la zona de trabajo, encima de la semana (no la empuja). */
   .nut-drawer {
     position: absolute;
     top: 0;
@@ -727,27 +848,17 @@ body.nut-modal-open { overflow: hidden; }
     width: 400px;
     display: flex;
     flex-direction: column;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-md);
+    background: var(--bg);
+    border: 1px solid var(--separator-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--elev-3);
     overflow: hidden;
-    animation: drawer-in var(--dur-sheet) var(--ease);
+    animation: drawer-in var(--dur-sheet) var(--ease-out);
   }
   .nut-drawer:focus { outline: none; }
-  .nut-drawer-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px 12px 10px 16px;
-    border-bottom: 1px solid var(--line);
-    flex-shrink: 0;
-  }
-  .nut-drawer-head h2 { margin: 0; min-width: 0; font-size: 0.9375rem; line-height: 1.3; letter-spacing: -0.02em; }
+  .nut-drawer-head { padding-top: var(--space-3); }
   .nut-drawer-head .icon-btn { flex-shrink: 0; }
-  .nut-drawer-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 20px; }
-  .nut-drawer .nut-actions .btn { min-height: 44px; }
+  .nut-drawer-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-1) var(--space-4) var(--space-5); }
 }
 
 /* —— Preferencias del sistema (solo clases de este workspace) —— */
@@ -762,4 +873,19 @@ body.nut-modal-open { overflow: hidden; }
   .nut-month-day:not(.on), .nut-week-cell.empty:not(.on) { box-shadow: inset 0 0 0 1px var(--separator); }
   .nut-ws-cal-note, .nut-ws-list-sub, .nut-week-slot, .nut-week-vs, .nut-month-dow, .nut-week-day .md-tag { color: var(--label); }
   .nut-week-add { opacity: 1; color: var(--label-secondary); }
+}
+
+/* —— Preferencias del sistema: ficha del plato (rd-C2) —— */
+@media (prefers-reduced-motion: reduce) {
+  .nut-drawer { animation: none; }
+  .nut-ficha-hero, .nut-photo-btn { transition: none; }
+  .nut-photo-btn:active { transform: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .nut-photo-btn, .nut-ficha-drop { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  .nut-photo-btn, .nut-ficha-card, .nut-ficha-same { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-item { border-top-color: var(--separator); }
+  .nut-ficha-title p, .nut-ficha-card-count, .nut-items-status, .nut-ficha-same small, .meal-slot-dish, .meal-form-file-name { color: var(--label); }
 }
