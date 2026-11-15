@@ -1904,3 +1904,428 @@ body.nut-modal-open { overflow: hidden; }
   .nut-tpl-toggle small, .nut-dish-meta, .nut-dish-none, .nut-daynote-form-label { color: var(--label); }
   .nut-daynote-form--compact { border-bottom-color: var(--label); }
 }
+
+/* —— Compra (rd-N9): la lista del jugador en solo lectura + aviso de alimentos por configurar ——
+   Reutiliza la cabecera y el scroll interno de Seguimiento (.nut-trk-page / .nut-trk-inner). */
+.nut-buy-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); min-width: 0; }
+.nut-buy-range {
+  display: inline-flex;
+  flex: 0 1 auto;
+  gap: 2px;
+  min-width: 0;
+  padding: 2px;
+  border-radius: var(--radius-md);
+  background: var(--fill-secondary);
+}
+.nut-buy-range-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: calc(var(--tap-min) - 4px);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-sm);
+  color: var(--label);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: transform var(--dur) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+/* La pista suma 4 px: la opción ocupa 40 de alto y 44 con su pista. */
+.nut-buy-range-opt[aria-current="page"] { font-weight: 600; background: var(--surface); box-shadow: var(--elev-1); }
+.nut-buy-range-opt:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.nut-buy-range-opt:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+
+.nut-buy-nav {
+  display: grid;
+  grid-template-columns: var(--tap-min) minmax(0, 1fr) var(--tap-min);
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1 1 18rem;
+  min-width: 0;
+  max-width: 24rem;
+}
+.nut-buy-arrow svg { width: 20px; height: 20px; }
+.nut-buy-arrow:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-buy-nav-head { display: flex; flex-direction: column; align-items: center; min-width: 0; text-align: center; }
+.nut-buy-nav-title {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  font: var(--t-headline);
+  letter-spacing: var(--ls-headline);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.nut-buy-nav-rel { color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-buy-nav-today {
+  position: relative;
+  border-radius: var(--radius-sm);
+  color: var(--accent-text);
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+  text-decoration: none;
+}
+/* Área táctil de 44 sin mover la línea. */
+.nut-buy-nav-today::after { content: ""; position: absolute; inset: -14px -10px; }
+.nut-buy-nav-today:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+.nut-buy-summary { display: flex; flex-direction: column; gap: 2px; padding: 0 var(--row-inset); }
+.nut-buy-count { margin: 0; font: var(--t-headline); letter-spacing: var(--ls-headline); font-variant-numeric: tabular-nums; }
+.nut-buy-count span { color: var(--label-secondary); font-weight: 400; }
+.nut-buy-pending { margin: 0; color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+
+/* Aviso: tarjeta con icono naranja accesible (no es un error: la lista sale igual, solo menos precisa). */
+.nut-buy-gaps { min-width: 0; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface); }
+.nut-buy-gaps-head { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: var(--space-2) var(--space-3); }
+.nut-buy-gaps-icon { align-self: start; width: 24px; height: 24px; color: var(--warn); }
+.nut-buy-gaps-text { min-width: 0; }
+.nut-buy-gaps-title { margin: 0; font: var(--t-headline); letter-spacing: var(--ls-headline); }
+.nut-buy-gaps-sub { margin: 2px 0 0; color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-buy-gaps-cta { white-space: nowrap; }
+.nut-buy-gaps-cta:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-buy-gaps-more { margin-top: var(--space-2); padding-left: calc(24px + var(--space-3)); }
+.nut-buy-gaps-more > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--tap-min);
+  border-radius: var(--radius-sm);
+  color: var(--accent-text);
+  font: var(--t-subhead);
+  font-weight: 600;
+  letter-spacing: var(--ls-subhead);
+  list-style: none;
+  cursor: pointer;
+}
+.nut-buy-gaps-more > summary::-webkit-details-marker { display: none; }
+.nut-buy-gaps-more > summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-left: 2px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.nut-buy-gaps-more[open] > summary::after { transform: translateY(1px) rotate(-135deg); }
+.nut-buy-gaps-more > summary:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.nut-buy-gaps-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 0 var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nut-buy-gaps-list > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--separator-soft);
+}
+.nut-buy-gaps-name { flex: 1 1 auto; min-width: 0; font: var(--t-subhead); letter-spacing: var(--ls-subhead); overflow-wrap: anywhere; }
+.nut-buy-tag {
+  flex: 0 0 auto;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--fill-tertiary);
+  color: var(--label-secondary);
+  font: var(--t-caption);
+  font-weight: 600;
+  letter-spacing: var(--ls-caption);
+  white-space: nowrap;
+}
+.nut-buy-tag--strong { background: var(--warn-tint); color: var(--warn); }
+.nut-buy-ok {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0 var(--row-inset);
+  color: var(--ok);
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+}
+.nut-buy-ok svg { flex-shrink: 0; width: 18px; height: 18px; }
+
+/* Secciones: lista agrupada inset (como la del jugador), sin casillas: aquí no se marca nada. */
+.nut-buy-sections { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+.nut-buy-sec { min-width: 0; }
+.nut-buy-sec-title {
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--row-inset);
+  color: var(--label-secondary);
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+}
+.nut-buy-sec-count { font-weight: 400; }
+.nut-buy-sec-note { margin: var(--space-2) 0 0; padding: 0 var(--row-inset); color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-buy-lines { margin: 0; padding: 0; overflow: hidden; border-radius: var(--radius-md); background: var(--surface); list-style: none; }
+.nut-buy-line {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--row-inset);
+}
+.nut-buy-line + .nut-buy-line::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--row-inset);
+  right: 0;
+  height: 1px;
+  background: var(--separator);
+}
+.nut-buy-box { display: none; }
+.nut-buy-text { display: flex; flex-direction: column; min-width: 0; }
+.nut-buy-name { font: var(--t-body-row); letter-spacing: var(--ls-body); overflow-wrap: anywhere; }
+.nut-buy-meta { color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-buy-amount {
+  justify-self: end;
+  color: var(--label-secondary);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.nut-buy-line.is-checked .nut-buy-name { color: var(--label-secondary); }
+.nut-buy-foot { margin: 0; padding: 0 var(--row-inset); color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-buy-foot a { border-radius: var(--radius-sm); color: var(--accent-text); font-weight: 600; text-decoration: none; }
+.nut-buy-foot a:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+@media (max-width: 559.98px) {
+  .nut-buy-bar { flex-direction: column; align-items: stretch; }
+  .nut-buy-range { display: flex; }
+  .nut-buy-nav { flex-basis: auto; max-width: none; }
+  .nut-buy-gaps-head { grid-template-columns: 24px minmax(0, 1fr); }
+  .nut-buy-gaps-cta { grid-column: 1 / -1; }
+  .nut-buy-gaps-more { padding-left: 0; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .nut-buy-range-opt:not([aria-current="page"]):hover { background: var(--fill-quaternary); }
+  .nut-buy-nav-today:hover, .nut-buy-foot a:hover, .nut-rep-empty a:hover { text-decoration: underline; }
+}
+
+/* —— Informes (rd-N9): hoja semanal imprimible (objetivos + menú + compra) ——
+   En pantalla, la hoja es una tarjeta blanca de lectura; al imprimir solo queda ella (bloque @media print). */
+.nut-rep-inner { display: flex; flex-direction: column; gap: var(--space-6); width: 100%; max-width: 920px; min-width: 0; }
+.nut-rep-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); min-width: 0; }
+.nut-rep-print svg { flex-shrink: 0; width: 18px; height: 18px; }
+.nut-rep-print:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+.nut-rep {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
+  padding: var(--space-8) var(--space-8) var(--space-10);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--label);
+}
+.nut-rep-head { display: flex; flex-direction: column; gap: 2px; padding-bottom: var(--space-6); border-bottom: 1px solid var(--separator); }
+.nut-rep-kicker { margin: 0 0 var(--space-1); color: var(--label-secondary); font: var(--t-footnote); font-weight: 600; letter-spacing: var(--ls-footnote); }
+.nut-rep-name { margin: 0; font: var(--t-title-1); letter-spacing: var(--ls-title-1); }
+.nut-rep-week { margin: 0; font: var(--t-headline); letter-spacing: var(--ls-headline); }
+.nut-rep-meta { margin: 0; color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+
+.nut-rep-sec { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.nut-rep-sec-title { margin: 0; font: var(--t-title-3); letter-spacing: var(--ls-title-3); }
+.nut-rep-sec-count { color: var(--label-secondary); font-weight: 400; }
+.nut-rep-empty, .nut-rep-note { margin: 0; color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-rep-empty { font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
+.nut-rep-empty a { border-radius: var(--radius-sm); color: var(--accent-text); font-weight: 600; text-decoration: none; }
+.nut-rep-empty a:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+/* Ficha: pares etiqueta/valor en línea; alergias e intolerancias en rojo si las hay. */
+.nut-rep-facts { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); margin: 0; }
+.nut-rep-facts > div { display: flex; flex-direction: column; min-width: 0; }
+.nut-rep-facts dt { color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-rep-facts dd { margin: 0; font: var(--t-subhead); font-weight: 600; letter-spacing: var(--ls-subhead); overflow-wrap: anywhere; }
+.nut-rep-facts > .is-alert dd { color: var(--danger); }
+
+/* Objetivos: tabla por tipo de día; cifra arriba, margen aceptable debajo. */
+.nut-rep-table-wrap { min-width: 0; overflow-x: auto; }
+.nut-rep-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.nut-rep-table th, .nut-rep-table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--separator-soft); text-align: right; vertical-align: top; }
+.nut-rep-table th:first-child, .nut-rep-table td:first-child { padding-left: 0; text-align: left; }
+.nut-rep-table th:last-child, .nut-rep-table td:last-child { padding-right: 0; }
+.nut-rep-table thead th { border-bottom-color: var(--separator); color: var(--label-secondary); font: var(--t-subhead); font-weight: 600; letter-spacing: var(--ls-subhead); }
+.nut-rep-table thead th.is-in-week { color: var(--label); }
+.nut-rep-th-sub { display: block; color: var(--label-secondary); font: var(--t-caption); font-weight: 400; letter-spacing: var(--ls-caption); }
+.nut-rep-table tbody th { font: var(--t-subhead); font-weight: 600; letter-spacing: var(--ls-subhead); }
+.nut-rep-val { display: block; font: var(--t-subhead); letter-spacing: var(--ls-subhead); white-space: nowrap; }
+.nut-rep-val small { color: var(--label-secondary); font-size: 0.8em; }
+.nut-rep-band { display: block; color: var(--label-secondary); font: var(--t-caption); letter-spacing: var(--ls-caption); white-space: nowrap; }
+.nut-rep-table td.is-override .nut-rep-val { font-weight: 700; }
+.nut-rep-table td.is-override .nut-rep-val::after {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--label);
+  vertical-align: 0.35em;
+}
+.nut-rep-none { color: var(--label-tertiary); }
+.nut-rep-micros { margin: 0; font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-rep-micros-label { font-weight: 600; }
+.nut-rep-micro { white-space: nowrap; }
+
+/* Menú: un bloque por día (lunes a domingo), franjas en filas; el punto lleva el color de la proteína. */
+.nut-rep-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16.5rem), 1fr)); gap: var(--space-5) var(--space-6); }
+.nut-rep-day { display: flex; flex-direction: column; min-width: 0; padding-top: var(--space-3); border-top: 2px solid var(--label); break-inside: avoid; }
+.nut-rep-day--rest { border-top-color: var(--separator); }
+.nut-rep-day-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+.nut-rep-day-title { margin: 0; font: var(--t-headline); letter-spacing: var(--ls-headline); }
+.nut-rep-day-title span { color: var(--label-secondary); font-weight: 400; font-variant-numeric: tabular-nums; }
+.nut-rep-day-type {
+  flex: 0 0 auto;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--fill-tertiary);
+  font: var(--t-caption);
+  font-weight: 600;
+  letter-spacing: var(--ls-caption);
+  white-space: nowrap;
+}
+.nut-rep-day--match .nut-rep-day-type { background: var(--label); color: var(--surface); }
+.nut-rep-meals { display: flex; flex-direction: column; margin: 0; }
+.nut-rep-meal { display: grid; grid-template-columns: 6.25rem minmax(0, 1fr); gap: var(--space-2); padding: 6px 0; border-top: 1px solid var(--separator-soft); }
+.nut-rep-meal:first-child { border-top: 0; }
+.nut-rep-meal dt { color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-rep-meal dd { position: relative; margin: 0; padding-left: 12px; font: var(--t-footnote); letter-spacing: var(--ls-footnote); overflow-wrap: anywhere; }
+.nut-rep-meal dd::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cat-ink, var(--label-tertiary));
+}
+.nut-rep-meal.is-empty dd { color: var(--label-tertiary); }
+.nut-rep-meal.is-empty dd::before { display: none; }
+
+/* Compra dentro de la hoja: secciones en columnas, filas finas con casilla cuadrada para tachar a boli. */
+.nut-rep .nut-buy-sections { display: block; columns: 2 16rem; column-gap: var(--space-8); }
+.nut-rep .nut-buy-sec { margin-bottom: var(--space-5); break-inside: avoid-column; }
+.nut-rep .nut-buy-sec-title { padding: 0; color: var(--label); }
+.nut-rep .nut-buy-lines { overflow: visible; border-radius: 0; background: none; }
+.nut-rep .nut-buy-line { grid-template-columns: 14px minmax(0, 1fr) auto; min-height: 0; padding: 5px 0; break-inside: avoid; }
+.nut-rep .nut-buy-line + .nut-buy-line::before { left: 0; background: var(--separator-soft); }
+.nut-rep .nut-buy-box { display: block; width: 14px; height: 14px; border: 1.5px solid var(--label-secondary); border-radius: 3px; }
+.nut-rep .nut-buy-name { font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
+.nut-rep .nut-buy-amount { color: var(--label); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-rep .nut-buy-meta { font: var(--t-caption); letter-spacing: var(--ls-caption); }
+
+@media (max-width: 559.98px) {
+  .nut-rep-toolbar { flex-direction: column; align-items: stretch; }
+  .nut-rep-toolbar .nut-buy-nav { flex-basis: auto; max-width: none; }
+  .nut-rep { gap: var(--space-6); padding: var(--space-5) var(--space-4) var(--space-6); }
+  .nut-rep-name { font: var(--t-title-2); letter-spacing: var(--ls-title-2); }
+  .nut-rep-table th, .nut-rep-table td { padding-inline: var(--space-1); }
+  .nut-rep-table th:first-child, .nut-rep-table td:first-child { padding-left: 0; }
+  .nut-rep-table th:last-child, .nut-rep-table td:last-child { padding-right: 0; }
+  .nut-rep-th-sub { display: none; }
+  .nut-rep-val { font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+  .nut-rep-meal { grid-template-columns: 5.5rem minmax(0, 1fr); }
+}
+@media (min-width: 1280px) {
+  /* Zona de trabajo a alto fijo (como Seguimiento): compra e informe hacen scroll dentro. */
+  .nut-trk-inner.nut-buy-inner, .nut-rep-page .nut-rep-inner { padding-bottom: var(--space-6); }
+}
+
+/* Imprimir: solo la hoja (sin cabecera, pestañas, sidebar ni barra), A4 en vertical y tinta negra. */
+@page nut-rep { size: A4 portrait; margin: 14mm 13mm 16mm; }
+@media print {
+  html:has(.nut-rep) body :not(:has(.nut-rep)):not(.nut-rep):not(.nut-rep *) { display: none !important; }
+  html:has(.nut-rep),
+  html:has(.nut-rep) body,
+  html:has(.nut-rep) body :has(.nut-rep) {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+  .nut-rep {
+    page: nut-rep;
+    display: block;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    color: #000;
+    font-size: 10pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .nut-rep-screen-only { display: none !important; }
+  .nut-rep-head { margin-bottom: 6mm; padding-bottom: 4mm; border-bottom-color: #000; }
+  .nut-rep-kicker, .nut-rep-meta { font-size: 8.5pt; }
+  .nut-rep-name { font-size: 20pt; }
+  .nut-rep-week { font-size: 11pt; }
+  .nut-rep-sec { display: block; margin-bottom: 7mm; }
+  .nut-rep-sec > * + * { margin-top: 3mm; }
+  .nut-rep-sec-title { font-size: 13pt; break-after: avoid; }
+  .nut-rep-sec--shop { break-before: page; }
+  .nut-rep-facts dt, .nut-rep-note, .nut-rep-micros, .nut-rep-th-sub, .nut-rep-band { font-size: 8.5pt; }
+  .nut-rep-facts dd, .nut-rep-table th, .nut-rep-val { font-size: 9.5pt; }
+  .nut-rep-table { break-inside: avoid; }
+  .nut-rep-table th, .nut-rep-table td { padding: 1.4mm 2.5mm; }
+  .nut-rep-days { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5mm 8mm; }
+  .nut-rep-day { padding-top: 1.6mm; }
+  .nut-rep-day-title { font-size: 10.5pt; }
+  .nut-rep-day-type { font-size: 7.5pt; }
+  .nut-rep-meal { grid-template-columns: 19mm minmax(0, 1fr); padding: 1mm 0; }
+  .nut-rep-meal dt, .nut-rep-meal dd { font-size: 8.5pt; }
+  .nut-rep .nut-buy-sections { columns: 2; column-gap: 10mm; }
+  .nut-rep .nut-buy-sec { margin-bottom: 4mm; }
+  .nut-rep .nut-buy-sec-title { font-size: 9.5pt; break-after: avoid; }
+  .nut-rep .nut-buy-line { grid-template-columns: 3.4mm minmax(0, 1fr) auto; column-gap: 2.5mm; padding: 1.2mm 0; }
+  .nut-rep .nut-buy-box { width: 3.4mm; height: 3.4mm; border: 1px solid #000; border-radius: 0.6mm; }
+  .nut-rep .nut-buy-name, .nut-rep .nut-buy-amount { color: #000; font-size: 9.5pt; }
+  .nut-rep .nut-buy-meta { font-size: 8pt; }
+  .nut-rep .nut-buy-line + .nut-buy-line::before { background: #ccc; }
+  .nut-rep a { color: inherit; text-decoration: none; }
+}
+
+/* —— Preferencias del sistema: compra e informes (rd-N9) ——
+   Transparencia: sin materiales ni desenfoques en estas piezas, nada que ajustar. */
+@media (prefers-reduced-motion: reduce) {
+  .nut-buy-range-opt, .nut-buy-gaps-more > summary::after { transition: none; }
+  .nut-buy-range-opt:active { transform: none; }
+}
+@media (prefers-contrast: more) {
+  .nut-buy-range, .nut-buy-gaps, .nut-buy-lines, .nut-rep { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-buy-range-opt[aria-current="page"] { box-shadow: inset 0 0 0 2px var(--label); }
+  .nut-buy-tag { box-shadow: inset 0 0 0 1px currentColor; }
+  .nut-buy-gaps-sub, .nut-buy-pending, .nut-buy-sec-title, .nut-buy-sec-note, .nut-buy-meta, .nut-buy-amount, .nut-buy-foot,
+  .nut-buy-nav-rel, .nut-rep-kicker, .nut-rep-meta, .nut-rep-note, .nut-rep-empty, .nut-rep-th-sub, .nut-rep-band,
+  .nut-rep-facts dt, .nut-rep-meal dt, .nut-rep-day-title span, .nut-rep-val small { color: var(--label); }
+  .nut-buy-line + .nut-buy-line::before { background: var(--label); }
+  .nut-rep-meal, .nut-rep-table th, .nut-rep-table td { border-color: var(--label); }
+}
