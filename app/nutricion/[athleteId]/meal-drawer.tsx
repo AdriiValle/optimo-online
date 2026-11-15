@@ -8,6 +8,7 @@ import { resizeImage } from "@/lib/image-resize";
 import { MealItemsEditor } from "./meal-items-editor";
 import { fmt, mealMacros } from "./nutrition-summary";
 import { AllergyAlert } from "./perfil/allergy-alert";
+import { SaveDishButton } from "./plantillas/dish-picker";
 
 /** Gramos de cada macro (por día en el resumen, por plato en la ficha). */
 export type MacroGrams = { p: number; c: number; f: number };
@@ -333,6 +334,8 @@ export function MealFicha({
       </section>
 
       <MealItemsEditor athleteId={athleteId} meal={meal} onChanged={onItemsChanged} />
+
+      <SaveDishButton mealId={meal.id} />
 
       <details className="nut-details nut-ficha-edit">
         <summary>

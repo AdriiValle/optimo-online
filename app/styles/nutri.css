@@ -1803,3 +1803,104 @@ body.nut-modal-open { overflow: hidden; }
   .nut-trk-grid { stroke: var(--label-secondary); }
   .nut-trk-note { box-shadow: inset 0 0 0 1px var(--separator); }
 }
+
+/* —— Plantillas y platos (rd-N8) —— */
+.nut-tpl-form { display: flex; flex-direction: column; gap: var(--space-3); }
+.nut-tpl-form .nut-trk-form-title { margin-bottom: 0; }
+.nut-tpl-form .nut-trk-form-actions { margin-top: var(--space-1); }
+.nut-tpl-swap-fields { grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); }
+.nut-tpl-form select { width: 100%; min-height: var(--tap-min); margin-bottom: 0; }
+.nut-tpl-md { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; margin: 0; padding: 0; border: 0; }
+.nut-tpl-md > legend { margin-bottom: var(--space-2); padding: 0; }
+.nut-tpl-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.nut-tpl-chip {
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--fill-tertiary);
+  color: var(--label);
+  font: var(--t-subhead);
+  font-weight: 600;
+  letter-spacing: var(--ls-subhead);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+.nut-tpl-chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.nut-tpl-chip:active { transform: scale(var(--press-scale)); }
+.segmented.nut-tpl-seg > button { min-height: var(--tap-min); }
+.nut-tpl-chip:focus-visible, .nut-dish-item:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-tpl-toggle small { display: block; color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-tpl-status { margin: 0; padding: 0 var(--row-inset); text-align: left; }
+.nut-tpl-form .nut-tpl-status { padding: 0; text-align: right; }
+.nut-tpl-search { padding: 0; }
+.nut-tpl-search input { width: 100%; margin-bottom: 0; }
+.nut-tpl-list { margin: 0; }
+.nut-tpl-row { display: flex; flex-direction: column; min-width: 0; }
+.nut-tpl-row-main { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); min-height: 56px; padding: var(--space-2) var(--space-2) var(--space-2) var(--row-inset); }
+.nut-tpl-row-body { display: flex; flex: 1 1 12rem; flex-direction: column; gap: 2px; min-width: 0; }
+.nut-tpl-row-name { font: var(--t-body-row); font-weight: 600; letter-spacing: var(--ls-body); overflow-wrap: anywhere; }
+.nut-tpl-ingr { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.nut-tpl-thumb, .nut-dish-thumb { flex: 0 0 auto; width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--fill-tertiary); object-fit: cover; }
+.nut-tpl-apply { display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--space-4) var(--space-4) var(--row-inset); }
+.nut-tpl-apply .nut-trk-field input { margin-bottom: 0; }
+.nut-tpl-apply .nut-trk-form-actions { margin-top: 0; }
+
+/* Buscar en mis platos (ficha «Nuevo plato» y menú del día). */
+.nut-dish-open { margin-bottom: var(--space-3); }
+.nut-dish-picker { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-3); padding: var(--space-3); border-radius: var(--radius-md); background: var(--fill-quaternary); }
+.nut-dish-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.nut-dish-label { font: var(--t-headline); letter-spacing: var(--ls-headline); }
+.nut-dish-close { padding-inline: var(--space-3); }
+.nut-dish-picker input[type="search"] { width: 100%; margin-bottom: 0; }
+.nut-dish-list { display: flex; flex-direction: column; gap: 2px; max-height: 320px; margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; }
+.nut-dish-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--label);
+  text-align: left;
+  cursor: pointer;
+}
+.nut-dish-item:disabled { cursor: default; opacity: 0.6; }
+.nut-dish-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nut-dish-name { font: var(--t-subhead); font-weight: 600; letter-spacing: var(--ls-subhead); overflow-wrap: anywhere; }
+.nut-dish-meta { display: -webkit-box; overflow: hidden; color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.nut-dish-none { margin: 0; padding: var(--space-2); color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-dish-save { display: flex; flex-direction: column; gap: var(--space-1); }
+.nut-dish-save .nut-ficha-msg:empty { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .nut-dish-item:not(:disabled):hover, .nut-tpl-chip:not([aria-pressed="true"]):hover { background: var(--fill-secondary); }
+}
+
+/* Nota del día (sheet en el workspace; en línea en el menú del día). */
+.nut-daynote-form { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.nut-daynote-form--compact { padding: var(--space-3) 0; border-bottom: 1px solid var(--separator-soft); }
+.nut-daynote-form-label { color: var(--label-secondary); font: var(--t-footnote); font-weight: 600; letter-spacing: var(--ls-footnote); }
+.nut-daynote-form textarea { width: 100%; min-height: 72px; margin-bottom: 0; }
+.nut-daynote-form-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.nut-daynote-form-actions .nut-ficha-msg { margin: 0; }
+
+@media (min-width: 1280px) {
+  .nut-page--tabs .nut-tpl-page .nut-trk-inner { padding-bottom: var(--space-6); }
+}
+
+/* —— Preferencias del sistema: plantillas y platos (rd-N8) ——
+   Transparencia: sin materiales ni desenfoques en estas piezas, nada que ajustar. */
+@media (prefers-reduced-motion: reduce) {
+  .nut-tpl-chip { transition: none; }
+  .nut-tpl-chip:active { transform: none; }
+}
+@media (prefers-contrast: more) {
+  .nut-tpl-chip, .nut-dish-picker, .nut-tpl-thumb, .nut-dish-thumb { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-tpl-chip[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--label); }
+  .nut-tpl-toggle small, .nut-dish-meta, .nut-dish-none, .nut-daynote-form-label { color: var(--label); }
+  .nut-daynote-form--compact { border-bottom-color: var(--label); }
+}

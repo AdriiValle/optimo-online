@@ -1089,3 +1089,61 @@ button.nut-wk-day:active { background: var(--fill-quaternary); transition-durati
   .nut-check-photo { box-shadow: inset 0 0 0 1px var(--label); }
   .nut-check-label, .nut-check-left { color: var(--label-on-tint); }
 }
+
+/* —— «Cambiar» un ingrediente por una sustitución aprobada (rd-N8) —— */
+.nut-ingr li.nut-ingr-swap { flex-direction: column; align-items: stretch; gap: var(--space-2); }
+.nut-ingr-swap-row { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.nut-ingr-swap-row .nut-ingr-name { display: flex; flex: 1 1 auto; flex-direction: column; }
+.nut-ingr-was { color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-ingr-change {
+  flex: 0 0 auto;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  margin: calc(var(--space-2) * -1) 0;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--fill-tertiary);
+  color: var(--accent);
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+.nut-ingr-change[aria-expanded="true"] { background: var(--accent); color: var(--on-accent); }
+.nut-ingr-change:active, .nut-ingr-option:active { transform: scale(var(--press-scale)); }
+.nut-ingr-options { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: var(--space-1); border-radius: var(--radius-md); background: var(--fill-tertiary); list-style: none; }
+.nut-ingr .nut-ingr-options li { display: block; padding: 0; border: 0; }
+.nut-ingr-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--label);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+.nut-ingr-change:focus-visible, .nut-ingr-option:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+@media (hover: hover) and (pointer: fine) {
+  .nut-ingr-option:hover { background: var(--surface); }
+}
+
+/* Preferencias del sistema («Cambiar», rd-N8). Transparencia: sin materiales, nada que ajustar. */
+@media (prefers-reduced-motion: reduce) {
+  .nut-ingr-change, .nut-ingr-option { transition: none; }
+  .nut-ingr-change:active, .nut-ingr-option:active { transform: none; }
+}
+@media (prefers-contrast: more) {
+  .nut-ingr-change, .nut-ingr-options { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-ingr-was { color: var(--label-on-tint); }
+}

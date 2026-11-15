@@ -14,6 +14,8 @@ import { NutAthleteNav } from "../athlete-nav";
 import { MenuWordImportButton } from "./menu-word-import";
 import { AthleteProfileForm } from "./athlete-profile-form";
 import { CloseGlyph, MealDrawer, MealFicha, type PhotoChange } from "./meal-drawer";
+import { DishPicker } from "./plantillas/dish-picker";
+import { DayNoteForm } from "./plantillas/day-note";
 import { fmt, perDay, periodTotal, summarizeNutrition } from "./nutrition-summary";
 import { dayTypeFromMdTag } from "@/lib/nutrition/day-type";
 import { averageTargets, dailyTargets, ringStatus, type DailyTargets, type RingStatus, type Target, type TargetKey } from "@/lib/nutrition/targets";
@@ -166,6 +168,14 @@ export function NutricionAthleteClient({
             meal={editorMeal}
             bare
             onChange={(next) => updateMeal(editor.date, editor.slot, next)}
+            picker={
+              <DishPicker
+                athleteId={athleteId}
+                date={editor.date}
+                slot={editor.slot}
+                onApplied={(next) => updateMeal(editor.date, editor.slot, next)}
+              />
+            }
           />
         }
       />
@@ -282,6 +292,7 @@ export function NutricionAthleteClient({
             <h2 id="nut-day-stack-title">Menú del día</h2>
             <p>{formatLongDate(parseDateLocal(center))}</p>
           </header>
+          <DayNoteForm athleteId={athleteId} date={center} compact />
           {meals === null ? (
             <p className="muted" role="status">Cargando menú…</p>
           ) : (
@@ -295,6 +306,7 @@ export function NutricionAthleteClient({
                 meal={meals.find((m) => m.date === center && m.slot === kind) ?? null}
                 onChange={(next) => updateMeal(center, kind, next)}
                 onOpenFicha={() => openCell(center, kind)}
+                picker={<DishPicker athleteId={athleteId} date={center} slot={kind} onApplied={(next) => updateMeal(center, kind, next)} />}
               />
             ))
           )}
@@ -476,6 +488,7 @@ function WeekGrid({
           ))}
         </div>
         <div className="nut-toolbar-end">
+          <DayNoteButton athleteId={athleteId} date={center} />
           <ProfileSheetButton athleteId={athleteId} onSaved={onProfileSaved} />
           <MenuWordImportButton athleteId={athleteId} onImported={onMenuImported} />
         </div>
@@ -1072,6 +1085,29 @@ const MICROS: { key: NutrientKey & TargetKey; label: string; unit: string; digit
 ];
 
 /** Botón «Perfil» del toolbar: la ficha física en el sheet de Amanda (scrim, X, Escape, foco). */
+/** Nota del día seleccionado (la ve el jugador en la tarjeta del día). */
+function DayNoteButton({ athleteId, date }: { athleteId: string; date: string }) {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  useEffect(() => {
+    if (!open) return;
+    document.body.classList.add("nut-modal-open");
+    return () => document.body.classList.remove("nut-modal-open");
+  }, [open]);
+  return (
+    <>
+      <button type="button" className="btn secondary" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+        Nota del día
+      </button>
+      {open ? (
+        <NutModal title={`Nota · ${formatLongDate(parseDateLocal(date))}`} onClose={close}>
+          <DayNoteForm athleteId={athleteId} date={date} />
+        </NutModal>
+      ) : null}
+    </>
+  );
+}
+
 function ProfileSheetButton({ athleteId, onSaved }: { athleteId: string; onSaved: () => void }) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
@@ -1225,7 +1261,8 @@ function MealSlotForm({
   meal,
   bare,
   onChange,
-  onOpenFicha
+  onOpenFicha,
+  picker
 }: {
   athleteId: string;
   date: string;
@@ -1233,6 +1270,8 @@ function MealSlotForm({
   label: string;
   meal: MealSlot | null;
   bare?: boolean;
+  /** Franja vacía: «Buscar en mis platos» (copia un plato de la biblioteca con foto e ingredientes). */
+  picker?: ReactNode;
   onChange: (meal: MealSlot | null) => void;
   /** Menú del día (<1280): abre la ficha del plato (macros, ingredientes, foto, platos iguales) en sheet. */
   onOpenFicha?: () => void;
@@ -1316,6 +1355,7 @@ function MealSlotForm({
       {meal?.hasPhoto && !bare ? (
         <img className="nut-menu-photo" src={`/api/meals/${meal.id}/photo?v=${encodeURIComponent(meal.updatedAt)}`} alt="" />
       ) : null}
+      {!meal && picker ? picker : null}
       {meal && !bare && onOpenFicha ? (
         <button type="button" className="btn btn--tinted btn--block meal-slot-ficha" aria-haspopup="dialog" onClick={onOpenFicha}>
           Ficha del plato · macros e ingredientes
