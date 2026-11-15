@@ -1,0 +1,31 @@
+# from-rd-N4: Nutrición del jugador, check de comidas
+
+- **Hecho:** sí
+- **Qué cambió (rutas):**
+  - `lib/nutrition/checks-queries.ts` (nuevo): `mealChecksForDay`, `checkableSlot` (franja del deportista y no futura, con un día de margen por zona horaria), `setMealCheckStatus` (upsert; cambiar de estado conserva comentario y foto), `setMealCheckDetails` (comentario ≤280 y foto: dejarla, ponerla o quitarla), `clearMealCheck`, `mealCheckPhoto`.
+  - `app/a/[id]/nutrition/actions.ts`: Server Actions `loadMealChecks` (devuelve `canCheck` = solo el propio jugador), `saveMealCheckStatus` (Hecho/A medias/No, o `null` para quitar la marca) y `saveMealCheckDetails` (FormData con comentario y foto; valida `PHOTO_MAX_BYTES` y `PHOTO_MIME`).
+  - `app/a/[id]/nutrition/check-photo/[slotId]/route.ts` (nuevo): GET de la foto del plato real (`canSeeAthleteNutrition` + la franja tiene que ser del deportista de la URL).
+  - `app/a/[id]/nutrition/meal-check.tsx` (nuevo): barra de check por franja. Tres cápsulas de 44 px con `aria-pressed`. Volver a tocar la opción marcada la quita (solo si no tiene comentario ni foto). Debajo, «Añadir comentario o foto», que abre un editor con un textarea de 280 caracteres, la foto reducida con `resizeImage` de `lib/image-resize.ts`, Guardar / Cancelar / «Quitar marca», y Escape para cerrar. El foco vuelve al disparador.
+  - `app/a/[id]/nutrition/today-view.tsx`: carga los checks en paralelo con el menú (si fallan, el menú se ve igual, sin botones) y pone la barra en cada franja con plato, solo si mira el propio jugador y el día es hoy o anterior. En las franjas pasadas plegadas, la barra va pegada bajo la fila, fuera del `<details>`, así que siempre está a la vista.
+  - `app/styles/nutri-shared.css`: bloque `.nut-check*`, con la marca en tinte de selección azul y un filete, nunca en rojo o verde, para que no parezca una nota. Las reglas de reduced-motion y contrast van al final de la hoja; reduced-transparency no aplica porque no hay materiales.
+- **Verificado (localhost:3001, 390×844, cuenta ricardovisus; capturas en `.tmp-verify/rd-N4/`):**
+  - Marcar con un toque funciona y se mantiene al recargar.
+  - Comentario y foto: probé una PNG de 3,6 MB, se redujo a 1200 px en el navegador y se guardó. Después de recargar se ven la nota y la foto, servida por la ruta nueva.
+  - Funcionan quitar la marca desde el editor y volver a tocar para desmarcar.
+  - En un día futuro no aparecen botones.
+  - `scrollWidth` = 390 en todos los estados. Cápsulas de 44 px de alto, sin recortar («A medias» ocupa 125 px).
+  - `:focus-visible` muestra un anillo azul de 2 px.
+  - La consola no da errores nuevos (los CORS de signout son del script de capturas).
+  - `npx tsc --noEmit` limpio.
+  - Probé las consultas con un ROLLBACK: un deportista ajeno y una franja futura dan `null`.
+  - Datos de prueba borrados: `meal_checks` = 0 filas. Lock liberado.
+- **Sin gamificación:** no hay rachas, contadores, porcentajes ni comparación. El jugador solo ve su marca, su comentario y su foto.
+- **Decidí:**
+  - No crear `app/api/nutrition/checks/*` y escribir con Server Actions en `app/a/[id]/nutrition/actions.ts`. El motivo es que `middleware.ts` reescribe a 404 todo `/api/nutrition/*` para quien no sea nutricionista, así que el jugador no llegaría (es el mismo motivo que ya documentan N1–N3).
+  - Servir la foto en `/a/[id]/nutrition/check-photo/[slotId]`, por la misma razón. Amanda ya tiene la suya en `/api/nutrition/tracking/checks/[slotId]/photo` (N7).
+- **Duda:** en desarrollo la app conecta como `neondb_owner`, que tiene BYPASSRLS. Ahí la política RLS de `meal_checks` no actúa, y la única barrera es la comprobación del Server Action (`isOwner` + `checkableSlot`, ya probada). No pude repetir la prueba de RLS con un rol sin bypass porque el rol `app` de la prueba de N0 no existe en la BD y no creo roles.
+- **Recomendación:** confirmar que en producción la app conecta con un rol sin BYPASSRLS. Si no, la RLS de toda la pista N es decorativa. No bloquea N4: el control de la aplicación ya impide marcar franjas ajenas.
+- **Nota para el master:**
+  - `app/a/[id]/nutrition/` aparece entero como no rastreado en `git status`. Al hacer el commit, incluye la carpeta completa con `meal-check.tsx` y `check-photo/`.
+  - No pude ver la vista de admin en el navegador porque la contraseña de desarrollo no entró con «admin». Por código, admin ve Hoy sin botones (`canCheck` es false fuera del rol athlete dueño).
+- **Bloquea a Adrián:** no.

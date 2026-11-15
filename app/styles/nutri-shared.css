@@ -908,6 +908,132 @@ button.nut-wk-day:active { background: var(--fill-quaternary); transition-durati
   .nut-shop-packs { color: var(--label); font-size: 9pt; }
 }
 
+/* —— Check de comidas (rd-N4): Hecho / A medias / No por franja, comentario y foto opcionales —— */
+.nut-check {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  margin-top: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--separator-soft);
+}
+/* Franja pasada: el check va pegado bajo la fila plegada (fuera del <details>, siempre a la vista). */
+.nut-slot--past.nut-slot--attached { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.nut-slot--past.nut-slot--attached > summary { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.nut-check--attached {
+  position: relative;
+  margin-top: 0;
+  padding: 0 var(--space-4) var(--space-4);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: var(--surface);
+}
+.nut-slot--attached[open] + .nut-check--attached { padding-top: var(--space-3); }
+.nut-slot--attached[open] + .nut-check--attached::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--space-4);
+  right: var(--space-4);
+  height: 1px;
+  background: var(--separator-soft);
+}
+
+.nut-check-opts { display: flex; gap: var(--space-2); }
+.nut-check-opt {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: 0;
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--fill-tertiary);
+  color: var(--label);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--dur) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+.nut-check-opt > span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.nut-check-opt:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.nut-check-opt:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+@media (hover: hover) { .nut-check-opt:hover { background: var(--fill-secondary); } }
+/* Marcada: selección del sistema (tinte azul + filete), nunca rojo/verde: no es una nota. */
+.nut-check-opt[aria-pressed="true"],
+.nut-check-opt[aria-pressed="true"]:hover {
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+.nut-check-opt[aria-disabled="true"] { cursor: progress; }
+.nut-check-glyph { flex-shrink: 0; width: 18px; height: 18px; }
+
+.nut-check-extra {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+.nut-check-extra > .nut-check-note:first-child,
+.nut-check-extra > .nut-check-edit { grid-column: 1 / -1; }
+.nut-check-photo {
+  display: block;
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--fill-quaternary);
+}
+.nut-check-note {
+  margin: 0;
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--label);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.nut-check-edit.btn {
+  justify-self: start;
+  margin-left: calc(var(--space-3) * -1);
+  padding-inline: var(--space-3);
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  font-weight: 600;
+}
+
+.nut-check-form { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.nut-check-label { font: var(--t-footnote); letter-spacing: var(--ls-footnote); font-weight: 600; color: var(--label-secondary); }
+.nut-check-optional { font-weight: 400; }
+.nut-check-form .nut-check-textarea { min-height: 72px; margin: 0; resize: vertical; }
+.nut-check-left { font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); }
+.nut-check-photo-row { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.nut-check-photo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; }
+.nut-check-pick.btn { position: relative; padding-inline: var(--space-4); }
+.nut-check-pick:has(> input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-check-pick.is-disabled { opacity: 0.4; pointer-events: none; }
+.nut-check-unphoto.btn { padding-inline: var(--space-3); }
+.nut-check-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding-top: var(--space-1); }
+.nut-check-actions .btn { padding-inline: var(--space-4); }
+.nut-check-actions .nut-check-remove { margin-left: auto; color: var(--danger); }
+.nut-check-msg.error { margin: 0; }
+
+@media (max-width: 359px) {
+  .nut-check-glyph { display: none; }
+}
+
 /* —— Preferencias (al final de la hoja propia, no en a11y.css) —— */
 @media (prefers-reduced-motion: reduce) {
   .nut-details summary,
@@ -920,7 +1046,9 @@ button.nut-wk-day:active { background: var(--fill-quaternary); transition-durati
   .nut-wk-today,
   .nut-shop-check,
   .nut-shop-box,
-  .nut-shop-box::after { transition: none; }
+  .nut-shop-box::after,
+  .nut-check-opt { transition: none; }
+  .nut-check-opt:active { transform: none; }
 }
 /* prefers-reduced-transparency: esta hoja no usa materiales (todo es --surface opaco); nada que cambiar. */
 @media (prefers-contrast: more) {
@@ -953,4 +1081,11 @@ button.nut-wk-day:active { background: var(--fill-quaternary); transition-durati
   .nut-shop-count span, .nut-shop-pending, .nut-pane .nut-shop-sec-title, .nut-shop-sec-note, .nut-shop-foot,
   .nut-shop-packs, .nut-shop-amount, .nut-shop-line.is-checked .nut-shop-name,
   .nut-shop-line.is-checked .nut-shop-amount, .nut-shop-line.is-checked .nut-shop-packs { color: var(--label-on-tint); }
+  .nut-check { border-top-color: var(--label); }
+  .nut-slot--attached[open] + .nut-check--attached::before { background: var(--label); }
+  .nut-check--attached { box-shadow: inset 1px 0 0 var(--label), inset -1px 0 0 var(--label), inset 0 -1px 0 var(--label); }
+  .nut-check-opt { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-check-opt[aria-pressed="true"], .nut-check-opt[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px var(--accent); }
+  .nut-check-photo { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-check-label, .nut-check-left { color: var(--label-on-tint); }
 }

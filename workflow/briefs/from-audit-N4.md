@@ -1,0 +1,7 @@
+- Veredicto: PASA
+- Bloqueantes (maximo 5): ninguno
+- Notas no bloqueantes (maximo 3, opcional):
+  - Verificado a 390x844 como jugador (ricardovisus): /a/<id> Nutrición > Hoy. scrollWidth = 390 (sin scroll horizontal), también con el editor abierto. Hecho/A medias/No en un toque (aria-pressed), se mantiene tras recargar; comentario (280 car.) y foto se guardan, la foto se sirve y se ve; «Quitar marca» deja la franja limpia (probado y limpiado, sin basura en datos). Tactiles Hecho/A medias/No, Guardar, Cancelar, Quitar marca, Añadir foto = 44 px de alto; foco visible con Tab (outline 2px, :focus-visible). `npx tsc --noEmit` limpio. Sin rachas, puntos ni porcentajes en el texto de la pantalla.
+  - Propiedad: las Server Actions exigen `role=athlete` y `athleteId` propio + franja del propio jugador (`app/a/[id]/nutrition/actions.ts`); otro jugador (paco) recibe 404 al pedir la foto de Ricardo.
+  - Menor, no bloquea: el servidor admite marcar franjas hasta mañana (`date <= current_date + 1` en `lib/nutrition/checks-queries.ts:47`) mientras la UI solo deja hasta hoy; hoy es inofensivo.
+  - Capturas: .tmp-verify/audit-N4/hoy.png, after-done.png, editor.png, foto.png, focus.png (full-page: la tab bar fija sale a media imagen, es artefacto de la captura).
