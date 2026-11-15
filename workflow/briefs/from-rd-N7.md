@@ -1,0 +1,31 @@
+# from-rd-N7 — Seguimiento (cumplimiento + medidas)
+
+- **Hecho:** sí
+- **Qué cambió (rutas):**
+  - `lib/nutrition/tracking-queries.ts` (nuevo): `trackingCompliance` (8 semanas lunes–domingo hasta hoy, por semana y por tipo de día desde `day_plans.md_tag`), `complianceScore`, `checkPhotoFor`, `athleteIdOfSlot`, `measurementsFor`, `upsertMeasurement`, `deleteMeasurement`, `syncProfileWeight`.
+  - `app/api/nutrition/tracking/shared.ts` (nuevo): `authorizeTracking` (solo admin/nutritionist + `canSeeAthleteNutrition`; el jugador recibe 404).
+  - `app/api/nutrition/tracking/measurements/route.ts` (GET/POST), `measurements/[id]/route.ts` (DELETE), `checks/[slotId]/photo/route.ts` (GET de la foto real del check).
+  - `app/nutricion/[athleteId]/seguimiento/page.tsx` (reescrita), `compliance-panel.tsx`, `measurements-panel.tsx`, `format.ts` (nuevos). `section-shell.tsx` no se toca porque lo siguen usando compra, informes y plantillas.
+  - `app/styles/nutri.css`: bloque `.nut-trk-*` al final. Las preferencias (reduced-motion, contrast) van al final de ese bloque; en transparency no hay nada que ajustar.
+- **Decisiones:**
+  - Cumplimiento = (✓ + ½·0,5) / comidas marcadas. Las no marcadas se muestran en la barra como «sin marcar», pero no penalizan.
+  - Una medida por fecha: si se guarda una fecha que ya existe, se sustituye. El formulario precarga ese registro.
+  - El peso del perfil (`athletes.weight_kg`, del que leen la ficha y los anillos) pasa a ser el del último registro con peso, también al borrar uno. Se escribe por la vía de `updateAthleteProfile` (RPC si es nutricionista). Si no queda ningún registro con peso, el perfil no se toca.
+  - La página es solo para nutricionista, como sus pestañas hermanas; la API admite también admin.
+  - Las fotos y comentarios salen con la foto del plan y la del jugador lado a lado. Cuando falta una de las dos, se muestra «Sin foto».
+- **Verificación:**
+  - `npx tsc --noEmit` limpio.
+  - A 390 px no hay scroll horizontal (`scrollWidth`=390), ni vacío ni con datos.
+  - La app no da errores de consola. El único error es el CORS del signout que hace `shots.sh`, no de la página.
+  - Botones del formulario y de los registros a 44 px. Los del selector de métrica también son de 44 px en pantallas táctiles.
+  - El foco de teclado es visible. La gráfica se navega con flechas, Inicio, Fin y Esc.
+  - Probado con datos reales en la BD local:
+    - 14 checks de prueba (9 ✓ + 3 ½ + 2 ✕) dan un 75 %, con foto y comentario.
+    - Al guardar medidas, la gráfica y `athletes.weight_kg` se actualizan: 85,3 y luego 84,6. Un registro con fecha anterior no cambia el peso, y el campo Peso de la ficha muestra 84,6.
+    - Al borrar desde la UI, el peso vuelve a 85,3.
+  - Datos de prueba borrados y peso restaurado a 85. Ricardo queda con 0 `body_measurements` y 0 `meal_checks`.
+  - Capturas en `.tmp-verify/rd-N7/`. `browse.lock` borrado.
+  - Sin commit: lo hace el master.
+- **Duda:** los datos reales seguirán vacíos hasta que exista el marcado del jugador (N4). Lo que se ve ahora es el estado vacío.
+- **Recomendación:** al cerrar N4, abrir Seguimiento con un check real con foto y comprobar que sale. No hace falta tocar nada: lee `meal_checks` tal cual.
+- **Bloquea a Adrián:** no

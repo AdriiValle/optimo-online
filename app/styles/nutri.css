@@ -1600,3 +1600,206 @@ body.nut-modal-open { overflow: hidden; }
   .nut-prof--extended .nut-prof-actions { background: var(--bg); box-shadow: 0 -1px 0 var(--label); }
   .nut-allergy-alert { box-shadow: inset 0 0 0 1px var(--label); }
 }
+
+/* —— Seguimiento: cumplimiento del menú y medidas (rd-N7). Solo panel de Amanda/admin —— */
+.nut-trk-page { min-width: 0; }
+.nut-trk-inner { display: flex; flex-direction: column; gap: var(--space-8); width: 100%; max-width: 760px; min-width: 0; }
+.nut-trk-head { display: flex; flex-direction: column; gap: var(--space-1); padding: 0 var(--row-inset); }
+.nut-trk-title { margin: 0; font: var(--t-title-2); letter-spacing: var(--ls-title-2); }
+.nut-trk-lead { margin: 0; color: var(--label-secondary); font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
+.nut-trk-block { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.nut-trk-block-head { display: flex; flex-direction: column; gap: 2px; padding: 0 var(--row-inset); }
+.nut-trk-block-head--sub { margin-top: var(--space-4); }
+.nut-trk-block-title { margin: 0; font: var(--t-title-3); letter-spacing: var(--ls-title-3); }
+.nut-trk-block-title--sm { font: var(--t-headline); letter-spacing: var(--ls-headline); }
+.nut-trk-block-sub, .nut-trk-meta, .nut-trk-none {
+  margin: 0;
+  color: var(--label-secondary);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+}
+.nut-trk-none { padding: 0 var(--row-inset); }
+.nut-trk-none--chart { padding: var(--space-8) 0; text-align: center; }
+.nut-trk-card { min-width: 0; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface); }
+.nut-trk-empty .state-icon { width: 40px; height: 40px; }
+.nut-trk-empty .state-text { max-width: 44ch; }
+.nut-trk-empty--flat { padding: var(--space-8) 0; }
+
+/* Cumplimiento: tarjetas por tipo de día, barra apilada (✓ · ½ · ✕ · sin marcar) y filas por semana. */
+.nut-trk-score { font: var(--t-title-1); letter-spacing: var(--ls-title-1); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.nut-trk-bar {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--fill-secondary);
+}
+.nut-trk-bar-seg { flex: 0 0 auto; height: 100%; }
+.nut-trk-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--fill-secondary); }
+.nut-trk-bar-seg--done, .nut-trk-dot--done { background: var(--ok); }
+.nut-trk-bar-seg--half, .nut-trk-dot--half { background: var(--ok); opacity: 0.45; }
+.nut-trk-bar-seg--missed, .nut-trk-dot--missed { background: var(--label-tertiary); }
+.nut-trk-types { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.nut-trk-type {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.nut-trk-type-label { color: var(--label-secondary); font: var(--t-subhead); font-weight: 600; letter-spacing: var(--ls-subhead); }
+.nut-trk-legend { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); margin: var(--space-2) 0 0; }
+.nut-trk-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.nut-trk-weeks { margin: 0; }
+.nut-trk-week {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) 4.5rem;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--row-inset);
+}
+.nut-trk-week-label { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nut-trk-week-name { font: var(--t-body-row); letter-spacing: var(--ls-body); }
+.nut-trk-week .nut-trk-score { font: var(--t-headline); letter-spacing: var(--ls-headline); text-align: right; }
+
+/* Fotos y comentarios: la del plan y la real, lado a lado. */
+.nut-trk-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.nut-trk-check { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface); }
+.nut-trk-check-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.nut-trk-check-when { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nut-trk-check-slot { font: var(--t-headline); letter-spacing: var(--ls-headline); }
+.nut-trk-check-date { color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-trk-status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+  white-space: nowrap;
+}
+.nut-trk-status--done { background: var(--ok-tint); color: var(--ok); }
+.nut-trk-status--half { background: var(--warn-tint); color: var(--warn); }
+.nut-trk-status--missed { background: var(--fill-tertiary); color: var(--label-secondary); }
+.nut-trk-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.nut-trk-photo { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; margin: 0; }
+.nut-trk-photo > img, .nut-trk-photo-empty {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  background: var(--fill-quaternary);
+  object-fit: cover;
+}
+.nut-trk-photo-empty { display: grid; place-items: center; color: var(--label-tertiary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-trk-photo > figcaption { color: var(--label-secondary); font: var(--t-caption); letter-spacing: var(--ls-caption); }
+.nut-trk-check-title { margin: 0; font: var(--t-subhead); letter-spacing: var(--ls-subhead); overflow-wrap: anywhere; }
+.nut-trk-note { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: var(--space-3); border-radius: var(--radius-md); background: var(--bg); }
+.nut-trk-note-label { color: var(--label-secondary); font: var(--t-caption); letter-spacing: var(--ls-caption); }
+.nut-trk-note > p { margin: 0; font: var(--t-subhead); letter-spacing: var(--ls-subhead); overflow-wrap: anywhere; }
+
+/* Medidas: gráfica de línea estilo Salud (rejilla tenue, eje a la derecha, último punto destacado). */
+.nut-trk-metrics { margin-bottom: var(--space-4); }
+.nut-trk-latest { display: flex; flex-direction: column; gap: 2px; }
+.nut-trk-latest-label { color: var(--label-secondary); font: var(--t-footnote); font-weight: 600; letter-spacing: var(--ls-footnote); }
+.nut-trk-latest-value { font: var(--t-large-title); letter-spacing: var(--ls-large-title); font-variant-numeric: tabular-nums; }
+.nut-trk-latest-unit { margin-left: 4px; color: var(--label-secondary); font: var(--t-headline); letter-spacing: var(--ls-headline); }
+.nut-trk-chart { position: relative; margin-top: var(--space-3); border-radius: var(--radius-sm); touch-action: pan-y; }
+.nut-trk-chart:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-trk-chart-svg { display: block; overflow: visible; }
+.nut-trk-grid { stroke: var(--separator); stroke-width: 1; shape-rendering: crispEdges; }
+.nut-trk-axis { fill: var(--label-secondary); font: var(--t-caption-2); letter-spacing: var(--ls-caption-2); font-variant-numeric: tabular-nums; }
+.nut-trk-line { fill: none; stroke: var(--label); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.nut-trk-pt { fill: var(--surface); stroke: var(--label); stroke-width: 2; }
+.nut-trk-pt.is-active { fill: var(--label); }
+.nut-trk-cursor { stroke: var(--label-tertiary); stroke-width: 1; stroke-dasharray: 2 3; }
+.nut-trk-tip {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--elev-2);
+  transform: translateX(-50%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.nut-trk-tip > strong { font: var(--t-subhead); font-weight: 600; letter-spacing: var(--ls-subhead); font-variant-numeric: tabular-nums; }
+.nut-trk-tip > span { color: var(--label-secondary); font: var(--t-caption); letter-spacing: var(--ls-caption); }
+
+/* Formulario de medida. */
+.nut-trk-form-title { margin: 0 0 var(--space-3); font: var(--t-headline); letter-spacing: var(--ls-headline); }
+.nut-trk-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); gap: var(--space-3); }
+.nut-trk-field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.nut-trk-field--notes { grid-column: 1 / -1; }
+.nut-trk-field-label { color: var(--label-secondary); font: var(--t-footnote); font-weight: 600; letter-spacing: var(--ls-footnote); }
+.nut-trk-field input, .nut-trk-field textarea { margin-bottom: 0; }
+.nut-trk-field textarea { min-height: 64px; }
+.nut-trk-input-unit { position: relative; display: block; }
+.nut-trk-input-unit > input { padding-right: 3rem; font-variant-numeric: tabular-nums; }
+.nut-trk-input-unit > span {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  transform: translateY(-50%);
+  color: var(--label-secondary);
+  font: var(--t-subhead);
+  pointer-events: none;
+}
+.nut-trk-form-help { margin-top: var(--space-3); }
+.nut-trk-form-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-4); }
+.nut-trk-saved { margin: var(--space-2) 0 0; color: var(--ok); font: var(--t-footnote); letter-spacing: var(--ls-footnote); text-align: right; }
+
+/* Registros. */
+.nut-trk-records-title { margin: var(--space-3) 0 0; }
+.nut-trk-records { margin: 0; }
+.nut-trk-record { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); min-height: 56px; padding: var(--space-2) var(--space-2) var(--space-2) var(--row-inset); }
+.nut-trk-record-body { display: flex; flex: 1 1 14rem; flex-direction: column; gap: 2px; min-width: 0; }
+.nut-trk-record-date { font: var(--t-subhead); font-weight: 600; letter-spacing: var(--ls-subhead); }
+.nut-trk-record-values { font: var(--t-body-row); letter-spacing: var(--ls-body); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.nut-trk-record-notes { overflow-wrap: anywhere; }
+.nut-trk-record-actions { display: flex; flex: 0 0 auto; gap: 0; margin-left: auto; }
+.nut-trk-record-actions .btn { padding-inline: var(--space-3); }
+.nut-trk-record-actions .nut-trk-delete { color: var(--danger); }
+
+@media (pointer: coarse) {
+  .nut-trk-metrics { min-height: var(--tap-min); }
+}
+@media (max-width: 559.98px) {
+  .nut-trk-type { padding: var(--space-3); }
+  .nut-trk-type .nut-trk-score { font: var(--t-title-2); letter-spacing: var(--ls-title-2); }
+  .nut-trk-week { grid-template-columns: minmax(0, 1fr) 3.5rem; gap: var(--space-1) var(--space-3); }
+  .nut-trk-week .nut-trk-bar { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (min-width: 1280px) {
+  /* Zona de trabajo a alto fijo: el seguimiento hace scroll dentro. */
+  .nut-page--tabs .nut-trk-page { overflow-y: auto; overscroll-behavior: contain; margin-bottom: 0; }
+  .nut-trk-inner { padding-bottom: var(--space-6); }
+}
+
+/* —— Preferencias del sistema: seguimiento (rd-N7) ——
+   Transparencia: nada translúcido en estas piezas (la burbuja de la gráfica es opaca), nada que ajustar. */
+@media (prefers-reduced-motion: reduce) {
+  .nut-trk-record-actions .btn, .nut-trk-metrics > button { transition: none; }
+  .nut-trk-record-actions .btn:active, .nut-trk-metrics > button:active { transform: none; }
+}
+@media (prefers-contrast: more) {
+  .nut-trk-card, .nut-trk-type, .nut-trk-check, .nut-trk-records { box-shadow: inset 0 0 0 1px var(--separator); }
+  .nut-trk-bar { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-trk-bar-seg--half, .nut-trk-dot--half { opacity: 0.7; }
+  .nut-trk-lead, .nut-trk-block-sub, .nut-trk-meta, .nut-trk-none, .nut-trk-type-label, .nut-trk-check-date,
+  .nut-trk-photo > figcaption, .nut-trk-note-label, .nut-trk-latest-label, .nut-trk-latest-unit,
+  .nut-trk-field-label, .nut-trk-input-unit > span, .nut-trk-tip > span { color: var(--label); }
+  .nut-trk-axis { fill: var(--label); }
+  .nut-trk-grid { stroke: var(--label-secondary); }
+  .nut-trk-note { box-shadow: inset 0 0 0 1px var(--separator); }
+}
