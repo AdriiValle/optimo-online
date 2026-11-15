@@ -862,6 +862,142 @@
   .card.an-molestias { padding-inline: var(--space-5); padding-top: var(--space-5); }
 }
 
+/* —— Perfil físico en la cabecera del deportista (B4, home-client.tsx) ——
+   Debajo de nombre y foto, como en Contactos: filete, cifras en baldosas y alergias en cápsulas. */
+.dash-head > .adm-fis {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--separator-soft);
+}
+.adm-fis-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.adm-fis-title {
+  margin: 0;
+  color: var(--label);
+  font: var(--t-subhead);
+  font-weight: 600;
+  letter-spacing: var(--ls-subhead);
+}
+.btn.adm-fis-edit { flex-shrink: 0; padding-inline: var(--space-4); }
+.adm-fis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+.adm-fis-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--fill-quaternary);
+}
+.adm-fis-fact dt {
+  margin: 0;
+  overflow: hidden;
+  color: var(--label-secondary);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.adm-fis-fact dd {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  min-width: 0;
+  min-height: 25px;
+  margin: 0;
+}
+.adm-fis-num {
+  min-width: 0;
+  color: var(--label);
+  font: var(--t-title-3);
+  font-weight: 700;
+  letter-spacing: var(--ls-title-3);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.adm-fis-unit {
+  color: var(--label-secondary);
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+}
+.adm-fis-fact--text dd { align-items: flex-end; }
+.adm-fis-fact--text .adm-fis-num {
+  font: var(--t-headline);
+  letter-spacing: var(--ls-headline);
+  font-variant-numeric: normal;
+}
+.adm-fis-none {
+  color: var(--label-tertiary);
+  font: var(--t-title-3);
+  font-weight: 600;
+}
+.adm-fis-hint {
+  margin: 0;
+  color: var(--label-secondary);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+}
+.adm-fis-diet { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; }
+.adm-fis-diet-row {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+.adm-fis-diet-row dt {
+  color: var(--label-secondary);
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+}
+.adm-fis-diet-row dd { min-width: 0; margin: 0; }
+.adm-fis-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.adm-fis-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  max-width: 100%;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  color: var(--label);
+  font: var(--t-subhead);
+  font-weight: 600;
+  letter-spacing: var(--ls-subhead);
+  overflow-wrap: anywhere;
+}
+.adm-fis-chips--danger .adm-fis-chip { background: var(--danger-tint); }
+.adm-fis-chips--warn .adm-fis-chip { background: var(--warn-tint); }
+
+@media (min-width: 560px) {
+  .adm-fis-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 720px) {
+  .dash-head > .adm-fis { padding-top: var(--space-4); }
+}
+
 /* —— Preferencias del panel (B1) —— */
 @media (prefers-reduced-motion: reduce) {
   .adm-row { transition: none; }
@@ -940,4 +1076,17 @@
   .adm-set-msg:not(.ok, .error),
   .adm-set-card > .muted { color: var(--label-on-tint); }
   .adm-set-chevron { border-color: var(--label-on-tint); }
+}
+
+/* —— Preferencias del perfil físico (B4) —— */
+@media (prefers-contrast: more) {
+  .dash-head > .adm-fis { border-top-color: var(--label); }
+  .adm-fis-fact { background: transparent; box-shadow: inset 0 0 0 1px var(--label-on-tint); }
+  .adm-fis-fact dt,
+  .adm-fis-unit,
+  .adm-fis-hint,
+  .adm-fis-diet-row dt { color: var(--label-on-tint); }
+  .adm-fis-none { color: var(--label-on-tint); }
+  .adm-fis-chips--danger .adm-fis-chip { box-shadow: inset 0 0 0 1px var(--danger); }
+  .adm-fis-chips--warn .adm-fis-chip { box-shadow: inset 0 0 0 1px var(--warn); }
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { addDays, dateKey, DOW_FULL, MONTHS_ES, parseDateLocal, todayKey } from "@/lib/dates";
 import type { Athlete, DayPlan, Diary, Injury, IntegrationInfo } from "@/lib/types";
 import { capabilitiesFor, isDeviceField } from "@/lib/integrations/capabilities";
@@ -9,6 +10,7 @@ import { NutritionPane } from "./nutrition-pane";
 import { SessionList } from "./session-list";
 import { DeviceCard, IntegrationAdminChip } from "./device-card";
 import { PlanCalendar, type CalendarView } from "@/app/components/plan-calendar";
+import { AthleteProfileForm, NutSheet, ageFrom } from "@/app/nutricion/[athleteId]/athlete-profile-form";
 
 type Pane = "train" | "food" | "log" | "stats";
 
@@ -82,6 +84,112 @@ const RUN_METRICS: MetricSpec[] = [
 ];
 const RPE_METRIC: MetricSpec = { name: "rpe", label: "Esfuerzo (RPE)", hint: "De 1 a 10", min: 1, max: 10 };
 
+/** Ficha física que ve el admin (B4). Solo lectura aquí; se edita en el sheet. */
+export type AdminProfile = {
+  birthDate: string | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  allergies: string[];
+  intolerances: string[];
+};
+
+/** 72.5 → «72,5» (sin depender del ICU del servidor). */
+const decimalEs = (n: number) => String(Math.round(n * 10) / 10).replace(".", ",");
+
+/** `1992-03-12` → «12 mar 1992». */
+function birthShort(iso: string) {
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  return `${d} ${MONTHS_ES[m - 1].slice(0, 3).toLowerCase()} ${y}`;
+}
+
+function ProfileFact({ label, value, unit, wide }: { label: string; value: string | null; unit?: string; wide?: boolean }) {
+  return (
+    <div className={`adm-fis-fact${wide ? " adm-fis-fact--text" : ""}`}>
+      <dt>{label}</dt>
+      <dd>
+        {value === null ? (
+          <span className="adm-fis-none">
+            <span aria-hidden="true">—</span>
+            <span className="sr-only">Sin dato</span>
+          </span>
+        ) : (
+          <>
+            <span className="adm-fis-num">{value}</span>
+            {unit ? <span className="adm-fis-unit">{unit}</span> : null}
+          </>
+        )}
+      </dd>
+    </div>
+  );
+}
+
+/** Perfil físico del deportista en la cabecera del admin: cifras + alergias, y «Editar» abre la ficha. */
+function AdminProfileCard({ athleteId, profile }: { athleteId: string; profile: AdminProfile }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const age = ageFrom(profile.birthDate);
+  const empty = profile.birthDate === null && profile.heightCm === null && profile.weightKg === null;
+  const diet = [
+    { key: "allergies", title: "Alergias", tone: "danger", items: profile.allergies },
+    { key: "intolerances", title: "Intolerancias", tone: "warn", items: profile.intolerances }
+  ].filter((g) => g.items.length > 0);
+
+  return (
+    <div className="adm-fis" role="group" aria-labelledby="adm-fis-title">
+      <div className="adm-fis-head">
+        <h3 className="adm-fis-title" id="adm-fis-title">
+          Perfil físico
+        </h3>
+        <button
+          type="button"
+          className="btn btn--tinted adm-fis-edit"
+          aria-haspopup="dialog"
+          aria-label={empty ? "Añadir perfil físico" : "Editar perfil físico"}
+          onClick={() => setOpen(true)}
+        >
+          {empty ? "Añadir" : "Editar"}
+        </button>
+      </div>
+      <dl className="adm-fis-grid">
+        <ProfileFact label="Edad" value={age !== null ? String(age) : null} unit="años" />
+        <ProfileFact label="Altura" value={profile.heightCm !== null ? decimalEs(profile.heightCm) : null} unit="cm" />
+        <ProfileFact label="Peso" value={profile.weightKg !== null ? decimalEs(profile.weightKg) : null} unit="kg" />
+        <ProfileFact label="Nacimiento" value={profile.birthDate ? birthShort(profile.birthDate) : null} wide />
+      </dl>
+      {empty ? <p className="adm-fis-hint">Sin datos físicos. Con nacimiento, altura y peso se calculan los objetivos del día.</p> : null}
+      {diet.length ? (
+        <dl className="adm-fis-diet">
+          {diet.map((g) => (
+            <div key={g.key} className="adm-fis-diet-row">
+              <dt>{g.title}</dt>
+              <dd>
+                <ul className={`adm-fis-chips adm-fis-chips--${g.tone}`}>
+                  {g.items.map((t) => (
+                    <li key={t} className="adm-fis-chip">
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+      <NutSheet open={open} title="Perfil del deportista" onRequestClose={close} grouped>
+        <AthleteProfileForm
+          athleteId={athleteId}
+          onSaved={() => {
+            close();
+            router.refresh();
+          }}
+        />
+      </NutSheet>
+    </div>
+  );
+}
+
 type Props = {
   athlete: Athlete;
   plans: DayPlan[];
@@ -96,6 +204,8 @@ type Props = {
   polarIntegration: IntegrationInfo;
   polarConfigured: boolean;
   adminIntegration: IntegrationInfo | null;
+  /** Solo admin: ficha física editable en la cabecera. */
+  adminProfile?: AdminProfile | null;
   callbackDevice?: string | null;
   callbackMsg?: string | null;
 };
@@ -134,6 +244,7 @@ export function HomeClient({
   polarIntegration: initialPolar,
   polarConfigured,
   adminIntegration,
+  adminProfile,
   callbackDevice,
   callbackMsg
 }: Props) {
@@ -497,6 +608,7 @@ export function HomeClient({
             Recup.
           </span>
         </div>
+        {isAdmin && adminProfile ? <AdminProfileCard athleteId={athlete.id} profile={adminProfile} /> : null}
       </section>
       {photoMsg ? <p className={photoMsg.includes("400") || photoMsg.includes("válida") ? "error" : "ok"}>{photoMsg}</p> : null}
 

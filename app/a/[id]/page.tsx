@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { currentUser, rlsFrom, validAthleteId } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
-import { athleteHome, diaryHistory, integrationFor } from "@/lib/queries";
+import { athleteHome, athleteProfile, diaryHistory, integrationFor } from "@/lib/queries";
 import { polarConfigured } from "@/lib/integrations/config";
 import { addDays, dateKey, parseDateLocal, todayKey } from "@/lib/dates";
 import { planData } from "@/lib/plan-data";
@@ -37,7 +37,8 @@ export default async function AthleteHome({
     if (!home) return null;
     const history = isAdmin ? await diaryHistory(tx, id, historyFrom, historyTo) : null;
     const adminIntegration = isAdmin ? await integrationFor(tx, id) : null;
-    return { home, history, adminIntegration };
+    const profile = isAdmin ? await athleteProfile(tx, id) : null;
+    return { home, history, adminIntegration, profile };
   });
   if (!data) notFound();
 
@@ -62,6 +63,17 @@ export default async function AthleteHome({
           polarIntegration={data.home.polarIntegration}
           polarConfigured={polarConfigured()}
           adminIntegration={data.adminIntegration}
+          adminProfile={
+            data.profile
+              ? {
+                  birthDate: data.profile.birthDate,
+                  heightCm: data.profile.heightCm,
+                  weightKg: data.profile.weightKg,
+                  allergies: data.profile.allergies,
+                  intolerances: data.profile.intolerances
+                }
+              : null
+          }
           callbackDevice={callbackDevice}
           callbackMsg={callbackMsg}
         />
