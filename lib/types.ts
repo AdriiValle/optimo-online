@@ -55,6 +55,8 @@ export type DayPlan = {
   matchVenue: MatchVenue | null;
   matchTime: string | null;
   matchCompetition: string | null;
+  /** Día con exposición a sauna (viene resumido aunque `blocks` llegue vacío). */
+  sauna?: boolean;
 };
 
 export type Diary = {

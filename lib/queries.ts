@@ -333,6 +333,7 @@ type PlanJson = {
   match_venue: DayPlan["matchVenue"];
   match_time: string | null;
   match_competition: string | null;
+  sauna?: boolean;
 };
 
 type DiaryJson = {
@@ -379,7 +380,8 @@ function mapPlan(p: PlanJson): DayPlan {
     matchOpponent: p.match_opponent,
     matchVenue: p.match_venue,
     matchTime: p.match_time,
-    matchCompetition: p.match_competition
+    matchCompetition: p.match_competition,
+    sauna: p.sauna ?? false
   };
 }
 
@@ -485,7 +487,8 @@ export async function athleteHome(tx: Tx, athleteId: string, date: string) {
             'match_opponent', p.match_opponent,
             'match_venue', p.match_venue,
             'match_time', p.match_time,
-            'match_competition', p.match_competition
+            'match_competition', p.match_competition,
+            'sauna', exists(select 1 from jsonb_array_elements(p.blocks) b where b->>'protocolId' = 'sauna-exposicion')
           )
           order by p.date
         ), '[]'::jsonb)
