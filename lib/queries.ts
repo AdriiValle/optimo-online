@@ -12,6 +12,7 @@ import type {
   SupplementEntry
 } from "@/lib/types";
 import { isoDate } from "@/lib/dates";
+import { parseTargetOverrides, type TargetOverrides } from "@/lib/nutrition/targets";
 
 type AccountRow = { id: string; email: string; password_hash: string; role: SessionUser["role"] };
 type AthleteRow = {
@@ -1121,8 +1122,13 @@ export type MealNutrition = {
   totals: Record<NutrientKey, NutrientSum>;
 };
 
-/** Perfil físico para los objetivos (`lib/nutrition/targets.ts`); null = no rellenado. */
-export type NutritionProfile = { weightKg: number | null; heightCm: number | null; ageYears: number | null };
+/** Perfil físico y objetivos fijados por la nutricionista (`lib/nutrition/targets.ts`); null = no rellenado. */
+export type NutritionProfile = {
+  weightKg: number | null;
+  heightCm: number | null;
+  ageYears: number | null;
+  targetOverrides: TargetOverrides | null;
+};
 
 export type NutritionTotals = {
   weightKg: number | null;
@@ -1142,8 +1148,10 @@ type QuantItemRow = { meal_slot_id: string; ok: boolean; grams: string | null } 
  * Los items obsoletos no cuentan. Días sin platos no aparecen. `meals` = macros de cada plato del rango (ficha).
  */
 export async function nutritionTotals(tx: Tx, athleteId: string, from: string, to: string): Promise<NutritionTotals> {
-  const athlete = await tx<{ weight_kg: string | null; height_cm: string | null; age_years: number | null }[]>`
-    select weight_kg::text, height_cm::text, extract(year from age(birth_date))::int as age_years
+  const athlete = await tx<
+    { weight_kg: string | null; height_cm: string | null; age_years: number | null; target_overrides: unknown }[]
+  >`
+    select weight_kg::text, height_cm::text, extract(year from age(birth_date))::int as age_years, target_overrides
     from athletes where id = ${athleteId}
   `;
   const slots = await tx<{ id: string; date: string }[]>`
@@ -1202,35 +1210,97 @@ export async function nutritionTotals(tx: Tx, athleteId: string, from: string, t
   const weightKg = num(athlete[0]?.weight_kg ?? null);
   return {
     weightKg,
-    profile: { weightKg, heightCm: num(athlete[0]?.height_cm ?? null), ageYears: athlete[0]?.age_years ?? null },
+    profile: {
+      weightKg,
+      heightCm: num(athlete[0]?.height_cm ?? null),
+      ageYears: athlete[0]?.age_years ?? null,
+      targetOverrides: parseTargetOverrides(athlete[0]?.target_overrides)
+    },
     days: [...days.values()].sort((a, b) => a.date.localeCompare(b.date)),
     meals
   };
 }
 
-export type AthleteProfile = { birthDate: string | null; heightCm: number | null; weightKg: number | null };
+/** Ficha física. */
+export type AthleteBodyProfile = { birthDate: string | null; heightCm: number | null; weightKg: number | null };
+
+/** Lo que fija la nutricionista: alergias, intolerancias, meta, números visibles y objetivos propios. */
+export type AthleteDietProfile = {
+  allergies: string[];
+  intolerances: string[];
+  showNumbers: boolean;
+  dietGoal: string | null;
+  targetOverrides: TargetOverrides | null;
+};
+
+export type AthleteProfile = AthleteBodyProfile & AthleteDietProfile;
+
+/** Cambios del perfil: la ficha física va entera; de la parte de dieta, solo lo que llega. */
+export type AthleteProfilePatch = { body?: AthleteBodyProfile; diet?: Partial<AthleteDietProfile> };
 
 export async function athleteProfile(tx: Tx, athleteId: string): Promise<AthleteProfile | null> {
-  const rows = await tx<{ birth_date: string | null; height_cm: string | null; weight_kg: string | null }[]>`
-    select birth_date::text, height_cm::text, weight_kg::text from athletes where id = ${athleteId} limit 1
+  const rows = await tx<
+    {
+      birth_date: string | null;
+      height_cm: string | null;
+      weight_kg: string | null;
+      allergies: string[] | null;
+      intolerances: string[] | null;
+      show_numbers: boolean | null;
+      diet_goal: string | null;
+      target_overrides: unknown;
+    }[]
+  >`
+    select birth_date::text, height_cm::text, weight_kg::text, allergies, intolerances, show_numbers, diet_goal,
+      target_overrides
+    from athletes where id = ${athleteId} limit 1
   `;
   const r = rows[0];
   if (!r) return null;
   const n = (v: string | null) => (v == null ? null : Number(v));
-  return { birthDate: r.birth_date, heightCm: n(r.height_cm), weightKg: n(r.weight_kg) };
+  return {
+    birthDate: r.birth_date,
+    heightCm: n(r.height_cm),
+    weightKg: n(r.weight_kg),
+    allergies: r.allergies ?? [],
+    intolerances: r.intolerances ?? [],
+    showNumbers: r.show_numbers ?? false,
+    dietGoal: r.diet_goal,
+    targetOverrides: parseTargetOverrides(r.target_overrides)
+  };
 }
 
-/** Admin escribe directo (RLS); la nutricionista asignada pasa por la función security definer. */
-export async function updateAthleteProfile(tx: Tx, athleteId: string, p: AthleteProfile, asNutritionist: boolean) {
-  if (asNutritionist) {
+/**
+ * Ficha física: admin escribe directo (RLS); la nutricionista asignada pasa por la función security definer.
+ * Dieta: siempre por `nutritionist_set_athlete_diet_profile` (admite admin y nutricionista asignada),
+ * mezclando lo que llega con lo guardado. Todo en la misma transacción.
+ */
+export async function updateAthleteProfile(tx: Tx, athleteId: string, patch: AthleteProfilePatch, asNutritionist: boolean) {
+  const p = patch.body;
+  if (p && asNutritionist) {
     const rows = await tx<{ ok: boolean }[]>`
       select nutritionist_set_athlete_profile(${athleteId}, ${p.birthDate}::date, ${p.heightCm}, ${p.weightKg}) as ok
     `;
-    return rows[0]?.ok ?? false;
+    if (!rows[0]?.ok) return false;
+  } else if (p) {
+    const rows = await tx<{ id: string }[]>`
+      update athletes set birth_date = ${p.birthDate}::date, height_cm = ${p.heightCm}, weight_kg = ${p.weightKg}
+      where id = ${athleteId} returning id
+    `;
+    if (!rows.length) return false;
   }
-  const rows = await tx<{ id: string }[]>`
-    update athletes set birth_date = ${p.birthDate}::date, height_cm = ${p.heightCm}, weight_kg = ${p.weightKg}
-    where id = ${athleteId} returning id
-  `;
-  return rows.length > 0;
+  if (patch.diet) {
+    const current = await athleteProfile(tx, athleteId);
+    if (!current) return false;
+    const d = { ...current, ...patch.diet };
+    // tx.json: con JSON.stringify + ::jsonb llegaría como cadena JSON (jsonb_typeof 'string') y la función lo rechaza.
+    const overrides = d.targetOverrides ? tx.json(d.targetOverrides as Parameters<typeof tx.json>[0]) : null;
+    const rows = await tx<{ ok: boolean }[]>`
+      select nutritionist_set_athlete_diet_profile(
+        ${athleteId}, ${d.allergies}::text[], ${d.intolerances}::text[], ${d.showNumbers}, ${overrides}::jsonb, ${d.dietGoal}
+      ) as ok
+    `;
+    if (!rows[0]?.ok) return false;
+  }
+  return true;
 }

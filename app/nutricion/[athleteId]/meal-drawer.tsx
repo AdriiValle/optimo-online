@@ -7,6 +7,7 @@ import { dishLines, splitCategory } from "@/lib/nutrition/protein-category";
 import { resizeImage } from "@/lib/image-resize";
 import { MealItemsEditor } from "./meal-items-editor";
 import { fmt, mealMacros } from "./nutrition-summary";
+import { AllergyAlert } from "./perfil/allergy-alert";
 
 /** Gramos de cada macro (por día en el resumen, por plato en la ficha). */
 export type MacroGrams = { p: number; c: number; f: number };
@@ -259,7 +260,7 @@ function PhotoHero({ meal, name, onChanged }: { meal: MealSlot; name: string; on
 }
 
 /**
- * Ficha del plato: foto (o placeholder de su proteína), titular, macros de esta comida,
+ * Ficha del plato: foto (o placeholder de su proteína), titular, aviso de alergias (N6), macros de esta comida,
  * ingredientes (O4) y «Editar plato» plegado. Sin plato: solo el formulario para crearlo.
  */
 export function MealFicha({
@@ -312,6 +313,8 @@ export function MealFicha({
         <h3>{lines.headline}</h3>
         {lines.rest ? <p>{lines.rest}</p> : null}
       </header>
+
+      <AllergyAlert athleteId={athleteId} meal={meal} revision={nutrition} />
 
       <section className="nut-ficha-card nut-ficha-macros" aria-labelledby="nut-ficha-macros-title">
         <header className="nut-ficha-card-head">

@@ -12,8 +12,28 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { FormAlert, type FormMsg } from "@/app/components/password-form";
+import type { TargetOverrides } from "@/lib/nutrition/targets";
+import { ALLERGY_SUGGESTIONS, INTOLERANCE_SUGGESTIONS } from "./perfil/allergy-match";
+import { forgetAllergyProfile } from "./perfil/allergy-client";
+import {
+  DietGoalField,
+  TargetOverridesField,
+  TermListField,
+  draftFromOverrides,
+  overridesFromDraft,
+  type OverrideDraft
+} from "./perfil/profile-extras";
 
-type Profile = { birthDate: string | null; heightCm: number | null; weightKg: number | null };
+type Profile = {
+  birthDate: string | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  allergies?: string[];
+  intolerances?: string[];
+  showNumbers?: boolean;
+  dietGoal?: string | null;
+  targetOverrides?: TargetOverrides | null;
+};
 
 /** Edad en años cumplidos a partir de `YYYY-MM-DD`. */
 export function ageFrom(birthDate: string | null): number | null {
@@ -33,26 +53,61 @@ function toNum(v: string): number | null | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-/** Ficha física del deportista (nacimiento, altura, peso). La editan admins y la nutricionista asignada. */
-export function AthleteProfileForm({ athleteId, onSaved }: { athleteId: string; onSaved: () => void }) {
+/**
+ * Ficha del deportista. La editan admins y la nutricionista asignada.
+ * Básica (sheet del menú): nacimiento, altura y peso. `extended` (pestaña Perfil): además alergias,
+ * intolerancias, meta, «mostrar números al jugador» y objetivos propios; todo se guarda de una vez.
+ */
+export function AthleteProfileForm({
+  athleteId,
+  onSaved,
+  extended = false
+}: {
+  athleteId: string;
+  onSaved: () => void;
+  extended?: boolean;
+}) {
   const uid = useId();
   const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [birth, setBirth] = useState("");
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
+  const [allergies, setAllergies] = useState<string[]>([]);
+  const [intolerances, setIntolerances] = useState<string[]>([]);
+  const [showNumbers, setShowNumbers] = useState(false);
+  const [dietGoal, setDietGoal] = useState("");
+  const [targets, setTargets] = useState<OverrideDraft>(() => draftFromOverrides(null));
+  /** Sube al cargar: monta de nuevo los campos con estado propio (meta «Otra…»). */
+  const [rev, setRev] = useState(0);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<FormMsg | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const res = await fetch(`/api/athletes/${athleteId}/profile`);
-      const json = res.ok ? await res.json() : null;
+      const res = await fetch(`/api/athletes/${athleteId}/profile`).catch(() => null);
+      if (!res) {
+        if (!cancelled) setLoadFailed(true);
+        return;
+      }
+      const json = res.ok ? await res.json().catch(() => null) : null;
       if (cancelled) return;
       const p: Profile | undefined = json?.data;
+      // Sin datos no se pinta el formulario: guardar en blanco borraría alergias y objetivos.
+      if (!p) {
+        setLoadFailed(true);
+        return;
+      }
       setBirth(p?.birthDate ?? "");
       setHeight(p?.heightCm != null ? String(p.heightCm) : "");
       setWeight(p?.weightKg != null ? String(p.weightKg) : "");
+      setAllergies(p?.allergies ?? []);
+      setIntolerances(p?.intolerances ?? []);
+      setShowNumbers(p?.showNumbers ?? false);
+      setDietGoal(p?.dietGoal ?? "");
+      setTargets(draftFromOverrides(p?.targetOverrides ?? null));
+      setRev((n) => n + 1);
       setLoaded(true);
     })();
     return () => {
@@ -68,12 +123,29 @@ export function AthleteProfileForm({ athleteId, onSaved }: { athleteId: string; 
       setMsg({ ok: false, text: "Altura o peso no válidos." });
       return;
     }
+    const targetOverrides = extended ? overridesFromDraft(targets) : null;
+    if (targetOverrides === undefined) {
+      setMsg({ ok: false, text: "Revisa los objetivos marcados en rojo." });
+      return;
+    }
     setBusy(true);
     setMsg(null);
+    const payload = extended
+      ? {
+          birthDate: birth || null,
+          heightCm,
+          weightKg,
+          allergies,
+          intolerances,
+          showNumbers,
+          dietGoal: dietGoal.trim() || null,
+          targetOverrides
+        }
+      : { birthDate: birth || null, heightCm, weightKg };
     const res = await fetch(`/api/athletes/${athleteId}/profile`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ birthDate: birth || null, heightCm, weightKg })
+      body: JSON.stringify(payload)
     });
     const json = await res.json().catch(() => null);
     setBusy(false);
@@ -81,8 +153,17 @@ export function AthleteProfileForm({ athleteId, onSaved }: { athleteId: string; 
       setMsg({ ok: false, text: json?.error?.message ?? "No se pudo guardar (altura 100–250 cm, peso 25–250 kg)." });
       return;
     }
+    forgetAllergyProfile(athleteId);
     setMsg({ ok: true, text: "Perfil guardado." });
     onSaved();
+  }
+
+  if (loadFailed) {
+    return (
+      <div className="nut-prof">
+        <FormAlert msg={{ ok: false, text: "No se pudo cargar el perfil. Recarga la página para intentarlo de nuevo." }} />
+      </div>
+    );
   }
 
   if (!loaded) {
@@ -118,7 +199,7 @@ export function AthleteProfileForm({ athleteId, onSaved }: { athleteId: string; 
   };
 
   return (
-    <form className="nut-prof" onSubmit={(e) => void save(e)} aria-labelledby={ids.group} noValidate>
+    <form className={`nut-prof${extended ? " nut-prof--extended" : ""}`} onSubmit={(e) => void save(e)} aria-labelledby={ids.group} noValidate>
       <h3 className="list-group-title" id={ids.group}>
         Datos físicos
       </h3>
@@ -200,12 +281,77 @@ export function AthleteProfileForm({ athleteId, onSaved }: { athleteId: string; 
       <p className="list-group-footer" id={ids.help}>
         Altura entre 100 y 250 cm y peso entre 25 y 250 kg. Con estos datos se calculan los objetivos del día.
       </p>
+      {extended ? (
+        <>
+          <DietGoalField key={`goal-${rev}`} value={dietGoal} onChange={setDietGoal} disabled={busy} />
+          <TermListField
+            title="Alergias"
+            footer="La ficha del plato avisa si un ingrediente casa con una alergia (por el alimento o su alias). «Lácteos» o «Gluten» incluyen sus alimentos habituales."
+            values={allergies}
+            onChange={setAllergies}
+            suggestions={ALLERGY_SUGGESTIONS}
+            placeholder="Añadir alergia"
+            addLabel="Añadir alergia"
+            tone="danger"
+            disabled={busy}
+          />
+          <TermListField
+            title="Intolerancias"
+            footer="También avisan en la ficha del plato, con menos urgencia que una alergia."
+            values={intolerances}
+            onChange={setIntolerances}
+            suggestions={INTOLERANCE_SUGGESTIONS}
+            placeholder="Añadir intolerancia"
+            addLabel="Añadir intolerancia"
+            tone="warn"
+            disabled={busy}
+          />
+          <section className="nut-prof-group" aria-labelledby={`${uid}-player`}>
+            <h3 className="list-group-title" id={`${uid}-player`}>
+              Lo que ve el jugador
+            </h3>
+            <ul className="list-group">
+              <li className="list-row">
+                <label className="toggle-row nut-prof-toggle">
+                  <span>Mostrar números al jugador</span>
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    className="toggle"
+                    checked={showNumbers}
+                    disabled={busy}
+                    aria-describedby={`${uid}-player-help`}
+                    onChange={(e) => setShowNumbers(e.target.checked)}
+                  />
+                </label>
+              </li>
+            </ul>
+            <p className="list-group-footer" id={`${uid}-player-help`}>
+              {showNumbers
+                ? "El jugador ve kcal y macros de cada plato y del día en su pestaña Hoy."
+                : "El jugador ve sus platos sin cifras. Los anillos y totales siguen solo en tu panel."}
+            </p>
+          </section>
+          <TargetOverridesField
+            body={{
+              weightKg: toNum(weight) ?? null,
+              heightCm: toNum(height) ?? null,
+              ageYears: age
+            }}
+            draft={targets}
+            onChange={setTargets}
+            disabled={busy}
+          />
+        </>
+      ) : null}
       <div className="nut-prof-feedback" aria-live="polite">
         {msg ? <FormAlert msg={msg} id={ids.msg} /> : null}
       </div>
-      <button type="submit" className="btn btn--lg btn--block" disabled={busy} aria-busy={busy || undefined}>
-        {busy ? "Guardando…" : "Guardar perfil"}
-      </button>
+      <div className="nut-prof-actions">
+        <button type="submit" className="btn btn--lg btn--block" disabled={busy} aria-busy={busy || undefined}>
+          {busy ? "Guardando…" : "Guardar perfil"}
+        </button>
+      </div>
     </form>
   );
 }

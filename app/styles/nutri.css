@@ -75,6 +75,172 @@ body.nut-modal-open { overflow: hidden; }
 .nut-prof-skel-title { width: 30%; height: 0.75rem; margin: 0 var(--row-inset) var(--space-2); }
 .nut-prof-skel { width: 60%; margin: 0; }
 
+/* —— Perfil ampliado (rd-N6): pestaña Perfil, alergias/intolerancias, meta, números y objetivos —— */
+.nut-prof-group { min-width: 0; }
+.nut-prof-toggle { width: 100%; }
+.nut-prof-toggle > span { min-width: 0; }
+.nut-field-select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: var(--tap-min);
+  padding-right: calc(var(--space-2) + 14px);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='14' viewBox='0 0 10 14'%3E%3Cpath d='M1.5 5 5 1.5 8.5 5M1.5 9 5 12.5 8.5 9' fill='none' stroke='%238A8A8E' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-1) center;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+.nut-field-input:focus-visible { outline: var(--focus-ring); outline-offset: calc(var(--focus-offset) * -1); }
+
+/* Listas de términos: chips teñidos (alergia = peligro, intolerancia = aviso) + campo para añadir + sugerencias. */
+.nut-terms { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3) var(--row-inset); }
+.nut-terms-list { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.nut-term {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 32px;
+  max-width: 100%;
+  padding: 0 2px 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  color: var(--label);
+  font: var(--t-subhead);
+  font-weight: 600;
+  letter-spacing: var(--ls-subhead);
+}
+.nut-term > span { min-width: 0; overflow-wrap: anywhere; }
+.nut-terms-list--danger .nut-term { background: var(--danger-tint); }
+.nut-terms-list--warn .nut-term { background: var(--warn-tint); }
+.nut-term-remove {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--label-on-tint);
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+/* Zona de toque de 44 alrededor del aspa sin agrandar el chip. */
+.nut-term-remove::after { content: ""; position: absolute; inset: -8px; }
+.nut-term-remove:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.nut-term-remove:focus-visible { outline: var(--focus-ring); outline-offset: 0; }
+.nut-term-remove:disabled { opacity: 0.4; cursor: default; }
+@media (hover: hover) { .nut-term-remove:not(:disabled):hover { background: var(--fill-tertiary); } }
+.nut-terms-empty { margin: 0; color: var(--label-secondary); font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
+.nut-terms-add { display: flex; gap: var(--space-2); min-width: 0; }
+.nut-terms-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--label);
+  font: var(--t-body-row);
+  letter-spacing: var(--ls-body);
+}
+.nut-terms-input:focus-visible { border-color: var(--accent); outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-terms-input:disabled { color: var(--label-secondary); }
+.nut-terms-btn { flex-shrink: 0; min-height: var(--tap-min); }
+.nut-terms-suggest { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.nut-terms-suggest-label { color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); }
+.nut-terms-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.nut-terms-chip:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.nut-terms-chip:disabled { opacity: 0.4; cursor: default; }
+.nut-terms-chip > span { color: var(--accent-text); font-weight: 600; }
+@media (pointer: coarse) { .nut-terms-chip { min-height: var(--tap-min); } }
+
+/* Objetivos propios: segmentado por tipo de día, filas con el calculado en gris y botón «usar el calculado». */
+.nut-targets-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); min-width: 0; }
+.nut-targets-head .list-group-title { margin-bottom: var(--space-2); }
+.nut-targets-clear {
+  min-height: var(--tap-min);
+  margin: calc(var(--space-3) * -1) 0 0;
+  padding: 0 var(--row-inset);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--accent-text);
+  font: var(--t-footnote);
+  font-weight: 600;
+  letter-spacing: var(--ls-footnote);
+  cursor: pointer;
+}
+.nut-targets-clear:focus-visible { outline: var(--focus-ring); outline-offset: calc(var(--focus-offset) * -1); }
+.nut-targets-days { margin-bottom: var(--space-3); }
+.nut-targets-days > button { min-height: 36px; gap: 6px; }
+.nut-targets-days > button:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+.nut-targets-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+@media (pointer: coarse) { .nut-targets-days > button { min-height: 40px; } }
+.nut-target-line { display: flex; align-items: center; min-width: 0; }
+.nut-target-line > .list-row { flex: 1 1 auto; min-width: 0; }
+.nut-target-line:has(.nut-target-reset) > .list-row { padding-right: 0; }
+.nut-target-label { display: flex; flex-direction: column; gap: 1px; min-width: 6.5rem; }
+.nut-target-calc { color: var(--label-secondary); font: var(--t-footnote); letter-spacing: var(--ls-footnote); font-variant-numeric: tabular-nums; }
+.nut-target-row .nut-field-input { flex-basis: 5rem; }
+.nut-target-row .nut-field-input::placeholder { color: var(--label-tertiary); }
+.nut-target-row.is-own .nut-field-input { font-weight: 600; }
+.nut-target-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  margin: 0 var(--space-1) 0 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--accent-text);
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.nut-target-reset:active { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.nut-target-reset:focus-visible { outline: var(--focus-ring); outline-offset: calc(var(--focus-offset) * -1); }
+@media (hover: hover) { .nut-target-reset:hover { background: var(--fill-quaternary); } }
+.nut-target-error { margin: 0; padding: 0 var(--row-inset) var(--space-2); }
+
+/* Pestaña Perfil: columna legible dentro de la zona de trabajo; «Guardar» queda a mano al pie. */
+.nut-prof-page { min-width: 0; }
+.nut-prof-page-inner { width: 100%; max-width: 640px; min-width: 0; }
+.nut-prof-page-head { display: flex; flex-direction: column; gap: var(--space-1); margin-bottom: var(--space-4); padding: 0 var(--row-inset); }
+.nut-prof-page-title { margin: 0; font: var(--t-title-2); letter-spacing: var(--ls-title-2); }
+.nut-prof-page-lead { margin: 0; color: var(--label-secondary); font: var(--t-subhead); letter-spacing: var(--ls-subhead); }
+.nut-prof--extended { padding-top: 0; }
+.nut-prof--extended .nut-prof-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: var(--space-3) 0 calc(var(--space-3) + env(safe-area-inset-bottom));
+  background: var(--material-regular);
+  -webkit-backdrop-filter: var(--blur-regular);
+  backdrop-filter: var(--blur-regular);
+}
+@supports not (backdrop-filter: blur(1px)) { .nut-prof--extended .nut-prof-actions { background: var(--bg); } }
+@media (min-width: 1280px) {
+  /* La zona de trabajo tiene alto fijo: el perfil hace scroll dentro y «Guardar» se pega a su pie. */
+  .nut-page--tabs .nut-prof-page { overflow-y: auto; overscroll-behavior: contain; margin-bottom: 0; }
+  .nut-prof-page-inner { padding-bottom: var(--space-2); }
+}
+
+/* Aviso de alergias en la ficha del plato. */
+.nut-allergy-alert { margin: 0; }
+.nut-allergy-body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.nut-allergy-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.nut-allergy-list li { overflow-wrap: anywhere; }
+.nut-allergy-kind, .nut-allergy-src { color: var(--label-on-tint); }
+
 /* Importar menú: archivo → semana → macros; resultado y error como estados */
 .nut-import { display: flex; flex-direction: column; min-width: 0; padding-top: var(--space-2); }
 .nut-import .list-group { margin-bottom: var(--space-6); }
@@ -1412,4 +1578,25 @@ body.nut-modal-open { overflow: hidden; }
   .nut-section-state, .nut-orphan, .nut-tray-empty, .nut-catalog-list { box-shadow: inset 0 0 0 1px var(--separator); }
   .nut-foods-lead, .nut-foods-section-sub, .nut-count, .nut-food-label, .nut-food-meta,
   .nut-orphan-meta, .nut-orphan-label, .nut-catalog-head { color: var(--label); }
+}
+
+/* —— Preferencias del sistema: perfil ampliado y aviso de alergias (rd-N6) —— */
+@media (prefers-reduced-motion: reduce) {
+  .nut-term-remove, .nut-target-reset, .nut-terms-chip { transition: none; }
+  .nut-term-remove:active, .nut-target-reset:active, .nut-terms-chip:active { transform: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .nut-prof--extended .nut-prof-actions {
+    background: var(--bg);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: 0 -1px 0 var(--separator);
+  }
+}
+@media (prefers-contrast: more) {
+  .nut-term { box-shadow: inset 0 0 0 1px var(--label); }
+  .nut-terms-input { border-color: var(--label); }
+  .nut-terms-empty, .nut-terms-suggest-label, .nut-target-calc, .nut-prof-page-lead { color: var(--label-on-tint); }
+  .nut-prof--extended .nut-prof-actions { background: var(--bg); box-shadow: 0 -1px 0 var(--label); }
+  .nut-allergy-alert { box-shadow: inset 0 0 0 1px var(--label); }
 }
