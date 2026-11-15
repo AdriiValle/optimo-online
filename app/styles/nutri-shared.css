@@ -524,11 +524,6 @@
 .nut-indic { margin-top: var(--space-3); border-color: transparent; }
 .nut-indic .nut-diet-text { font: var(--t-body); letter-spacing: var(--ls-body); color: var(--label); }
 
-/* Semana y Compra (N2/N3): estado vacío. */
-.nut-soon { display: flex; flex-direction: column; gap: 2px; margin-bottom: 0; }
-.nut-soon strong { font: var(--t-headline); letter-spacing: var(--ls-headline); color: var(--label); }
-.nut-soon span { font: var(--t-subhead); letter-spacing: var(--ls-subhead); color: var(--label-secondary); }
-
 /* —— Semana (rd-N2): lunes a domingo, una fila por día con MD y una miniatura por franja —— */
 .nut-wk { --wk-col: 52px; display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 /* Cambio de semana: flecha · rango · flecha (como el mes de Calendario). */
@@ -722,6 +717,197 @@ button.nut-wk-day:active { background: var(--fill-quaternary); transition-durati
 }
 .nut-dayctx-back:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
+/* —— Compra (rd-N3): lista de la compra por pasillo, con «ya lo tengo», compartir e imprimir —— */
+.nut-shop { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.nut-shop-kind { min-height: 36px; }
+.nut-shop-kind > label { min-height: 32px; }
+.nut-shop-kind > label::after { content: ""; position: absolute; inset: -6px 0; }
+.nut-shop-print-only { display: none; }
+
+.nut-shop-summary { display: flex; flex-direction: column; gap: 2px; padding: 0 var(--space-1); }
+.nut-shop-count {
+  margin: 0;
+  font: var(--t-headline);
+  letter-spacing: var(--ls-headline);
+  color: var(--label);
+  font-variant-numeric: tabular-nums;
+}
+.nut-shop-count span { font-weight: 400; color: var(--label-secondary); }
+.nut-shop-pending {
+  margin: 0;
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+
+/* Acciones: la principal rellena (Compartir, o Copiar si no hay hoja de compartir), el resto gris. */
+.nut-shop-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.nut-shop-actions .btn { flex: 1 1 0; min-width: 0; gap: var(--space-2); padding-inline: var(--space-3); white-space: nowrap; }
+.nut-shop-actions .btn svg { flex-shrink: 0; width: 18px; height: 18px; }
+.nut-shop-actions .btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.nut-shop-msg {
+  margin: calc(var(--space-2) * -1) 0 0;
+  padding: 0 var(--space-1);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--ok);
+}
+/* Vacío sigue en el árbol (región viva) pero sin ocupar sitio. */
+.nut-shop-msg:empty { margin-top: calc(var(--space-3) * -1); }
+.nut-shop-msg.is-error { color: var(--danger); }
+
+/* Sección = lista agrupada inset con título Footnote encima y nota debajo. */
+.nut-shop-sec { min-width: 0; }
+.nut-pane .nut-shop-sec-title {
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--row-inset);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  font-weight: 600;
+  color: var(--label-secondary);
+}
+.nut-shop-sec-note {
+  margin: var(--space-2) 0 0;
+  padding: 0 var(--row-inset);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+.nut-shop-lines {
+  --box: 22px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+.nut-shop-line { position: relative; }
+.nut-shop-line + .nut-shop-line::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(var(--row-inset) + var(--box) + var(--space-3));
+  right: 0;
+  height: 1px;
+  background: var(--separator);
+  z-index: 1;
+}
+/* Toda la fila marca: casilla redonda (como Recordatorios) · nombre (+ paquetes) · cantidad. */
+.nut-shop-check {
+  display: grid;
+  grid-template-columns: var(--box) minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: var(--space-2) var(--row-inset);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.nut-shop-check:active { background: var(--fill-quaternary); transition-duration: 0ms; }
+@media (hover: hover) { .nut-shop-check:hover { background: var(--fill-quaternary); } }
+.nut-shop-check:has(> input:focus-visible) { outline: var(--focus-ring); outline-offset: calc(var(--focus-offset) * -2); border-radius: var(--radius-md); }
+.nut-shop-check > input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; pointer-events: none; }
+.nut-shop-box {
+  position: relative;
+  width: var(--box);
+  height: var(--box);
+  border: 1.5px solid var(--label-secondary);
+  border-radius: 50%;
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.nut-shop-box::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2.5px;
+  width: 5px;
+  height: 10px;
+  border-right: 2px solid var(--on-accent);
+  border-bottom: 2px solid var(--on-accent);
+  transform: rotate(45deg) scale(0.6);
+  opacity: 0;
+  transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+}
+.nut-shop-check > input:checked + .nut-shop-box { background: var(--accent); border-color: var(--accent); }
+.nut-shop-check > input:checked + .nut-shop-box::after { opacity: 1; transform: rotate(45deg) scale(1); }
+.nut-shop-text { display: flex; flex-direction: column; min-width: 0; }
+.nut-shop-name {
+  font: var(--t-body-row);
+  letter-spacing: var(--ls-body);
+  color: var(--label);
+  overflow-wrap: anywhere;
+}
+.nut-shop-packs { font: var(--t-footnote); letter-spacing: var(--ls-footnote); color: var(--label-secondary); }
+.nut-shop-amount {
+  justify-self: end;
+  font: var(--t-subhead);
+  letter-spacing: var(--ls-subhead);
+  color: var(--label-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.nut-shop-line.is-checked .nut-shop-name { color: var(--label-secondary); text-decoration: line-through; text-decoration-color: var(--label-tertiary); }
+.nut-shop-line.is-checked .nut-shop-amount,
+.nut-shop-line.is-checked .nut-shop-packs { color: var(--label-tertiary); }
+.nut-shop-foot {
+  margin: 0;
+  padding: 0 var(--row-inset);
+  font: var(--t-footnote);
+  letter-spacing: var(--ls-footnote);
+  color: var(--label-secondary);
+}
+
+.nut-shop-skel { display: flex; flex-direction: column; gap: var(--space-4); }
+.nut-shop-skel .nut-shop-skel-title { width: 8rem; margin: 0 var(--row-inset) var(--space-2); }
+.nut-shop-skel .nut-shop-line { display: flex; align-items: center; gap: var(--space-3); min-height: var(--tap-min); padding: var(--space-2) var(--row-inset); }
+.nut-shop-skel-box { flex-shrink: 0; width: var(--box); height: var(--box); }
+.nut-shop-skel .nut-shop-skel-name { width: 45%; margin: 0; }
+
+/* Imprimir: solo la lista (lo que falta), a dos columnas, sin fondos; cada casilla, un cuadro para tachar a boli. */
+@media print {
+  html:has(.nut-shop) body :not(:has(.nut-shop)):not(.nut-shop):not(.nut-shop *) { display: none !important; }
+  html:has(.nut-shop),
+  html:has(.nut-shop) body,
+  html:has(.nut-shop) body :has(.nut-shop) {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+  .nut-shop { display: block; columns: 2; column-gap: 12mm; color: var(--label); }
+  .nut-shop-nav, .nut-shop-summary { column-span: all; }
+  .nut-shop-nav { display: block; margin-bottom: 2mm; }
+  .nut-shop-nav .nut-wk-head { align-items: flex-start; text-align: left; }
+  .nut-pane .nut-shop .nut-wk-title { font-size: 16pt; }
+  .nut-shop-print-only { display: inline; }
+  .nut-shop-kind, .nut-shop-nav .nut-wk-arrow, .nut-shop-nav .nut-wk-rel, .nut-shop-nav .nut-wk-sub,
+  .nut-shop-actions, .nut-shop-msg, .nut-shop-sec-note, .nut-shop-foot,
+  .nut-shop-line.is-checked,
+  .nut-shop-sec:not(:has(.nut-shop-line:not(.is-checked))) { display: none !important; }
+  .nut-shop-summary { margin-bottom: 4mm; padding: 0; }
+  .nut-shop-count span, .nut-shop-pending { color: var(--label); }
+  .nut-shop-sec { margin-bottom: 5mm; }
+  .nut-pane .nut-shop-sec-title { padding: 0; color: var(--label); font-size: 11pt; break-after: avoid; }
+  .nut-shop-lines { border-radius: 0; background: none; overflow: visible; }
+  .nut-shop-line { break-inside: avoid; }
+  .nut-shop-line + .nut-shop-line::before { left: 0; }
+  .nut-shop-check { min-height: 0; padding: 1.6mm 0; column-gap: 3mm; grid-template-columns: 3.6mm minmax(0, 1fr) auto; }
+  .nut-shop-box { width: 3.6mm; height: 3.6mm; border: 1px solid var(--label); border-radius: 0.6mm; }
+  .nut-shop-name, .nut-shop-amount { color: var(--label); font-size: 10.5pt; }
+  .nut-shop-packs { color: var(--label); font-size: 9pt; }
+}
+
 /* —— Preferencias (al final de la hoja propia, no en a11y.css) —— */
 @media (prefers-reduced-motion: reduce) {
   .nut-details summary,
@@ -731,7 +917,10 @@ button.nut-wk-day:active { background: var(--fill-quaternary); transition-durati
   .nut-slot--past > summary,
   .nut-slot--past > summary::after,
   .nut-wk-day,
-  .nut-wk-today { transition: none; }
+  .nut-wk-today,
+  .nut-shop-check,
+  .nut-shop-box,
+  .nut-shop-box::after { transition: none; }
 }
 /* prefers-reduced-transparency: esta hoja no usa materiales (todo es --surface opaco); nada que cambiar. */
 @media (prefers-contrast: more) {
@@ -748,7 +937,7 @@ button.nut-wk-day:active { background: var(--fill-quaternary); transition-durati
   .nut-daynote, .nut-ingr li + li { border-top-color: var(--label); }
   .nut-fuel-gauge rect:not([data-on]) { fill: var(--label-quaternary); }
   .nut-slot-label, .nut-ingr-amount, .nut-slot-supp-time, .nut-daynote-label,
-  .nut-pane .nut-numbers, .nut-soon span { color: var(--label-on-tint); }
+  .nut-pane .nut-numbers { color: var(--label-on-tint); }
   .nut-slot--past > summary::after { border-color: var(--label); }
   .nut-wk-days { border: 1px solid var(--label); }
   .nut-wk-days > li + li::before { background: var(--label); }
@@ -758,4 +947,10 @@ button.nut-wk-day:active { background: var(--fill-quaternary); transition-durati
   .nut-wk-thumb--none { border-color: var(--label); box-shadow: none; }
   .nut-wk-badge { box-shadow: inset 0 0 0 1px var(--label); }
   .nut-wk-chev { border-color: var(--label); }
+  .nut-shop-lines { border: 1px solid var(--label); }
+  .nut-shop-line + .nut-shop-line::before { background: var(--label); }
+  .nut-shop-box { border-color: var(--label); }
+  .nut-shop-count span, .nut-shop-pending, .nut-pane .nut-shop-sec-title, .nut-shop-sec-note, .nut-shop-foot,
+  .nut-shop-packs, .nut-shop-amount, .nut-shop-line.is-checked .nut-shop-name,
+  .nut-shop-line.is-checked .nut-shop-amount, .nut-shop-line.is-checked .nut-shop-packs { color: var(--label-on-tint); }
 }

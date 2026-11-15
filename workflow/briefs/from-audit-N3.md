@@ -1,0 +1,8 @@
+- Veredicto: PASA
+- Bloqueantes (maximo 5): ninguno
+- Notas no bloqueantes (maximo 3, opcional):
+  - Compartir no se pudo probar de extremo a extremo: el navegador headless no tiene `navigator.share`, así que solo sale Copiar (Lista copiada, bien). Lo que sí consta: el botón Compartir solo aparece si el navegador lo admite; el ejecutor lo probó con `navigator.share` simulado. Capturas en `.tmp-verify/audit-N3/` (`compra-top.png`, `compra-3d.png`, `compra-checked.png`, `compra-vacio.png`, `focus-row.png`, `print.pdf`).
+  - 14 de 36 líneas con los datos de Ricardo caen en «Otros / revisar» sin cantidad (son `meal_items` sin `food_id` ni gramos). Es lo previsto; mejorará cuando Amanda empareje alimentos.
+  - Imprimir: el PDF A4 sale de 1 página (`.tmp-verify/audit-N3/print.pdf`). Aquí no hay `pdftoppm` para renderizarlo. La hoja limpia se comprobó leyendo el `@media print` (oculta la interfaz, 2 columnas, sin lo marcado), no a ojo.
+
+Comprobado (390x844, Ricardo): semana 9–15 nov = 36 productos en 7 secciones con sumas y unidades de compra («10 huevos», «1 aguacate»); «Próximos 3 días» recalcula a 21; la semana del 30 nov da «Sin menú en estos días»; scrollWidth = 390 en todos los estados; «Ya lo tengo» (Boniato) se guarda y sigue marcado tras recargar (desmarcado al acabar, sin datos de prueba); Copiar muestra «Lista copiada»; Copiar/Imprimir/flechas/filas miden 44 de alto; foco visible con Tab (anillo de 2px en botones y filas); `shopping.ts` coincide con el ejemplo manual (`npx tsx .tmp-verify/rd-N3/example.ts`: 6 huevos, 600 g de pollo, 2 plátanos, 1 paquete de 1 kg de arroz); `npx tsc --noEmit` limpio.

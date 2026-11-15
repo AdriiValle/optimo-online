@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { startOfWeekMonday, todayKey } from "@/lib/dates";
 import type { SupplementEntry } from "@/lib/types";
-import { NutritionSegmented, NutritionSoon, panelId, tabId, type NutritionView } from "./nutrition/segments";
+import { NutritionSegmented, panelId, tabId, type NutritionView } from "./nutrition/segments";
+import { ShoppingView } from "./nutrition/shopping-view";
 import { TodayView } from "./nutrition/today-view";
 import { longDayLabel, WeekView } from "./nutrition/week-view";
 
@@ -225,7 +226,7 @@ export function NutritionPane({ athleteId, initialDietNotes, initialSupplements,
                 onOpenDay={openDay}
               />
             ) : (
-              <NutritionSoon />
+              <ShoppingView athleteId={athleteId} date={dayDate} today={today} />
             )}
           </div>
         </>
