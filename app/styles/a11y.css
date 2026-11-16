@@ -1,7 +1,8 @@
 /* —— Accesibilidad: una sola salida por preferencia (compartido, F3/T-común) ——
-   Se resuelve sobre todo redefiniendo tokens en :root: todo lo que use materiales, blur,
-   separadores o duraciones hereda la preferencia sin tocar su hoja. Las reglas por selector
-   cubren hojas que aún usan valores propios; cada hoja nueva pone las suyas al final de sí misma. */
+   Se resuelve redefiniendo tokens en :root: todo lo que use materiales, blur, separadores, rellenos
+   o duraciones hereda la preferencia sin tocar su hoja. Cada hoja pone sus reglas por selector al final
+   de sí misma (components.css, shell.css, player.css, admin.css, nutri*.css, login.css). Aquí solo quedan
+   los tokens, la red de seguridad de movimiento y las piezas de otras hojas que ninguna cubre. */
 
 @media (prefers-reduced-transparency: reduce) {
   :root {
@@ -12,25 +13,6 @@
     --blur-thin: none;
     --blur-regular: none;
     --blur-thick: none;
-    --glass-border: var(--separator);
-  }
-  .doc-header-viewport {
-    background: var(--surface);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    border-bottom: 1px solid var(--separator);
-  }
-  .sheet,
-  .dash-tabs,
-  .session-item,
-  .nut-details,
-  .an-chips button,
-  .video-embed-shell,
-  .video-embed-close {
-    background: var(--surface);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    border-color: var(--separator);
   }
 }
 
@@ -47,7 +29,6 @@
     --blur-thin: none;
     --blur-regular: none;
     --blur-thick: none;
-    --glass-border: var(--label);
     --cat-carne-tint: var(--surface);
     --cat-pescado-tint: var(--surface);
     --cat-huevos-tint: var(--surface);
@@ -55,39 +36,20 @@
     --cat-none-tint: var(--surface);
     --cat-rule: 4px;
   }
+  /* Piezas de otras hojas que dependen de este marco (A2 refuerza el separador de .session-list encima). */
   .nut-week-cell.nut-cat,
   .nut-week-cell.nut-cat:hover { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1px var(--label); }
   .nut-ficha-hero { box-shadow: inset var(--cat-rule) 0 0 var(--cat-ink), inset 0 0 0 1px var(--label); }
-  .card { border: 1px solid var(--label); }
-  .card .card, .sheet .card { border-color: var(--label); }
-  input:where(:not([type="checkbox"], [type="radio"], [type="range"], [type="color"])),
-  select,
-  textarea { border-color: var(--label); }
-  .list-group, .segmented, .alert, .state--error { box-shadow: inset 0 0 0 1px var(--label); }
-  .btn.secondary, .btn.btn--gray, .btn.btn--tinted, .btn.btn--danger, .chip, .icon-btn { box-shadow: inset 0 0 0 1px currentColor; }
-  input.toggle { box-shadow: inset 0 0 0 1px var(--label); }
-  .doc-header-viewport {
-    background: var(--surface);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    border-bottom: 1px solid var(--label);
-  }
-  .sheet,
-  .dash-tabs,
   .session-item,
-  .nut-details {
-    background: var(--surface);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    border: 1px solid var(--label);
-  }
+  .nut-details { border: 1px solid var(--label); }
   .session-section,
-  .session-item-info,
-  .muted { color: var(--label-on-tint); }
+  .session-item-info { color: var(--label-on-tint); }
 }
 
-/* Movimiento reducido: sin escalas ni deslizamientos. Press = sin cambio; sheets = fundido corto;
-   el spinner pasa a pulso de opacidad (sigue indicando actividad sin girar). */
+/* Movimiento reducido: sin escalas ni deslizamientos. Los tokens llevan press y desplazamientos a 0
+   (sheets y spinner lo resuelve components.css; el resto, cada hoja). La regla universal es la red de
+   seguridad para lo que una hoja no cubra: ninguna animación se repite ni dura, ninguna transición tarda.
+   Quien necesite un fundido corto lo declara con más especificidad (components.css: .sheet). */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --press-scale: 1;
@@ -103,15 +65,5 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-  .session-video:active { transform: none; }
-  /* La ficha y los sheets entran y salen en fundido corto, sin desplazamiento ni escala. */
-  .nut-drawer { animation-name: scrim-in; animation-duration: var(--dur-fast) !important; }
-  .sheet { animation-name: scrim-in !important; animation-duration: var(--dur-fast) !important; }
-  .is-closing > .sheet { animation-name: scrim-out !important; }
-  .sheet-scrim { animation-duration: var(--dur-fast) !important; }
-  .btn[aria-busy="true"]::before,
-  .spinner {
-    animation: pulse var(--dur-pulse) var(--ease-in-out) infinite alternate !important;
   }
 }

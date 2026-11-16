@@ -93,6 +93,10 @@
   --dur-spin: 800ms;    /* vuelta del spinner de pendiente (Óptimo) */
   --dur-pulse: 1200ms;  /* pulso de opacidad del esqueleto de carga */
   --press-scale: 0.97;  --press-scale-lg: 0.985;
+  --press-opacity: 0.6;        /* botones de barra (plain) al pulsar */
+  --sheet-pop-scale: 0.96;     /* sheet/modal ≥720: escala de entrada y salida */
+  --pulse-opacity: 0.45;       /* mínimo del pulso de esqueleto y de pendiente */
+  --disabled-opacity: 0.4;
 
   /* Táctil y foco */
   --tap-min: 44px;
@@ -105,24 +109,11 @@
   --tabbar-h: 49px;
   --sidebar-w: 300px;
   --header-offset: env(safe-area-inset-top, 0px);
-  --header-block: 58px;
-  --header-gap: 12px;
+  --header-gap: 12px;   /* --header-block lo define shell.css (navbar 44 / toolbar 52) */
 
-  /* Alias de transición v1 → v2 (se borran en la Oleada 4) */
-  --text: var(--label);
+  /* Alias de transición v1 → v2: solo los dos que aún lee nutri.css (anillos de macros). Se borran con ellos. */
   --secondary: var(--label-secondary);
-  --line: var(--separator);
-  --radius: var(--radius-md);
-  --shadow-sm: var(--elev-1);
-  --shadow-md: var(--elev-2);
-  --glass: var(--material-thin);
-  --glass-row: var(--material-regular);
-  --glass-strong: var(--material-thick);
-  --glass-blur: var(--blur-regular);
-  --glass-highlight: var(--material-edge);
-  --glass-border: var(--separator-soft);
   --ease: var(--ease-out);
-  --accent-hover: var(--label-on-tint);
 
   /* Categoría de proteína (se conserva). Ink = filete/punto/etiqueta; tint = fondo de celda y placeholder. */
   --cat-carne: #9A5B45;      --cat-carne-tint: #F4EAE5;

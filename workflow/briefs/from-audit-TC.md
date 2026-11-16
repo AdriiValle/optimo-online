@@ -1,0 +1,6 @@
+- Veredicto: PASA
+- Bloqueantes (maximo 5): ninguno
+- Notas no bloqueantes (maximo 3, opcional):
+  - Emulación de preferencias: el navegador headless no emula media features (sin CDP). Verificado desenrollando los bloques `@media` de reduced-motion, reduced-transparency y contrast dentro de un `<style>` en jugador, admin y Amanda a 390: sin scroll horizontal (sw=390), 0 animaciones activas y pantallas legibles (.tmp-verify/audit-TC/emu_a11y_jug.png, emu_a11y_ama.png, emu_a11y_adm.png). No es una emulación real del navegador.
+  - Fuera de tokens (visible solo en impresión o puntual): `nutri.css` bloque @media print usa `#000`/`#ccc`/mm (líneas ~2293-2324); `nutri.css:34` `border-radius: 999px` y `nutri.css:2244` `border-radius: 3px` literales (existe `--radius-pill`). Resto de hojas sin colores, radios, sombras ni duraciones literales.
+  - El resto del criterio se cumple: `npx tsc --noEmit` exit 0 (.tmp-verify/audit-TC/tsc.txt); scrollWidth = innerWidth en /login, /a/<id>, /a/<id>/nutrition, /panel, /nutricion, /nutricion/<id> a 390 y 1440; foco con Tab visible (anillo 2px azul) en login (en la fila del grupo), jugador, admin y Amanda; sin tactiles <44 en la vista inicial a 390 (capturas focus_*.png, m390_*.png, d1440_*.png).

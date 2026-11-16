@@ -83,7 +83,13 @@ header.doc-header {
   letter-spacing: var(--ls-headline);
   white-space: nowrap;
 }
-.doc-header .brand-logo { width: 28px; height: 28px; }
+.doc-header .brand-logo {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: var(--radius-pill);
+}
 .doc-header .brand-title,
 .doc-header .brand-player { font-weight: 600; }
 .doc-header .brand-player,
@@ -172,7 +178,7 @@ header.doc-header {
 .header-btn:active,
 .doc-header .icon-btn:active {
   transform: scale(var(--press-scale));
-  opacity: 0.6;
+  opacity: var(--press-opacity);
   transition-duration: var(--dur-press);
 }
 .header-btn:focus-visible,
@@ -216,8 +222,11 @@ header.doc-header {
 }
 
 /* —— Preferencias (al final de la hoja) —— */
+/* Movimiento: el borde de scroll cambia de opacidad sin transición y el press queda en opacidad, sin escala. */
 @media (prefers-reduced-motion: reduce) {
-  .doc-header-viewport::before { transition: none; }
+  .doc-header-viewport::before,
+  .header-btn,
+  .doc-header .icon-btn { transition: none; }
   .header-btn:active,
   .doc-header .icon-btn:active { transform: none; }
 }
