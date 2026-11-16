@@ -727,6 +727,11 @@ body.nut-modal-open { overflow: hidden; }
   }
   /* Rejilla / lista / mes ocupan el alto libre; el resumen va debajo a su alto natural. */
   .nut-week-grid, .nut-day-layout, .nut-month { flex: 1; min-height: 0; }
+  /* Alto bajo: la rejilla no se encoge por debajo de lo legible; el panel hace scroll en vez de solapar el resumen. */
+  .nut-week { overflow-y: auto; overscroll-behavior: contain; }
+  .nut-week-grid { min-height: 300px; }
+  .nut-month { min-height: 260px; }
+  .nut-day-layout { min-height: 260px; }
   /* Toolbar: paso + título a la izquierda, segmentado al centro, acciones a la derecha. */
   .nut-toolbar {
     display: grid;
@@ -968,25 +973,32 @@ body.nut-modal-open { overflow: hidden; }
   .nut-macro-dot--f { background: var(--macro-f); }
   .nut-week-cell img { width: 36px; height: 36px; flex-shrink: 0; object-fit: cover; border-radius: var(--radius-xs); }
   .nut-dish { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  .nut-dish-head {
+  /* Una celda no crece con su contenido (container-type: size): el plato se recorta por líneas según el
+     alto real de la celda y nada se sale a la fila vecina. Alturas = caja de contenido de la celda. */
+  .nut-week-cell .nut-dish-head {
     font: var(--t-footnote);
     font-weight: 600;
     letter-spacing: var(--ls-footnote);
     color: var(--label);
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
   }
   /* Texto secundario sobre tinte: --label-on-tint (4.5:1). */
-  .nut-dish-rest { font: var(--t-caption); color: var(--label-on-tint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  /* Celda alta (franjas vacías colapsadas): el plato se lee entero en vez de dejar hueco. */
-  .nut-week-cell.nut-cat { container-type: size; }
-  @container (min-height: 96px) {
-    .nut-dish { gap: 3px; }
-    .nut-dish-head { -webkit-line-clamp: 3; }
-    .nut-dish-rest { display: -webkit-box; white-space: normal; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+  .nut-week-cell .nut-dish-rest { font: var(--t-caption); color: var(--label-on-tint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nut-week-cell.nut-cat { container-type: size; overflow: hidden; }
+  .nut-week-cell.nut-cat .nut-dish { max-width: 100%; max-height: 100%; overflow: hidden; }
+  @container (max-height: 34px) { .nut-week-cell .nut-dish-rest { display: none; } }
+  @container (min-height: 53px) { .nut-week-cell .nut-dish-head { -webkit-line-clamp: 2; } }
+  @container (min-height: 73px) {
+    .nut-week-cell .nut-dish { gap: 3px; }
+    .nut-week-cell .nut-dish-head { -webkit-line-clamp: 3; }
   }
+  @container (min-height: 89px) {
+    .nut-week-cell .nut-dish-rest { display: -webkit-box; white-space: normal; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  }
+  @container (min-height: 121px) { .nut-week-cell .nut-dish-rest { -webkit-line-clamp: 4; } }
   .nut-week-cell--snack { min-height: 32px; padding: 3px 6px; }
   .nut-week-cell--snack .nut-dish-head { font: var(--t-caption); font-weight: 600; }
 
