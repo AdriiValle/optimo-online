@@ -4,6 +4,18 @@ import { addDays, dateKey, DOW_ES, DOW_FULL, MONTHS_ES, parseDateLocal } from "@
 import { LOAD_TINT_FROM, loadClassForDay } from "@/lib/plan";
 import type { DayPlan } from "@/lib/types";
 
+const SAUNA_SVG = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3.5 14c-2-2 2-3.5 0-5.5s2-3.5 0-5.5" />
+    <path d="M8 14c-2-2 2-3.5 0-5.5s2-3.5 0-5.5" />
+    <path d="M12.5 14c-2-2 2-3.5 0-5.5s2-3.5 0-5.5" />
+  </svg>
+);
+
+function hasSauna(p: DayPlan | undefined) {
+  return !!p?.sauna || !!p?.blocks.some((b) => b.kind === "protocol" && b.protocolId === "sauna-exposicion");
+}
+
 const VENUE_SVG = {
   casa: (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -120,6 +132,7 @@ export function PlanCalendar({ byDate, crests, year, month, center, today, onMon
             `${DOW_FULL[cell.getDay()]} ${cell.getDate()} de ${MONTHS_ES[cell.getMonth()].toLowerCase()}`,
             iso === today ? "hoy" : null,
             p?.mdTag ?? null,
+            hasSauna(p) ? "sauna" : null,
             p?.matchOpponent ? `partido contra ${p.matchOpponent}${p.matchVenue ? (p.matchVenue === "casa" ? ", en casa" : ", fuera") : ""}` : null
           ]
             .filter(Boolean)
@@ -141,6 +154,7 @@ export function PlanCalendar({ byDate, crests, year, month, center, today, onMon
                   <span className="md-tag">{p.mdTag}</span>
                 ) : null}
               </span>
+              {hasSauna(p) ? <span className="sauna-icon">{SAUNA_SVG}</span> : null}
               {p?.matchVenue ? <span className="venue-icon">{VENUE_SVG[p.matchVenue]}</span> : null}
             </button>
           );

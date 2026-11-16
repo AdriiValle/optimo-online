@@ -7,6 +7,7 @@ import { assignedAthletesForNutritionist, athleteById } from "@/lib/queries";
 import { BrandHeader } from "@/app/components/brand-header";
 import { HeaderBackButton } from "@/app/components/header-back-button";
 import { LogoutButton } from "@/app/logout-button";
+import { AccountSettingsLink } from "../account-settings-link";
 import { NutAthleteNav } from "../../athlete-nav";
 import { AthleteTabs } from "../athlete-tabs";
 import { ProfilePanel } from "./profile-panel";
@@ -40,6 +41,7 @@ export default async function PerfilPage({ params }: { params: Promise<{ athlete
         leading={<HeaderBackButton href="/nutricion" />}
         trailing={
           <div className="top-actions nut-top-actions">
+            <AccountSettingsLink athleteId={data.athlete.id} />
             <LogoutButton inline />
           </div>
         }

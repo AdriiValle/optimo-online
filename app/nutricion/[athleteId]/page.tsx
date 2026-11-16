@@ -10,7 +10,7 @@ import { LogoutButton } from "@/app/logout-button";
 import { AthleteTabs } from "./athlete-tabs";
 import { NutricionAthleteClient } from "./nutricion-athlete-client";
 
-export default async function NutricionAthletePage({ params }: { params: Promise<{ athleteId: string }> }) {
+export default async function NutricionAthletePage({ params, searchParams }: { params: Promise<{ athleteId: string }>; searchParams: Promise<{ ajustes?: string }> }) {
   const { athleteId } = await params;
   const user = await currentUser();
   if (!user) redirect("/login");
@@ -40,8 +40,9 @@ export default async function NutricionAthletePage({ params }: { params: Promise
           crests={planData.crests}
           athletes={data.athletes}
           playerName={data.athlete.name}
-          headerLeading={<HeaderBackButton href="/nutricion" />}
-          headerLogout={<LogoutButton inline />}
+          headerLeading={<HeaderBackButton key="back" href="/nutricion" />}
+          headerLogout={<LogoutButton key="logout" inline />}
+          initialSettingsOpen={(await searchParams).ajustes === "1"}
         />
       </main>
     </>

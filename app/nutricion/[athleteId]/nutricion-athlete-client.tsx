@@ -33,6 +33,7 @@ type Props = {
   playerName: string;
   headerLeading: ReactNode;
   headerLogout: ReactNode;
+  initialSettingsOpen?: boolean;
 };
 
 type NutView = "day" | "week" | "month";
@@ -49,7 +50,8 @@ export function NutricionAthleteClient({
   athletes,
   playerName,
   headerLeading,
-  headerLogout
+  headerLogout,
+  initialSettingsOpen
 }: Props) {
   const byDate = useMemo(() => Object.fromEntries(plans.map((p) => [p.date, p])), [plans]);
   const today = todayKey();
@@ -58,7 +60,7 @@ export function NutricionAthleteClient({
   const [month, setMonth] = useState(seed.getMonth());
   const [center, setCenter] = useState(today);
   const [editor, setEditor] = useState<EditorTarget | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(initialSettingsOpen ?? false);
   const [mealRefresh, setMealRefresh] = useState(0);
   /** Cambios de plato o de ingredientes: recalcula los totales sin recargar el menú. */
   const [totalsRefresh, setTotalsRefresh] = useState(0);
@@ -88,7 +90,10 @@ export function NutricionAthleteClient({
     setEditor(null);
     if (cur) requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-cell="${cur.date}:${cur.slot}"]`)?.focus());
   }, []);
-  const closeSettings = useCallback(() => setSettingsOpen(false), []);
+  const closeSettings = useCallback(() => {
+    setSettingsOpen(false);
+    if (window.location.search.includes("ajustes=1")) window.history.replaceState(null, "", window.location.pathname);
+  }, []);
 
   // Cambio de semana / mes / día: la ficha de un día que ya no se ve se cierra.
   useEffect(() => {
