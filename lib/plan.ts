@@ -1,6 +1,6 @@
 import { addDays, dateKey, daysBetween, parseDateLocal } from "@/lib/dates";
 import type { ParsedPlan } from "@/lib/plan-data";
-import { DAY_OVERRIDES, DAY_TINT_OVERRIDES } from "@/lib/plan-data/calendar";
+import { DAY_OVERRIDES, DAY_TINT_OVERRIDES, SAUNA_DAYS } from "@/lib/plan-data/calendar";
 import type { DayPlan, DayPlanBlock, HtmlMatch, MatchVenue } from "@/lib/types";
 
 function sortedMatches(matches: HtmlMatch[]) {
@@ -301,7 +301,21 @@ function buildOverridePlan(
       mdTag: o.mdTag,
       title: o.mdTag,
       minutes: sessionDurationMinutes(o.mdTag, iso, parsed, sm, fm),
-      blocks: [...buildBlocks(parsed, iso, o.mdTag, undefined, sm, fm), { kind: "note", text: o.note }],
+      blocks: [...buildBlocks(parsed, iso, o.mdTag, undefined, sm, fm)],
+      ...empty
+    };
+  }
+  if (o.kind === "md-movido") {
+    const src = o.sourceMd ?? o.mdTag;
+    const fm = { ...fieldMap, [iso]: true as const };
+    const sm = { ...strengthMap };
+    delete sm[iso];
+    return {
+      date: iso,
+      mdTag: o.mdTag,
+      title: o.mdTag,
+      minutes: sessionDurationMinutes(src, iso, parsed, sm, fm),
+      blocks: [...buildBlocks(parsed, iso, src, undefined, sm, fm)],
       ...empty
     };
   }
@@ -312,7 +326,6 @@ function buildOverridePlan(
     pushProtocol(parsed, blocks, "activacion-basica-aductores");
     pushProtocol(parsed, blocks, "activacion-basica-isquios-1");
     pushProtocol(parsed, blocks, "activacion-basica-lumbar-1");
-    blocks.push({ kind: "note", text: o.note });
     return { date: iso, mdTag: o.mdTag, title: "Activación general", minutes: 20, blocks, ...empty };
   }
   if (o.kind === "posterior-v2") {
@@ -324,7 +337,7 @@ function buildOverridePlan(
       mdTag: o.mdTag,
       title: "Cadena posterior",
       minutes: sessionDurationMinutes("MD-2", iso, parsed, sm, fm),
-      blocks: [...buildBlocks(parsed, iso, "MD-2", undefined, sm, fm), { kind: "note", text: o.note }],
+      blocks: [...buildBlocks(parsed, iso, "MD-2", undefined, sm, fm)],
       ...empty
     };
   }
@@ -338,7 +351,6 @@ function buildOverridePlan(
       kind: "note",
       text: "5 m por salida, lo más rápido/fuerte posible (trineo ≥45–50 kg). Sin plyo de momento."
     });
-    blocks.push({ kind: "note", text: o.note });
     return { date: iso, mdTag: o.mdTag, title: "Isquios + trineo", minutes: 20, blocks, ...empty };
   }
   const titles: Record<string, string> = {
@@ -353,11 +365,19 @@ function buildOverridePlan(
     mdTag: o.mdTag,
     title: titles[o.kind] ?? o.kind,
     minutes: null,
-    blocks: [{ kind: "note", text: o.note }],
+    blocks: [{ kind: "note", text: o.note ?? titles[o.kind] ?? o.kind }],
     ...(o.kind === "amistoso"
       ? { matchOpponent: "Amistoso", matchVenue: o.venue ?? null, matchTime: null, matchCompetition: "Amistoso" }
       : empty)
   };
+}
+
+function withSauna(parsed: ParsedPlan, plan: DayPlan): DayPlan {
+  if (!SAUNA_DAYS.includes(plan.date)) return plan;
+  const blocks = [...plan.blocks];
+  blocks.push({ kind: "section", title: "Sauna" });
+  pushProtocol(parsed, blocks, "sauna-exposicion");
+  return { ...plan, blocks, minutes: (plan.minutes ?? 0) + 10 };
 }
 
 export function buildDayPlans(parsed: ParsedPlan): DayPlan[] {
@@ -374,7 +394,7 @@ export function buildDayPlans(parsed: ParsedPlan): DayPlan[] {
   for (const iso of [...dates].sort()) {
     const override = DAY_OVERRIDES[iso];
     if (override) {
-      plans.push(buildOverridePlan(parsed, iso, override, strengthMap, fieldMap));
+      plans.push(withSauna(parsed, buildOverridePlan(parsed, iso, override, strengthMap, fieldMap)));
       continue;
     }
     const md = mdMap[iso] ?? null;
@@ -383,17 +403,19 @@ export function buildDayPlans(parsed: ParsedPlan): DayPlan[] {
     const title = match
       ? `Partido · ${parsed.shortNames[rivalLabel(match)] || rivalLabel(match)}`
       : md ?? "Sesión";
-    plans.push({
-      date: iso,
-      mdTag: md,
-      title,
-      minutes,
-      blocks: buildBlocks(parsed, iso, md, match, strengthMap, fieldMap),
-      matchOpponent: match ? rivalLabel(match) : null,
-      matchVenue: (match?.venue as MatchVenue | undefined) ?? null,
-      matchTime: match?.time ?? null,
-      matchCompetition: match?.comp ?? null
-    });
+    plans.push(
+      withSauna(parsed, {
+        date: iso,
+        mdTag: md,
+        title,
+        minutes,
+        blocks: buildBlocks(parsed, iso, md, match, strengthMap, fieldMap),
+        matchOpponent: match ? rivalLabel(match) : null,
+        matchVenue: (match?.venue as MatchVenue | undefined) ?? null,
+        matchTime: match?.time ?? null,
+        matchCompetition: match?.comp ?? null
+      })
+    );
   }
   return plans;
 }

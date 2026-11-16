@@ -186,6 +186,10 @@
     "label": "Sled push (trineo empujando)",
     "qty": "3×5 m · 1 serie · 45–50 kg"
   },
+  "sauna-exposicion": {
+    "label": "Exposición a sauna",
+    "qty": "10 min · 1 vez"
+  },
   "campo-reloj-arena": {
     "label": "Reloj de arena",
     "qty": "4 diagonales · 1 serie · ~90% Vmax"
