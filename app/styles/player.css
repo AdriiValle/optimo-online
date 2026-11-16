@@ -173,6 +173,16 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
   color: var(--label-tertiary);
 }
 .venue-icon svg { display: block; width: 100%; height: 100%; }
+.sauna-icon {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  width: 15px;
+  height: 15px;
+  color: var(--label-secondary);
+}
+.sauna-icon svg { display: block; width: 100%; height: 100%; }
+.cal-compact--month .sauna-icon { width: 12px; height: 12px; right: 1px; top: 1px; }
 
 /* —— Foco del día: fecha + Large Title + chips de MD, partido y duración —— */
 .day-focus { padding: var(--space-2) var(--space-1) 0; }
@@ -296,7 +306,11 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
 
 .dash-seg { min-height: 36px; }
 .dash-seg > button { min-height: 32px; }
-.dash-panes { display: flex; flex-direction: column; gap: var(--space-3); animation: cal-in var(--dur) var(--ease-out); }
+.dash-seg > button::after { content: ""; position: absolute; inset: -6px 0; }
+.dash-seg > button:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+/* Cambio de pestaña: el panel sube 6 px y aparece (spring crítico, sin rebote). */
+.dash-panes { display: flex; flex-direction: column; gap: var(--space-3); animation: pane-in var(--dur) var(--ease-out); }
+@keyframes pane-in { from { opacity: 0; transform: translateY(6px); } }
 .dash-pane h2 { font: var(--t-headline); letter-spacing: var(--ls-headline); }
 .dash-kicker {
   margin: var(--space-2) 0 2px;
@@ -364,13 +378,18 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
   -webkit-tap-highlight-color: transparent;
   transition: color var(--dur-fast) var(--ease-out);
 }
-.tab-bar-item svg {
-  width: 24px;
-  height: 24px;
+.tab-bar-item svg,
+.tab-bar-item > span {
   transition: transform var(--dur) var(--ease-out);
 }
-.tab-bar-item:active svg { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
+.tab-bar-item svg { width: 24px; height: 24px; }
+/* Press al tocar (no al soltar): icono y etiqueta se hunden juntos. */
+.tab-bar-item:active svg,
+.tab-bar-item:active > span { transform: scale(var(--press-scale)); transition-duration: var(--dur-press); }
 .tab-bar-item[aria-current="page"] { color: var(--accent); }
+/* Al activarse una pestaña, su icono se asienta desde un poco más pequeño (sin rebote). */
+.tab-bar-item[aria-current="page"] svg { animation: tab-select var(--dur) var(--ease-out); }
+@keyframes tab-select { from { transform: scale(0.88); } }
 .tab-bar-item:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
 @media (hover: hover) {
   .tab-bar-item:not([aria-current="page"]):hover { color: var(--label); }
@@ -644,7 +663,8 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
   .cal-day, .cal-day:active,
   button.cal-title, button.cal-title:active,
   .cal-today, .cal-today:active,
-  .tab-bar-item svg, .tab-bar-item:active svg { transition: none; transform: none; }
+  .tab-bar-item svg, .tab-bar-item:active svg,
+  .tab-bar-item > span, .tab-bar-item:active > span { transition: none; transform: none; }
   button.cal-title svg { transition: none; }
 }
 @media (prefers-reduced-transparency: reduce) {
@@ -703,4 +723,17 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
 @media (prefers-contrast: more) {
   .pset .list-group-title, .pset .list-group-footer, .pset .list-row-sub { color: var(--label-on-tint); }
   .pset-input::placeholder { color: var(--label-secondary); }
+}
+
+/* —— Transversal jugador (TJ) —— */
+/* Escritorio: la cabecera de las páginas con navbar ocupa la misma columna que el contenido (640 menos gutters). */
+@media (min-width: 720px) {
+  .doc-header-viewport:not(.doc-header-viewport--toolbar) header.doc-header:not(.doc-header--wide) {
+    max-width: calc(640px - 2 * var(--gutter));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-bar-item[aria-current="page"] svg { animation: none; }
+  .nut-ingr-change, .nut-ingr-option { transition: none; }
+  .nut-ingr-change:active, .nut-ingr-option:active { transform: none; }
 }

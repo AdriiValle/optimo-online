@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addDays, dateKey, DOW_FULL, MONTHS_ES, parseDateLocal, todayKey } from "@/lib/dates";
 import type { Athlete, DayPlan, Diary, Injury, IntegrationInfo } from "@/lib/types";
@@ -638,7 +638,12 @@ export function HomeClient({
       </header>
 
       {isAdmin ? (
-        <div className="segmented segmented--block dash-seg" role="tablist" aria-label="Secciones">
+        <div
+          className="segmented segmented--block dash-seg"
+          role="tablist"
+          aria-label="Secciones"
+          style={{ "--seg-count": tabs.length, "--seg-index": Math.max(0, tabs.findIndex((t) => t.id === pane)) } as CSSProperties}
+        >
           {tabs.map((t) => (
             <button key={t.id} type="button" role="tab" aria-selected={pane === t.id} onClick={() => openPane(t.id)}>
               {t.label}
