@@ -737,3 +737,17 @@ button.cal-title:active { transform: scale(var(--press-scale)); transition-durat
   .nut-ingr-change, .nut-ingr-option { transition: none; }
   .nut-ingr-change:active, .nut-ingr-option:active { transform: none; }
 }
+
+/* —— Sauna del día: tarjeta propia bajo la cabecera (antes iba al final de la sesión) —— */
+.card.day-sauna {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+}
+.day-sauna-icon { width: 24px; height: 24px; flex-shrink: 0; color: var(--label-secondary); }
+.day-sauna-icon svg { display: block; width: 100%; height: 100%; }
+.day-sauna-text { display: flex; flex-direction: column; min-width: 0; }
+.day-sauna-text strong { font: var(--t-headline); }
+.day-sauna-text span { color: var(--label-secondary); font: var(--t-footnote); font-variant-numeric: tabular-nums; }

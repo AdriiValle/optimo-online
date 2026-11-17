@@ -212,10 +212,11 @@ function buildBlocks(
       blocks.push({ kind: "section", title: "Fuerza" });
       if (parsed.posteriorFuerzaV2.includes(iso)) {
         pushProtocol(parsed, blocks, "fuerza-isquios-mancuernas-bilateral");
-        pushProtocol(parsed, blocks, "fuerza-isquios-mancuernas-unilateral");
-        pushProtocol(parsed, blocks, "hip-thrust-barra-50");
-        pushProtocol(parsed, blocks, "fuerza-isquios-salida-cajon-sagital-medball");
-        pushProtocol(parsed, blocks, "fuerza-isquios-salida-cajon-frontal-abierto-medball");
+        const sube = iso >= "2026-11-19"; // semana del partido en domingo: más carga y 2 series en salidas a cajón
+        pushProtocol(parsed, blocks, sube ? "fuerza-isquios-mancuernas-unilateral-12-5" : "fuerza-isquios-mancuernas-unilateral");
+        pushProtocol(parsed, blocks, sube ? "hip-thrust-barra-60" : "hip-thrust-barra-50");
+        pushProtocol(parsed, blocks, sube ? "fuerza-isquios-salida-cajon-sagital-medball-2s" : "fuerza-isquios-salida-cajon-sagital-medball");
+        pushProtocol(parsed, blocks, sube ? "fuerza-isquios-salida-cajon-frontal-abierto-medball-2s" : "fuerza-isquios-salida-cajon-frontal-abierto-medball");
       } else {
         pushProtocol(parsed, blocks, "fuerza-isquios-bilateral");
         pushProtocol(parsed, blocks, "fuerza-isquios-isometrico-cuna");
@@ -329,6 +330,8 @@ function buildOverridePlan(
     return { date: iso, mdTag: o.mdTag, title: "Activación general", minutes: 20, blocks, ...empty };
   }
   if (o.kind === "posterior-v2") {
+    // Con MD-3 el trineo no va en este día (pasa al MD-2); en los demás se mantiene el MD-2 de siempre.
+    const postMd = o.mdTag === "MD-3" ? "MD-3" : "MD-2";
     const sm = { ...strengthMap, [iso]: "posterior" as const };
     const fm = { ...fieldMap };
     delete fm[iso];
@@ -336,8 +339,8 @@ function buildOverridePlan(
       date: iso,
       mdTag: o.mdTag,
       title: "Cadena posterior",
-      minutes: sessionDurationMinutes("MD-2", iso, parsed, sm, fm),
-      blocks: [...buildBlocks(parsed, iso, "MD-2", undefined, sm, fm)],
+      minutes: sessionDurationMinutes(postMd, iso, parsed, sm, fm),
+      blocks: [...buildBlocks(parsed, iso, postMd, undefined, sm, fm)],
       ...empty
     };
   }
@@ -377,7 +380,7 @@ function withSauna(parsed: ParsedPlan, plan: DayPlan): DayPlan {
   const blocks = [...plan.blocks];
   blocks.push({ kind: "section", title: "Sauna" });
   pushProtocol(parsed, blocks, "sauna-exposicion");
-  return { ...plan, blocks, minutes: (plan.minutes ?? 0) + 10 };
+  return { ...plan, blocks };
 }
 
 export function buildDayPlans(parsed: ParsedPlan): DayPlan[] {

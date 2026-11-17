@@ -142,7 +142,7 @@ export const MATCHES: HtmlMatch[] = [
     "comp": "Ekstraklasa"
   },
   {
-    "date": "2026-11-21",
+    "date": "2026-11-22",
     "time": null,
     "home": "Raków Częstochowa",
     "away": "Widzew",
@@ -435,15 +435,16 @@ export const DAY_OVERRIDES: Record<string, { mdTag: string | null; kind: DayOver
   "2026-11-13": { mdTag: "MD-1", kind: "posterior-v2", note: "Cadena posterior: puedes entrenar con el club este día; aquí tienes el trabajo Óptimo." },
   "2026-11-14": { mdTag: "MD", kind: "amistoso", note: "Partido amistoso en casa.", venue: "casa" },
   "2026-11-15": { mdTag: "MD+1", kind: "recovery-club", note: "Recovery con el club. Sin trabajo Óptimo." },
-  "2026-11-16": { mdTag: "MD-5", kind: "libre", note: "Día libre." },
-  "2026-11-17": { mdTag: "MD-4", kind: "anterior-v2" },
-  "2026-11-18": { mdTag: "MD-3", kind: "md-movido", sourceMd: "MD-4" },
-  "2026-11-19": { mdTag: "MD-2", kind: "posterior-v2" }
+  "2026-11-16": { mdTag: null, kind: "libre", note: "Día libre." },
+  "2026-11-17": { mdTag: "MD-5", kind: "anterior-v2" },
+  "2026-11-18": { mdTag: "MD-4", kind: "md-movido", sourceMd: "MD-4" },
+  "2026-11-19": { mdTag: "MD-3", kind: "posterior-v2" }
 };
 
 // Días con exposición a sauna (bloque "Sauna" en el entrenamiento + marca en el calendario).
 export const SAUNA_DAYS: string[] = [
   "2026-11-16",
+  "2026-11-17",
   "2026-11-18"
 ];
 
@@ -451,7 +452,7 @@ export const SAUNA_DAYS: string[] = [
 export const DAY_TINT_OVERRIDES: Record<string, string | null> = {
   "2026-11-09": null, // vacaciones: etiqueta MD+2 pero sin color
   "2026-11-10": null, // vacaciones: etiqueta MD-4 pero sin color
-  "2026-11-16": null, // día libre: etiqueta MD-5 pero sin color (blanco)
+  "2026-11-16": null, // día libre: sin etiqueta MD y sin color (blanco)
   "2026-11-12": "load-md-plus2",
   "2026-11-13": "load-md-minus2"
 };

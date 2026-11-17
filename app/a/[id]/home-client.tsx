@@ -7,9 +7,9 @@ import type { Athlete, DayPlan, Diary, Injury, IntegrationInfo } from "@/lib/typ
 import { capabilitiesFor, isDeviceField } from "@/lib/integrations/capabilities";
 import { Analisis, type AnalysisView } from "./analisis";
 import { NutritionPane } from "./nutrition-pane";
-import { SessionList } from "./session-list";
+import { SessionList, withoutSauna } from "./session-list";
 import { DeviceCard, IntegrationAdminChip } from "./device-card";
-import { PlanCalendar, type CalendarView } from "@/app/components/plan-calendar";
+import { hasSauna, PlanCalendar, SAUNA_SVG, type CalendarView } from "@/app/components/plan-calendar";
 import { AthleteProfileForm, NutSheet, ageFrom } from "@/app/nutricion/[athleteId]/athlete-profile-form";
 
 type Pane = "train" | "food" | "log" | "stats";
@@ -541,7 +541,10 @@ export function HomeClient({
   const recoveryNow = dayDiary.date === today && dayDiary.recovery !== null ? dayDiary.recovery : null;
   const focusTitle = dayTitle(center, today);
   const relative = focusTitle === "Hoy" || focusTitle === "Mañana" || focusTitle === "Ayer";
-  const hasSession = Boolean(plan?.blocks?.length);
+  const hasSession = Boolean(plan && withoutSauna(plan.blocks).length);
+  const saunaBlock = plan?.blocks.find((b) => b.kind === "protocol" && b.protocolId === "sauna-exposicion");
+  const showSauna = hasSauna(plan);
+  const saunaQty = saunaBlock && saunaBlock.kind === "protocol" ? saunaBlock.qty : null;
   const matchCrest = plan?.matchOpponent ? crests[plan.matchOpponent] : null;
   const planTitle = plan?.title && plan.title !== plan.mdTag ? plan.title : null;
   const tabs: { id: Pane; label: string }[] = isAdmin
@@ -636,6 +639,16 @@ export function HomeClient({
           </div>
         ) : null}
       </header>
+
+      {showSauna ? (
+        <section className="card day-sauna" aria-label="Sauna del día">
+          <span className="day-sauna-icon">{SAUNA_SVG}</span>
+          <div className="day-sauna-text">
+            <strong>Sauna</strong>
+            <span>{saunaQty ?? "10 min · 1 vez"}</span>
+          </div>
+        </section>
+      ) : null}
 
       {isAdmin ? (
         <div

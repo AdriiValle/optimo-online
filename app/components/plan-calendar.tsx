@@ -4,7 +4,7 @@ import { addDays, dateKey, DOW_ES, DOW_FULL, MONTHS_ES, parseDateLocal } from "@
 import { LOAD_TINT_FROM, loadClassForDay } from "@/lib/plan";
 import type { DayPlan } from "@/lib/types";
 
-const SAUNA_SVG = (
+export const SAUNA_SVG = (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M3.5 14c-2-2 2-3.5 0-5.5s2-3.5 0-5.5" />
     <path d="M8 14c-2-2 2-3.5 0-5.5s2-3.5 0-5.5" />
@@ -12,7 +12,7 @@ const SAUNA_SVG = (
   </svg>
 );
 
-function hasSauna(p: DayPlan | undefined) {
+export function hasSauna(p: DayPlan | undefined) {
   return !!p?.sauna || !!p?.blocks.some((b) => b.kind === "protocol" && b.protocolId === "sauna-exposicion");
 }
 

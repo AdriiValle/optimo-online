@@ -5,16 +5,16 @@ import { buildDayPlans } from "../lib/plan";
 
 loadLocalEnv();
 
-// Semana 16-19 nov: lunes libre; anterior → martes, MD-4 → miércoles, posterior + trineo → jueves.
+// Semana 16-22 nov (partido domingo 22): lunes libre; anterior MD-5 → martes, MD-4 → miércoles, posterior MD-3 → jueves.
 // Uso: tsx db/upsert-semana-16-nov.ts           (simulación)
 //      tsx db/upsert-semana-16-nov.ts --apply   (graba)
 const FROM = "2026-11-16";
-const TO = "2026-11-19";
+const TO = "2026-11-22";
 const apply = process.argv.includes("--apply");
 
 async function main() {
   const plans = buildDayPlans(planData).filter((p) => p.date >= FROM && p.date <= TO);
-  if (plans.length !== 4) throw new Error(`semana-16-nov: esperaba 4 días, hay ${plans.length}`);
+  if (plans.length !== 7) throw new Error(`semana-16-nov: esperaba 7 días, hay ${plans.length}`);
   for (const p of plans) {
     console.log(`\n${p.date} · ${p.mdTag} · ${p.title} · ${p.minutes ?? "-"} min`);
     for (const b of p.blocks) console.log(`   ${b.kind}: ${"title" in b ? b.title : "label" in b ? b.label : "text" in b ? b.text : ""}`);

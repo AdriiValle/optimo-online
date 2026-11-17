@@ -14,10 +14,17 @@ function PlayGlyph() {
   );
 }
 
+/** La sauna va en su propia tarjeta bajo la cabecera del día, no al final de la sesión. */
+export function withoutSauna(blocks: DayPlan["blocks"]): DayPlan["blocks"] {
+  return blocks.filter(
+    (b) => !(b.kind === "section" && b.title === "Sauna") && !(b.kind === "protocol" && b.protocolId === "sauna-exposicion")
+  );
+}
+
 export function SessionList({ plan }: { plan?: DayPlan }) {
   const [openVideo, setOpenVideo] = useState<OpenVideo | null>(null);
   const closeVideo = useCallback(() => setOpenVideo(null), []);
-  const rows = plan?.blocks ?? [{ kind: "note" as const, text: "Sin bloque asignado para este día." }];
+  const rows = (plan ? withoutSauna(plan.blocks) : null) ?? [{ kind: "note" as const, text: "Sin bloque asignado para este día." }];
   return (
     <div className="session-list">
       {rows.map((row, i) => {

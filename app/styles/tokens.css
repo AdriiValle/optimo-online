@@ -19,11 +19,11 @@
   /* Separadores */
   --separator: #D2D2D7;
   --separator-soft: rgba(0, 0, 0, 0.08);
-  /* Acento: solo lo interactivo */
-  --accent: #0071E3;
-  --accent-hi: #0077ED;
-  --accent-text: #0066CC;
-  --accent-tint: rgba(0, 113, 227, 0.12);
+  /* Acento: solo lo interactivo. Paleta Óptimo: negro y grises (sin azul). */
+  --accent: #1D1D1F;
+  --accent-hi: #3A3A3C;
+  --accent-text: #1D1D1F;
+  --accent-tint: rgba(60, 60, 67, 0.12);
   --on-accent: #FFFFFF;
   /* Semántica */
   --danger: #D70015;   --danger-tint: rgba(215, 0, 21, 0.08);
