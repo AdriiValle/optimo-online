@@ -10,6 +10,8 @@ import { DeportistasSection } from "./deportistas-section";
 
 const SPORT_LABEL: Record<string, string> = { football: "Fútbol", running: "Running" };
 
+const numEs = (n: number) => String(Math.round(n * 10) / 10).replace(".", ",");
+
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   const first = parts[0]?.[0] ?? "";
@@ -39,6 +41,13 @@ export default async function PanelPage() {
               {cards.map((a) => {
                 const sport = SPORT_LABEL[a.sport] ?? "Otro";
                 const sub = [sport, a.team, a.shirtNumber ? `#${a.shirtNumber}` : null].filter(Boolean).join(" · ");
+                const fisico = [
+                  a.ageYears !== null ? `${a.ageYears} años` : null,
+                  a.heightCm !== null ? `${numEs(a.heightCm)} cm` : null,
+                  a.weightKg !== null ? `${numEs(a.weightKg)} kg` : null
+                ]
+                  .filter(Boolean)
+                  .join(" · ");
                 return (
                   <li key={a.id}>
                     <Link className="adm-row" href={`/a/${a.id}`}>
@@ -52,6 +61,7 @@ export default async function PanelPage() {
                       <span className="adm-who">
                         <span className="adm-name">{a.name}</span>
                         <span className="adm-sub">{sub}</span>
+                        {fisico ? <span className="adm-sub">{fisico}</span> : null}
                       </span>
                       <span className="adm-meta">
                         <span className="adm-rec">

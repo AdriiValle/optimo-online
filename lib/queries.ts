@@ -574,10 +574,14 @@ export async function panelCards(tx: Tx, date: string) {
       injury_note: string | null;
       injury_started_on: string | null;
       injury_closed_on: string | null;
+      age_years: number | null;
+      height_cm: string | null;
+      weight_kg: string | null;
     })[]
   >`
     select
       a.id, a.account_id, a.name, a.sport,
+      extract(year from age(a.birth_date))::int as age_years, a.height_cm::text, a.weight_kg::text,
       (a.photo_bytes is not null and octet_length(a.photo_bytes) > 0) as has_photo,
       a.team, a.shirt_number, a.diet_notes, a.supplements, a.sleep_routine,
       d.recovery,
@@ -601,6 +605,9 @@ export async function panelCards(tx: Tx, date: string) {
   return rows.map((row) => ({
     ...mapAthlete(row),
     recovery: row.recovery,
+    ageYears: row.age_years,
+    heightCm: row.height_cm === null ? null : Number(row.height_cm),
+    weightKg: row.weight_kg === null ? null : Number(row.weight_kg),
     injury: row.injury_id
       ? ({
           id: row.injury_id,
