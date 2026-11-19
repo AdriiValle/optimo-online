@@ -73,10 +73,12 @@ export async function GET(req: Request) {
   }
   if (!canSeeAthlete(user, parsed.data.athleteId)) return notFound();
 
-  const { diary, blocks } = await withRls(rlsFrom(user), async (tx) => ({
-    diary: await diaryFor(tx, parsed.data.athleteId, parsed.data.date),
-    blocks: await dayBlocks(tx, parsed.data.athleteId, parsed.data.date)
-  }));
+  // Dos lecturas independientes: una tx cada una, en paralelo (dentro de una tx se serializan).
+  const ctx = rlsFrom(user);
+  const [diary, blocks] = await Promise.all([
+    withRls(ctx, (tx) => diaryFor(tx, parsed.data.athleteId, parsed.data.date)),
+    withRls(ctx, (tx) => dayBlocks(tx, parsed.data.athleteId, parsed.data.date))
+  ]);
   return NextResponse.json({ data: diary, blocks });
 }
 

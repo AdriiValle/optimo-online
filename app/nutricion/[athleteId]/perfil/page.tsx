@@ -1,9 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
-import { currentUser, rlsFrom } from "@/lib/auth";
-import { withRls } from "@/lib/rls";
-import { canSeeAthleteNutrition } from "@/lib/access";
-import { assignedAthletesForNutritionist, athleteById } from "@/lib/queries";
+import { currentUser } from "@/lib/auth";
+import { nutritionAthleteData } from "@/lib/access";
 import { BrandHeader } from "@/app/components/brand-header";
 import { HeaderBackButton } from "@/app/components/header-back-button";
 import { LogoutButton } from "@/app/logout-button";
@@ -23,14 +21,8 @@ export default async function PerfilPage({ params }: { params: Promise<{ athlete
   if (!user) redirect("/login");
   if (user.role !== "nutritionist") notFound();
   if (!z.string().uuid().safeParse(athleteId).success) notFound();
-  if (!(await canSeeAthleteNutrition(user, athleteId))) notFound();
 
-  const data = await withRls(rlsFrom(user), async (tx) => {
-    const athlete = await athleteById(tx, athleteId);
-    if (!athlete) return null;
-    const athletes = await assignedAthletesForNutritionist(tx, user.id);
-    return { athlete, athletes };
-  });
+  const data = await nutritionAthleteData(user, athleteId);
   if (!data) notFound();
 
   return (

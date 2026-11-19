@@ -32,15 +32,16 @@ export default async function AthleteHome({
   const historyTo = todayKey();
   const historyFrom = dateKey(addDays(parseDateLocal(historyTo), -59));
 
-  const data = await withRls(rlsFrom(user), async (tx) => {
-    const home = await athleteHome(tx, id, historyTo);
-    if (!home) return null;
-    const history = isAdmin ? await diaryHistory(tx, id, historyFrom, historyTo) : null;
-    const adminIntegration = isAdmin ? await integrationFor(tx, id) : null;
-    const profile = isAdmin ? await athleteProfile(tx, id) : null;
-    return { home, history, adminIntegration, profile };
-  });
-  if (!data) notFound();
+  // Lecturas independientes en paralelo, cada una en su tx (dentro de una misma tx se serializan).
+  const ctx = rlsFrom(user);
+  const [home, history, adminIntegration, profile] = await Promise.all([
+    withRls(ctx, (tx) => athleteHome(tx, id, historyTo)),
+    isAdmin ? withRls(ctx, (tx) => diaryHistory(tx, id, historyFrom, historyTo)) : null,
+    isAdmin ? withRls(ctx, (tx) => integrationFor(tx, id)) : null,
+    isAdmin ? withRls(ctx, (tx) => athleteProfile(tx, id)) : null
+  ]);
+  if (!home) notFound();
+  const data = { home, history, adminIntegration, profile };
 
   return (
     <>

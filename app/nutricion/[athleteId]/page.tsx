@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
-import { currentUser, rlsFrom } from "@/lib/auth";
+import { currentUser } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
-import { canSeeAthleteNutrition } from "@/lib/access";
-import { assignedAthletesForNutritionist, athleteById, calendarPlansForAthlete } from "@/lib/queries";
+import { nutritionAthleteData } from "@/lib/access";
+import { calendarPlansForAthlete } from "@/lib/queries";
 import { planData } from "@/lib/plan-data";
 import { HeaderBackButton } from "@/app/components/header-back-button";
 import { LogoutButton } from "@/app/logout-button";
@@ -16,16 +16,10 @@ export default async function NutricionAthletePage({ params, searchParams }: { p
   if (!user) redirect("/login");
   if (user.role !== "nutritionist") notFound();
   if (!z.string().uuid().safeParse(athleteId).success) notFound();
-  if (!(await canSeeAthleteNutrition(user, athleteId))) notFound();
 
-  const data = await withRls(rlsFrom(user), async (tx) => {
-    const athlete = await athleteById(tx, athleteId);
-    if (!athlete) return null;
-    const plans = await calendarPlansForAthlete(tx, athleteId);
-    const athletes = await assignedAthletesForNutritionist(tx, user.id);
-    return { athlete, plans, athletes };
-  });
-  if (!data) notFound();
+  const base = await nutritionAthleteData(user, athleteId, (ctx) => withRls(ctx, (tx) => calendarPlansForAthlete(tx, athleteId)));
+  if (!base) notFound();
+  const data = { athlete: base.athlete, athletes: base.athletes, plans: base.extra };
 
   return (
     <>

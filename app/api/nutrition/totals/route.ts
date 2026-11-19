@@ -30,8 +30,11 @@ export async function GET(req: Request) {
   const span = daysBetween(parseDateLocal(from), parseDateLocal(to));
   if (span < 0 || span > MAX_RANGE_DAYS) return apiError(422, "VALIDATION_ERROR", `Rango de 1 a ${MAX_RANGE_DAYS + 1} días`);
 
-  if (!(await canSeeAthleteNutrition(user, athleteId))) return notFound();
-
-  const data = await withRls(rlsFrom(user), (tx) => nutritionTotals(tx, athleteId, from, to));
+  // Permiso y lectura en paralelo; si no hay permiso, lo leído se descarta.
+  const [allowed, data] = await Promise.all([
+    canSeeAthleteNutrition(user, athleteId),
+    withRls(rlsFrom(user), (tx) => nutritionTotals(tx, athleteId, from, to))
+  ]);
+  if (!allowed) return notFound();
   return NextResponse.json({ data });
 }

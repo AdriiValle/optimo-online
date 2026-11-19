@@ -16,3 +16,7 @@ node_modules
 *.avi
 *.mkv
 Biblioteca de Ejercicios/
+.gstack/
+workflow/load/k6/results/
+workflow/load/k6/config.env
+workflow/load/k6/tokens.json
