@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { SessionUser } from "@/lib/types";
-import { withRls } from "@/lib/rls";
-import { isNutritionistAssigned, mealById } from "@/lib/queries";
+import { withRls, type RlsContext } from "@/lib/rls";
+import { assignedAthletesForNutritionist, athleteById, isNutritionistAssigned, mealById } from "@/lib/queries";
 
 /** Admin o el propio deportista. La nutricionista no pasa: diario, lesiones, perfil y wearables quedan fuera. */
 export function canSeeAthlete(user: SessionUser, athleteId: string) {
@@ -21,6 +21,27 @@ export async function canSeeAthleteNutrition(user: SessionUser, athleteId: strin
   if (canSeeAthlete(user, athleteId)) return true;
   if (user.role !== "nutritionist") return false;
   return withRls(ctxOf(user), (tx) => isNutritionistAssigned(tx, athleteId));
+}
+
+/**
+ * Base de las páginas de la nutricionista por deportista: permiso, ficha y lista de asignados,
+ * en paralelo (una tx cada una) con la carga propia de la página (`extra`, que recibe el contexto RLS).
+ * null si no hay permiso o el deportista no existe; lo cargado de más se descarta sin pintarse.
+ */
+export async function nutritionAthleteData<E = null>(
+  user: SessionUser,
+  athleteId: string,
+  extra?: (ctx: RlsContext) => Promise<E>
+) {
+  const ctx = ctxOf(user);
+  const [allowed, athlete, athletes, more] = await Promise.all([
+    canSeeAthleteNutrition(user, athleteId),
+    withRls(ctx, (tx) => athleteById(tx, athleteId)),
+    withRls(ctx, (tx) => assignedAthletesForNutritionist(tx, user.id)),
+    extra ? extra(ctx) : (null as E)
+  ]);
+  if (!allowed || !athlete) return null;
+  return { athlete, athletes, extra: more };
 }
 
 /** Plato visible para el usuario (por su deportista), o null. */

@@ -13,10 +13,8 @@ export default async function AlimentosPage() {
   if (!user) redirect("/login");
   if (user.role !== "nutritionist") notFound();
 
-  const { foods, orphans } = await withRls(rlsFrom(user), async (tx) => ({
-    foods: await listFoods(tx),
-    orphans: await orphanGroups(tx)
-  }));
+  // Sin parámetros, las dos lecturas se encadenan en la misma tx (un viaje, no dos).
+  const [foods, orphans] = await withRls(rlsFrom(user), (tx) => Promise.all([listFoods(tx), orphanGroups(tx)]));
 
   return (
     <>

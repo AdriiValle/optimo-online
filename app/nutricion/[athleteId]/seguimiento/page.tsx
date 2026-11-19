@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
-import { currentUser, rlsFrom } from "@/lib/auth";
+import { currentUser } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
-import { canSeeAthleteNutrition } from "@/lib/access";
-import { assignedAthletesForNutritionist, athleteById, athleteProfile } from "@/lib/queries";
+import { nutritionAthleteData } from "@/lib/access";
+import { athleteProfile } from "@/lib/queries";
 import { todayKey } from "@/lib/dates";
 import { measurementsFor, trackingCompliance } from "@/lib/nutrition/tracking-queries";
 import { BrandHeader } from "@/app/components/brand-header";
@@ -25,21 +25,18 @@ export default async function SeguimientoPage({ params }: { params: Promise<{ at
   if (!user) redirect("/login");
   if (user.role !== "nutritionist") notFound();
   if (!z.string().uuid().safeParse(athleteId).success) notFound();
-  if (!(await canSeeAthleteNutrition(user, athleteId))) notFound();
 
   const today = todayKey();
-  const data = await withRls(rlsFrom(user), async (tx) => {
-    const athlete = await athleteById(tx, athleteId);
-    if (!athlete) return null;
-    const [athletes, compliance, measurements, profile] = await Promise.all([
-      assignedAthletesForNutritionist(tx, user.id),
-      trackingCompliance(tx, athleteId, today),
-      measurementsFor(tx, athleteId),
-      athleteProfile(tx, athleteId)
-    ]);
-    return { athlete, athletes, compliance, measurements, profileWeightKg: profile?.weightKg ?? null };
-  });
-  if (!data) notFound();
+  const base = await nutritionAthleteData(user, athleteId, (ctx) =>
+    Promise.all([
+      withRls(ctx, (tx) => trackingCompliance(tx, athleteId, today)),
+      withRls(ctx, (tx) => measurementsFor(tx, athleteId)),
+      withRls(ctx, (tx) => athleteProfile(tx, athleteId))
+    ])
+  );
+  if (!base) notFound();
+  const [compliance, measurements, profile] = base.extra;
+  const data = { athlete: base.athlete, athletes: base.athletes, compliance, measurements, profileWeightKg: profile?.weightKg ?? null };
 
   return (
     <>

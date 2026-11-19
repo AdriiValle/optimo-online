@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
-import { currentUser, rlsFrom } from "@/lib/auth";
+import { currentUser } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
-import { canSeeAthleteNutrition } from "@/lib/access";
-import { assignedAthletesForNutritionist, athleteById } from "@/lib/queries";
+import { nutritionAthleteData } from "@/lib/access";
 import { addDays, dateKey, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
 import { shoppingRange, shoppingRangeLabel, type ShoppingRangeKind } from "@/lib/nutrition/shopping";
 import { shoppingForRange } from "@/lib/nutrition/shopping-queries";
@@ -41,7 +40,6 @@ export default async function CompraPage({ params, searchParams }: { params: Pro
   if (!user) redirect("/login");
   if (user.role !== "nutritionist") notFound();
   if (!z.string().uuid().safeParse(athleteId).success) notFound();
-  if (!(await canSeeAthleteNutrition(user, athleteId))) notFound();
 
   const today = todayKey();
   const kind: ShoppingRangeKind = one(sp.rango) === "3d" ? "3d" : "week";
@@ -50,14 +48,15 @@ export default async function CompraPage({ params, searchParams }: { params: Pro
   const range = shoppingRange(kind, anchor);
   const label = shoppingRangeLabel(range.from, range.to);
 
-  const data = await withRls(rlsFrom(user), async (tx) => {
-    const athlete = await athleteById(tx, athleteId);
-    if (!athlete) return null;
-    const [athletes, shopping] = await Promise.all([assignedAthletesForNutritionist(tx, user.id), shoppingForRange(tx, athleteId, range)]);
-    const gaps = await foodGapsForList(tx, shopping.list);
-    return { athlete, athletes, shopping, gaps };
-  });
-  if (!data) notFound();
+  const loaded = await nutritionAthleteData(user, athleteId, (ctx) =>
+    withRls(ctx, async (tx) => {
+      const shopping = await shoppingForRange(tx, athleteId, range);
+      const gaps = await foodGapsForList(tx, shopping.list);
+      return { shopping, gaps };
+    })
+  );
+  if (!loaded) notFound();
+  const data = { athlete: loaded.athlete, athletes: loaded.athletes, ...loaded.extra };
 
   const base = `/nutricion/${data.athlete.id}/compra`;
   const href = (k: ShoppingRangeKind, from: string) => `${base}?${new URLSearchParams(k === "3d" ? { rango: "3d", desde: from } : { desde: from })}`;

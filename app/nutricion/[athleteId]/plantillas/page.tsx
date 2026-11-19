@@ -1,9 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
-import { currentUser, rlsFrom } from "@/lib/auth";
+import { currentUser } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
-import { canSeeAthleteNutrition } from "@/lib/access";
-import { assignedAthletesForNutritionist, athleteById } from "@/lib/queries";
+import { nutritionAthleteData } from "@/lib/access";
 import { addDays, dateKey, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
 import { foodOptions, listDishes, listSwaps, listTemplates } from "@/lib/nutrition/templates-queries";
 import { BrandHeader } from "@/app/components/brand-header";
@@ -24,22 +23,19 @@ export default async function PlantillasPage({ params }: { params: Promise<{ ath
   if (!user) redirect("/login");
   if (user.role !== "nutritionist") notFound();
   if (!z.string().uuid().safeParse(athleteId).success) notFound();
-  if (!(await canSeeAthleteNutrition(user, athleteId))) notFound();
 
   const today = todayKey();
-  const data = await withRls(rlsFrom(user), async (tx) => {
-    const athlete = await athleteById(tx, athleteId);
-    if (!athlete) return null;
-    const [athletes, templates, dishes, swaps, foods] = await Promise.all([
-      assignedAthletesForNutritionist(tx, user.id),
-      listTemplates(tx),
-      listDishes(tx),
-      listSwaps(tx),
-      foodOptions(tx)
-    ]);
-    return { athlete, athletes, templates, dishes, swaps, foods };
-  });
-  if (!data) notFound();
+  const base = await nutritionAthleteData(user, athleteId, (ctx) =>
+    Promise.all([
+      withRls(ctx, (tx) => listTemplates(tx)),
+      withRls(ctx, (tx) => listDishes(tx)),
+      withRls(ctx, (tx) => listSwaps(tx)),
+      withRls(ctx, (tx) => foodOptions(tx))
+    ])
+  );
+  if (!base) notFound();
+  const [templates, dishes, swaps, foods] = base.extra;
+  const data = { athlete: base.athlete, athletes: base.athletes, templates, dishes, swaps, foods };
 
   const thisMonday = startOfWeekMonday(today);
   const nextMonday = dateKey(addDays(parseDateLocal(thisMonday), 7));

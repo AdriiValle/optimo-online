@@ -2,10 +2,9 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
-import { currentUser, rlsFrom } from "@/lib/auth";
+import { currentUser } from "@/lib/auth";
 import { withRls } from "@/lib/rls";
-import { canSeeAthleteNutrition } from "@/lib/access";
-import { assignedAthletesForNutritionist, athleteById } from "@/lib/queries";
+import { nutritionAthleteData } from "@/lib/access";
 import { addDays, dateKey, DOW_FULL, formatLongDate, MONTHS_ES, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
 import { MEAL_SLOTS } from "@/lib/types";
 import type { DayType } from "@/lib/nutrition/day-type";
@@ -63,20 +62,15 @@ export default async function InformesPage({ params, searchParams }: { params: P
   if (!user) redirect("/login");
   if (user.role !== "nutritionist") notFound();
   if (!z.string().uuid().safeParse(athleteId).success) notFound();
-  if (!(await canSeeAthleteNutrition(user, athleteId))) notFound();
 
   const today = todayKey();
   const raw = one(sp.semana);
   const anchor = raw && DATE_RE.test(raw) && !Number.isNaN(parseDateLocal(raw).getTime()) ? raw : today;
   const weekStart = startOfWeekMonday(anchor);
 
-  const data = await withRls(rlsFrom(user), async (tx) => {
-    const athlete = await athleteById(tx, athleteId);
-    if (!athlete) return null;
-    const [athletes, report] = await Promise.all([assignedAthletesForNutritionist(tx, user.id), weeklyReport(tx, athleteId, weekStart, today)]);
-    return { athlete, athletes, report };
-  });
-  if (!data) notFound();
+  const loaded = await nutritionAthleteData(user, athleteId, (ctx) => withRls(ctx, (tx) => weeklyReport(tx, athleteId, weekStart, today)));
+  if (!loaded) notFound();
+  const data = { athlete: loaded.athlete, athletes: loaded.athletes, report: loaded.extra };
 
   const { athlete, report } = data;
   const base = `/nutricion/${athlete.id}/informes`;

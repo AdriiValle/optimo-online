@@ -1,3 +1,4 @@
+import { cache } from "react";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
@@ -73,7 +74,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   }
 });
 
-export async function currentUser(): Promise<SessionUser | null> {
+/** Una lectura de sesión por petición (React.cache: layout, página y componentes comparten el resultado). */
+export const currentUser = cache(async (): Promise<SessionUser | null> => {
   const session = await auth();
   if (!session?.user?.id || !session.user.role) return null;
   return {
@@ -82,7 +84,7 @@ export async function currentUser(): Promise<SessionUser | null> {
     role: session.user.role,
     athleteId: session.user.athleteId
   };
-}
+});
 
 export function rlsFrom(user: SessionUser) {
   return {

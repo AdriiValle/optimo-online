@@ -1,5 +1,14 @@
 # Session
 
+Escrito: 2026-11-19 08:00 (velocidad k6)
+
+Objetivo: mejorar velocidad con k6 en 2 rondas (local + Vercel) y arreglar dominio/móvil. Plan: `briefs/plan-velocidad-k6.md`.
+Hallazgos: función Vercel en iad1 vs Neon Frankfurt; app.optimosport.com redirige a optimo-online.vercel.app (AUTH_URL). dev == main == prod.
+En curso: P1 (k6 ronda 1), P2 (dominio/móvil), visto bueno del plan (opus, segundo plano).
+Siguiente: P3 mejoras → merge a main → P4 k6 ronda 2 → P5.
+
+---- (anterior) ----
+
 Escrito: 2026-11-17 13:00
 
 Objetivo: semana 16-22 nov de Ricardo Visus (partido pasa al domingo 22), sauna como tarjeta, jueves de isquios con más carga, paleta sin azul.
