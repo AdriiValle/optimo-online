@@ -2,11 +2,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { currentUser } from "@/lib/auth";
-import { withRls } from "@/lib/rls";
 import { nutritionAthleteData } from "@/lib/access";
 import { addDays, dateKey, parseDateLocal, startOfWeekMonday, todayKey } from "@/lib/dates";
 import { shoppingRange, shoppingRangeLabel, type ShoppingRangeKind } from "@/lib/nutrition/shopping";
-import { shoppingForRange } from "@/lib/nutrition/shopping-queries";
+import { shoppingForRangeParallel } from "@/lib/nutrition/shopping-queries";
 import { BrandHeader } from "@/app/components/brand-header";
 import { HeaderBackButton } from "@/app/components/header-back-button";
 import { LogoutButton } from "@/app/logout-button";
@@ -48,13 +47,10 @@ export default async function CompraPage({ params, searchParams }: { params: Pro
   const range = shoppingRange(kind, anchor);
   const label = shoppingRangeLabel(range.from, range.to);
 
-  const loaded = await nutritionAthleteData(user, athleteId, (ctx) =>
-    withRls(ctx, async (tx) => {
-      const shopping = await shoppingForRange(tx, athleteId, range);
-      const gaps = await foodGapsForList(tx, shopping.list);
-      return { shopping, gaps };
-    })
-  );
+  const loaded = await nutritionAthleteData(user, athleteId, async (ctx) => {
+    const { shopping, foods } = await shoppingForRangeParallel(ctx, athleteId, range);
+    return { shopping, gaps: foodGapsForList(shopping.list, foods) };
+  });
   if (!loaded) notFound();
   const data = { athlete: loaded.athlete, athletes: loaded.athletes, ...loaded.extra };
 
