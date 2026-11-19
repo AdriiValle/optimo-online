@@ -1,11 +1,12 @@
 # Session
 
-Escrito: 2026-11-19 08:00 (velocidad k6)
+Escrito: 2026-11-19 18:30 (velocidad k6, cerrado)
 
-Objetivo: mejorar velocidad con k6 en 2 rondas (local + Vercel) y arreglar dominio/móvil. Plan: `briefs/plan-velocidad-k6.md`.
-Hallazgos: función Vercel en iad1 vs Neon Frankfurt; app.optimosport.com redirige a optimo-online.vercel.app (AUTH_URL). dev == main == prod.
-En curso: P1 (k6 ronda 1), P2 (dominio/móvil), visto bueno del plan (opus, segundo plano).
-Siguiente: P3 mejoras → merge a main → P4 k6 ronda 2 → P5.
+Objetivo: velocidad con k6 en 2 rondas (local + Vercel) y arreglar dominio/móvil. Plan: `briefs/plan-velocidad-k6.md`.
+Hecho: región fra1 (antes iad1 con Neon en Frankfurt), `set_config` encadenado en `lib/rls.ts`, lecturas en tx paralelas, compra sin consulta extra, `loading.tsx`. En main (b765854) y desplegado. Vercel p95 de documento 1748 → 216 ms (checks 100 %). Informes: `briefs/k6-ronda1.md`, `k6-ronda2.md`.
+Dominio: `AUTH_URL` = app.optimosport.com (lo cambió Adrián); el host viejo optimo-online.vercel.app servía el deploy del 5-nov; Adrián dice que quitó sus referencias. El móvil: borrar icono y datos del sitio y volver a entrar por app.optimosport.com.
+Carpeta: desde el 19-nov el repo está en `Optimo\Entrenamientos online` (antes `…\Ricardo Visus`).
+Siguiente: arranques en frío en Vercel (primera petición 600-780 ms); `prepare: true` descartado (riesgo con migraciones dentro de tx). Lo anterior: perfil de Amanda (`npm run db:migrate`), peso del deportista.
 
 ---- (anterior) ----
 
