@@ -352,7 +352,7 @@ export const BASE_ONLINE: string[] = [
   "rutina-movilidad-slider-1"
 ];
 
-export const MD_ONLINE_BLOCKS: Record<string, { specific?: string[]; activation?: string[]; post?: string[] }> = {
+export const MD_ONLINE_BLOCKS: Record<string, { specific?: string[]; activation?: string[]; frontal?: string[]; post?: string[] }> = {
   "MD-5": {
     "specific": [
       "rutina-movilidad-4"
@@ -404,8 +404,16 @@ export const MD_ONLINE_BLOCKS: Record<string, { specific?: string[]; activation?
   "MD+2": {
     "activation": [
       "activacion-basica-aductores",
-      "activacion-basica-isquios-1",
-      "activacion-basica-lumbar-1"
+      "activacion-complementaria-aductores-2"
+    ],
+    // MD+2: palancas cortas, isométricos y glúteo medio / cadera (poca fatiga, sin agujetas); también suma plano frontal.
+    "frontal": [
+      "md2-puente-gluteo-medio-elastico",
+      "md2-bicho-muerto-elastico-empeines",
+      "md2-plancha-lateral-aduccion-subir-bajar",
+      "md2-plancha-lateral-aduccion-isometrica-giro",
+      "md2-aduccion-supino-90-45",
+      "md2-empuje-gluteo-medio-pared"
     ]
   }
 };
@@ -415,7 +423,8 @@ export const STRENGTH_FROM = "2026-10-19";
 export const ANTERIOR_FUERZA_V2: string[] = [
   "2026-11-03",
   "2026-11-11",
-  "2026-11-17"
+  "2026-11-17",
+  "2026-11-25"
 ];
 
 export const POSTERIOR_FUERZA_V2: string[] = [
@@ -438,14 +447,21 @@ export const DAY_OVERRIDES: Record<string, { mdTag: string | null; kind: DayOver
   "2026-11-16": { mdTag: null, kind: "libre", note: "Día libre." },
   "2026-11-17": { mdTag: "MD-5", kind: "anterior-v2" },
   "2026-11-18": { mdTag: "MD-4", kind: "md-movido", sourceMd: "MD-4" },
-  "2026-11-19": { mdTag: "MD-3", kind: "posterior-v2" }
+  "2026-11-19": { mdTag: "MD-3", kind: "posterior-v2" },
+  // Semana corta 23-28 nov: sin día principal, así que el MD-3 repite la rutina de cadena anterior (plano sagital) de la semana pasada
+  // y el MD-2 lleva activación de isquios + complementaria + sled push (más cerca del partido).
+  "2026-11-25": { mdTag: "MD-3", kind: "anterior-v2" },
+  "2026-11-26": { mdTag: "MD-2", kind: "isquio-sled" }
 };
 
 // Días con exposición a sauna (bloque "Sauna" en el entrenamiento + marca en el calendario).
 export const SAUNA_DAYS: string[] = [
   "2026-11-16",
   "2026-11-17",
-  "2026-11-18"
+  "2026-11-18",
+  "2026-11-23",
+  "2026-11-24",
+  "2026-11-25"
 ];
 
 // Color del calendario que no sale de la etiqueta MD (p. ej. MD-2 suave, MD-1 con carga).

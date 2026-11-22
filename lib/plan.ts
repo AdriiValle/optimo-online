@@ -113,6 +113,11 @@ function isquioComplementariaForPosterior(md: string, _weekHasMd5: boolean) {
   return "activacion-complementaria-isquios-1";
 }
 
+// MD+1 con entrenamiento de club (cualquier día salvo domingo): rutina básica Óptimo; el recovery completo lo hace el equipo.
+function md1HasClubTraining(iso: string) {
+  return parseDateLocal(iso).getDay() !== 0;
+}
+
 function sessionDurationMinutes(
   md: string | null,
   iso: string,
@@ -120,7 +125,8 @@ function sessionDurationMinutes(
   strengthMap: Record<string, "anterior" | "posterior">,
   fieldMap: Record<string, true>
 ) {
-  if (!md || md === "MD" || md === "MD-1" || md === "MD+1") return null;
+  if (md === "MD+1") return md1HasClubTraining(iso) ? 15 : null;
+  if (!md || md === "MD" || md === "MD-1") return null;
   const blocks = parsed.mdOnlineBlocks[md];
   if (!blocks) return null;
   const strengthRole = iso >= parsed.strengthFrom ? strengthMap[iso] : null;
@@ -147,6 +153,10 @@ function sessionDurationMinutes(
   if (md === "MD-2") {
     min += 5;
     max += 5;
+  }
+  if (blocks.frontal?.length) {
+    min += 10;
+    max += 14;
   }
   if (iso >= parsed.strengthFrom && fieldMap[iso]) {
     min += 8;
@@ -192,6 +202,14 @@ function buildBlocks(
       kind: "note",
       text: "Sesión previa al partido con el club (concentrados). Sin entrenamiento Óptimo."
     });
+  } else if (md === "MD+1" && md1HasClubTraining(iso)) {
+    blocks.push({ kind: "section", title: "Base" });
+    for (const id of parsed.baseOnline) pushProtocol(parsed, blocks, id);
+    blocks.push({ kind: "section", title: "Activación" });
+    pushProtocol(parsed, blocks, "activacion-basica-aductores");
+    pushProtocol(parsed, blocks, "activacion-basica-isquios-1");
+    pushProtocol(parsed, blocks, "activacion-basica-lumbar-1");
+    blocks.push({ kind: "note", text: "Rutina básica; el recovery completo lo haces con el equipo." });
   } else if (md === "MD+1") {
     blocks.push({
       kind: "note",
@@ -258,6 +276,10 @@ function buildBlocks(
       if (mdBlocks.activation?.length) {
         blocks.push({ kind: "section", title: "Activación" });
         for (const id of mdBlocks.activation) pushProtocol(parsed, blocks, id);
+      }
+      if (mdBlocks.frontal?.length) {
+        blocks.push({ kind: "section", title: "Cadera y glúteo" });
+        for (const id of mdBlocks.frontal) pushProtocol(parsed, blocks, id);
       }
     }
 
@@ -345,16 +367,20 @@ function buildOverridePlan(
     };
   }
   if (o.kind === "isquio-sled") {
-    const blocks: DayPlanBlock[] = [{ kind: "section", title: "Activación" }];
+    const blocks: DayPlanBlock[] = [{ kind: "section", title: "Base" }];
+    for (const id of parsed.baseOnline) pushProtocol(parsed, blocks, id);
+    blocks.push({ kind: "section", title: "Específica" });
+    pushProtocol(parsed, blocks, "rutina-movilidad-3");
+    blocks.push({ kind: "section", title: "Activación" });
     pushProtocol(parsed, blocks, "activacion-basica-isquios-1");
-    pushProtocol(parsed, blocks, "activacion-complementaria-isquios-2");
+    pushProtocol(parsed, blocks, "activacion-complementaria-isquios-1");
     blocks.push({ kind: "section", title: "Aceleración" });
-    pushProtocol(parsed, blocks, "aceleracion-sled-push", parsed.protocols["aceleracion-sled-push"]?.qty?.replace("1 serie", "2 series"));
+    pushProtocol(parsed, blocks, "aceleracion-sled-push");
     blocks.push({
       kind: "note",
       text: "5 m por salida, lo más rápido/fuerte posible (trineo ≥45–50 kg). Sin plyo de momento."
     });
-    return { date: iso, mdTag: o.mdTag, title: "Isquios + trineo", minutes: 20, blocks, ...empty };
+    return { date: iso, mdTag: o.mdTag, title: "Isquios + trineo", minutes: 25, blocks, ...empty };
   }
   const titles: Record<string, string> = {
     libre: "Libre",

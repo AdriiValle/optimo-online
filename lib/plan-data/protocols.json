@@ -223,5 +223,41 @@
     "info": "Desde posición de caballero, salida al cajón en el plano frontal por el lado abierto (el lado de la rodilla apoyada) con pelota medicinal. 6 repeticiones por pierna, 2 series.",
     "video": "https://youtu.be/yfBsDB-zfBU",
     "blurb": "Desde caballero mirando al frente, el cajón está al lado (no delante). Se lanza la pierna al cajón con patrón de triple extensión (cadera + rodilla + tobillo) mientras se cambia de plano (salida hacia el lado)."
+  },
+  "md2-puente-gluteo-medio-elastico": {
+    "label": "Puente de glúteo medio con elástico",
+    "qty": "8 reps · 2 series",
+    "info": "Tumbado boca arriba en posición de puente, con un elástico sobre las rodillas. Sube la cadera empujando las rodillas hacia fuera contra el elástico y mantén la tensión en el glúteo medio. 8 repeticiones, 2 series, sin prisa.",
+    "blurb": "Activa el glúteo medio y la zona cercana a la cadera con poca fatiga y sin agujetas."
+  },
+  "md2-bicho-muerto-elastico-empeines": {
+    "label": "Bicho muerto con elástico en los empeines",
+    "qty": "8 reps / pierna · 2 series",
+    "info": "Tumbado boca arriba con un elástico corto en los empeines; las manos no hacen nada. Extiende una pierna controlando el movimiento. 8 repeticiones por pierna, 2 series.",
+    "blurb": "Palanca corta y control de la cadera con poca carga excéntrica."
+  },
+  "md2-plancha-lateral-aduccion-subir-bajar": {
+    "label": "Plancha lateral con aducción de pierna (subir y bajar)",
+    "qty": "8 reps · 2 series",
+    "info": "En plancha lateral, la pierna de arriba sube y baja en aducción mientras el cuerpo se mantiene en línea. 8 repeticiones, 2 series (cada lado).",
+    "blurb": "Cadena lateral y aductores en el plano frontal, con la cadera estable."
+  },
+  "md2-plancha-lateral-aduccion-isometrica-giro": {
+    "label": "Plancha lateral, aducción mantenida y giro de tronco",
+    "qty": "8 reps / lado · 1 serie",
+    "info": "En plancha lateral con la aducción de pierna mantenida en isométrico, giro del tronco metiendo la mano por dentro y sacándola hacia fuera. 8 veces por cada lado, 1 serie.",
+    "blurb": "Isométrico de cadera y aductores con movilidad de tronco."
+  },
+  "md2-aduccion-supino-90-45": {
+    "label": "Aducción tumbado (rodillas a 90°, cadera a 45°)",
+    "qty": "8 reps · 2 series",
+    "info": "Tumbado boca arriba, rodillas flexionadas a 90° y cadera a 45°. Aducción apretando las piernas hacia dentro y soltando con control. 8 repeticiones, 2 series.",
+    "blurb": "Aductores en posición cómoda para la cadera, sin impacto ni excéntrico."
+  },
+  "md2-empuje-gluteo-medio-pared": {
+    "label": "Empuje de glúteo medio de pie contra la pared (subir y bajar)",
+    "qty": "6 reps / pierna · 2 series",
+    "info": "De pie, empujando con el lateral de la pierna contra la pared mientras subes y bajas. 6 repeticiones por pierna, 2 series.",
+    "blurb": "Glúteo medio activo con la cadera estable, sin cargas excéntricas."
   }
 }
