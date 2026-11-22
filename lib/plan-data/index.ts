@@ -17,7 +17,7 @@ export type ParsedPlan = {
   shortNames: Record<string, string>;
   protocols: Record<string, Protocol>;
   baseOnline: string[];
-  mdOnlineBlocks: Record<string, { specific?: string[]; activation?: string[]; post?: string[] }>;
+  mdOnlineBlocks: Record<string, { specific?: string[]; activation?: string[]; frontal?: string[]; post?: string[] }>;
   strengthFrom: string;
   anteriorFuerzaV2: string[];
   posteriorFuerzaV2: string[];
