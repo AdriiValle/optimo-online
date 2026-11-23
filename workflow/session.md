@@ -5,7 +5,7 @@ Escrito: 2026-11-22 (calendario MD y semana 23-28 nov, subido a main)
 Objetivo: etiquetas MD según el día del partido y rutinas de la semana corta 23-28 nov.
 Hecho: day_plans regrabado 23-27 nov (23 MD+1, 24 MD+2, 25-27 MD-3/-2/-1; las 241 fechas coinciden con `MATCHES`); script `db/sync-md-calendario.ts <desde> <hasta> [--apply]`. MD+1 que no cae en domingo = rutina básica (base + 3 activaciones). MD+2 = base + activación aductores (básica + complementaria 2) + bloque «Cadera y glúteo» (6 ejercicios `md2-*`, sin vídeo aún) = 27 min. Sauna 23-25. Mié 25 MD-3 = cadena anterior v2; jue 26 MD-2 = base + tobillo + isquios básica y complementaria 1 + sled push.
 Vídeos MD+2 (23-nov): 7 vídeos sin sonido subidos a YouTube (no listados) y unidos a fichas de Knowledge (6 nuevas + bicho muerto) y a `protocols.json`/Neon (`db:set-videos` + `db:sync-videos`; ruta del CSV corregida en `db/set-protocol-videos.ts`). Los bloques «Cadera y glúteo» ahora son 7 ejercicios (zancada atrás con fitball añadida); día 24 libre.
-Siguiente: rutina habitual de MD-3 (palancas largas en plano frontal, Copenhague y glúteo excéntrico con giros): falta la lista de ejercicios de Adrián. Revisar con Adrián la ejecución exacta del puente de glúteo medio con elástico (no dictada).
+Siguiente: rutina habitual de MD-3 (palancas largas en plano frontal, Copenhague y glúteo excéntrico con giros): falta la lista de ejercicios de Adrián. Pendiente menor: reps/series de la zancada atrás con fitball (puestas por nosotros).
 
 ---- (anterior) ----
 
