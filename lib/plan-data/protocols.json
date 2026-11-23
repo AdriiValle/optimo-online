@@ -122,7 +122,7 @@
     "qty": "10 reps · 2 series",
     "info": "Salto vertical muy alto con TRX: triple extensión al subir y triple flexión amortiguando al máximo al caer, saliendo otra vez a máxima velocidad. 10 repeticiones, 2 series.",
     "video": "https://youtu.be/g1jEO-z8vRU",
-    "blurb": "Salto + TRX: salto vertical muy alto con asistencia de TRX en las manos (el TRX quita peso y permite velocidades supramáximas). Subida: triple extensión de tobillo, rodilla y cadera buscando la máxima altura. Caída: triple flexión amortiguando al máximo para salir otra vez a máxima velocidad. Por la altura con el TRX, el pico excéntrico al aterrizar suele ser mayor que en un salto libre."
+    "blurb": "Salto vertical muy alto con asistencia de TRX en las manos (el TRX quita peso de las extremidades superiores y permite velocidades supramáximas). Subida: triple extensión de tobillo + rodilla + cadera buscando la máxima altura. Caída: triple flexión amortiguando al máximo para salir otra vez a máxima velocidad (mínimo tiempo de contacto, rebote explosivo)."
   },
   "fuerza-isquios-bilateral": {
     "label": "Hip thrust sin peso (pies en cuña)",
@@ -228,36 +228,49 @@
     "label": "Puente de glúteo medio con elástico",
     "qty": "8 reps · 2 series",
     "info": "Tumbado boca arriba en posición de puente, con un elástico sobre las rodillas. Sube la cadera empujando las rodillas hacia fuera contra el elástico y mantén la tensión en el glúteo medio. 8 repeticiones, 2 series, sin prisa.",
-    "blurb": "Activa el glúteo medio y la zona cercana a la cadera con poca fatiga y sin agujetas."
+    "blurb": "Puente de glúteo con elástico para activar el glúteo medio: se trabaja la abducción contra el elástico manteniendo la cadera arriba. Ejercicio de activación isométrica y de palanca corta, sin excéntrico fuerte: no fatiga ni deja agujetas. Colocación exacta del elástico y detalles del gesto: no dictados.",
+    "video": "https://youtu.be/g0ltjKpWuMM"
   },
   "md2-bicho-muerto-elastico-empeines": {
     "label": "Bicho muerto con elástico en los empeines",
     "qty": "8 reps / pierna · 2 series",
     "info": "Tumbado boca arriba con un elástico corto en los empeines; las manos no hacen nada. Extiende una pierna controlando el movimiento. 8 repeticiones por pierna, 2 series.",
-    "blurb": "Palanca corta y control de la cadera con poca carga excéntrica."
+    "blurb": "En el suelo, tumbado boca arriba (supino), posición de bicho muerto. Elástico corto en los empeines. Las manos no hacen nada. Una pierna se extiende y vuelve; después la otra (10 por pierna en cadena anterior; 8 por pierna en MD+2).",
+    "video": "https://youtu.be/vmLOCAHfXI8"
   },
   "md2-plancha-lateral-aduccion-subir-bajar": {
-    "label": "Plancha lateral con aducción de pierna (subir y bajar)",
+    "label": "Plancha lateral con abducción de pierna (subir y bajar)",
     "qty": "8 reps · 2 series",
-    "info": "En plancha lateral, la pierna de arriba sube y baja en aducción mientras el cuerpo se mantiene en línea. 8 repeticiones, 2 series (cada lado).",
-    "blurb": "Cadena lateral y aductores en el plano frontal, con la cadera estable."
+    "info": "En plancha lateral, la pierna de arriba sube y baja en abducción mientras el cuerpo se mantiene en línea. 8 repeticiones, 2 series (cada lado).",
+    "blurb": "En plancha lateral, la pierna de arriba sube y baja (abducción de cadera) mientras el cuerpo se mantiene en línea.",
+    "video": "https://youtu.be/XwdT3LOnhPs"
   },
   "md2-plancha-lateral-aduccion-isometrica-giro": {
-    "label": "Plancha lateral, aducción mantenida y giro de tronco",
+    "label": "Plancha lateral, abducción mantenida y giro de tronco",
     "qty": "8 reps / lado · 1 serie",
-    "info": "En plancha lateral con la aducción de pierna mantenida en isométrico, giro del tronco metiendo la mano por dentro y sacándola hacia fuera. 8 veces por cada lado, 1 serie.",
-    "blurb": "Isométrico de cadera y aductores con movilidad de tronco."
+    "info": "En plancha lateral con la abducción de pierna mantenida en isométrico, giro del tronco metiendo la mano por dentro y sacándola hacia fuera. 8 veces por cada lado, 1 serie.",
+    "blurb": "Mismo ejercicio que la plancha lateral con abducción de pierna, pero con la pierna de arriba mantenida en abducción (isométrico) mientras se hace un giro de tronco con la mano, metiéndola por dentro y sacándola por fuera. El giro es el de la plancha lateral con rotación de tronco; aquí se añade la pierna mantenida.",
+    "video": "https://youtu.be/O_B3nCJKWMI"
   },
   "md2-aduccion-supino-90-45": {
-    "label": "Aducción tumbado (rodillas a 90°, cadera a 45°)",
+    "label": "Aducción tumbado con fitball (rodillas a 90°, cadera a 45°)",
     "qty": "8 reps · 2 series",
-    "info": "Tumbado boca arriba, rodillas flexionadas a 90° y cadera a 45°. Aducción apretando las piernas hacia dentro y soltando con control. 8 repeticiones, 2 series.",
-    "blurb": "Aductores en posición cómoda para la cadera, sin impacto ni excéntrico."
+    "info": "Tumbado boca arriba, rodillas flexionadas a 90° y cadera a 45°. Aducción apretando un fitball entre las rodillas y soltando con control. 8 repeticiones, 2 series.",
+    "blurb": "Tumbado boca arriba (supino), rodillas a 90° y cadera a 45°. Un fitball entre las rodillas: aducción apretando hacia dentro y soltando con control.",
+    "video": "https://youtu.be/PdM9S8YNsOg"
   },
-  "md2-empuje-gluteo-medio-pared": {
-    "label": "Empuje de glúteo medio de pie contra la pared (subir y bajar)",
+  "md2-zancada-atras-fitball-pared": {
+    "label": "Zancada atrás empujando fitball contra la pared",
     "qty": "6 reps / pierna · 2 series",
-    "info": "De pie, empujando con el lateral de la pierna contra la pared mientras subes y bajas. 6 repeticiones por pierna, 2 series.",
-    "blurb": "Glúteo medio activo con la cadera estable, sin cargas excéntricas."
+    "info": "De lado a la pared, con un fitball entre tú y la pared a la altura del codo o del hombro. Haz una zancada atrás y empuja el fitball contra la pared con el lado de fuera todo el rato, tanto al bajar como al subir (fase excéntrica y concéntrica). 6 repeticiones por pierna, 2 series.",
+    "blurb": "Zancada atrás empujando un fitball contra la pared, con el fitball a la altura del codo / hombro. La pierna de fuera trabaja empujando constantemente. Truco: apretar el fitball tanto en la bajada como en la subida (fase excéntrica y concéntrica). Si no se aprieta, no trabaja el glúteo medio, que es lo que se busca: la estabilidad de cadera.",
+    "video": "https://youtu.be/R3vv_YWSRsc"
+  },
+  "md2-sentadilla-unilateral-fitball-pared": {
+    "label": "Sentadilla a una pierna con fitball contra la pared",
+    "qty": "6 reps / pierna · 2 series",
+    "info": "De pie, de lado a la pared, con un fitball entre la rodilla de la pierna libre y la pared. Aprieta el fitball con la rodilla (esa pierna queda en abducción) mientras haces una sentadilla a una pierna con la otra, bajando y subiendo con control. 6 repeticiones por pierna, 2 series.",
+    "blurb": "Sentadilla a una pierna mientras la otra pierna aprieta con la rodilla un fitball contra la pared. La pierna que aprieta el fitball está en abducción, lo que trabaja mucho el glúteo medio. Va justo después de la zancada atrás con fitball.",
+    "video": "https://youtu.be/pQVxWcKiijI"
   }
 }
