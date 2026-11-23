@@ -450,6 +450,7 @@ export const DAY_OVERRIDES: Record<string, { mdTag: string | null; kind: DayOver
   "2026-11-19": { mdTag: "MD-3", kind: "posterior-v2" },
   // Semana corta 23-28 nov: sin día principal, así que el MD-3 repite la rutina de cadena anterior (plano sagital) de la semana pasada
   // y el MD-2 lleva activación de isquios + complementaria + sled push (más cerca del partido).
+  "2026-11-24": { mdTag: "MD+2", kind: "libre", note: "Día libre." },
   "2026-11-25": { mdTag: "MD-3", kind: "anterior-v2" },
   "2026-11-26": { mdTag: "MD-2", kind: "isquio-sled" }
 };
@@ -460,7 +461,6 @@ export const SAUNA_DAYS: string[] = [
   "2026-11-17",
   "2026-11-18",
   "2026-11-23",
-  "2026-11-24",
   "2026-11-25"
 ];
 
@@ -469,6 +469,7 @@ export const DAY_TINT_OVERRIDES: Record<string, string | null> = {
   "2026-11-09": null, // vacaciones: etiqueta MD+2 pero sin color
   "2026-11-10": null, // vacaciones: etiqueta MD-4 pero sin color
   "2026-11-16": null, // día libre: sin etiqueta MD y sin color (blanco)
+  "2026-11-24": null, // día libre: etiqueta MD+2 pero sin color (blanco)
   "2026-11-12": "load-md-plus2",
   "2026-11-13": "load-md-minus2"
 };
