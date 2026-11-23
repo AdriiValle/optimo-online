@@ -7,7 +7,7 @@ import type { Protocol } from "../lib/types";
 // Vuelca url (+ blurb desde Knowledge si hay slug) en lib/plan-data/protocols.json. El id es protocolId; si falta,
 // slug cuando slug es una clave de PROTOCOLS; si no, la fila se ignora. Después: npm run db:sync-videos.
 
-const DEFAULT_CSV = resolve(process.cwd(), "..", "..", "YouTube", "subidos", "subidos.csv");
+const DEFAULT_CSV = resolve(process.cwd(), "..", "YouTube", "subidos", "subidos.csv");
 const PROTOCOLS_JSON = resolve(process.cwd(), "lib", "plan-data", "protocols.json");
 
 function parseCsv(text: string): string[][] {

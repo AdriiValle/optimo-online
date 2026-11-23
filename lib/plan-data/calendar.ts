@@ -413,7 +413,8 @@ export const MD_ONLINE_BLOCKS: Record<string, { specific?: string[]; activation?
       "md2-plancha-lateral-aduccion-subir-bajar",
       "md2-plancha-lateral-aduccion-isometrica-giro",
       "md2-aduccion-supino-90-45",
-      "md2-empuje-gluteo-medio-pared"
+      "md2-zancada-atras-fitball-pared",
+      "md2-sentadilla-unilateral-fitball-pared"
     ]
   }
 };

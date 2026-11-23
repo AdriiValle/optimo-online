@@ -38,7 +38,7 @@ export function extractDescripcionSection(md: string): string {
 
 function stripWikiAndMd(text: string): string {
   let s = text
-    .replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, "$1")
+    .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, slug: string, alias?: string) => alias ?? slug)
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/~~([^~]+)~~/g, "$1")
     .replace(/^#{1,6}\s+/gm, "")
