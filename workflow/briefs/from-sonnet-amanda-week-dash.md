@@ -1,0 +1,5 @@
+- Hecho: parcial
+- Qué cambió: app/nutricion/[athleteId]/nutricion-athlete-client.tsx (WeekPanel + Ring, anillos SVG), app/globals.css (celdas semana más compactas, estilos del panel). tsc limpio.
+- Duda: el modelo MealSlot solo tiene título/preparación en texto libre; no hay kcal, macros ni micros guardados, así que no se pueden calcular. El panel muestra anillos reales de cobertura (días con menú, comidas principales, snacks) y una nota de pendiente.
+- Recomendación: para macros/micros reales, añadir cantidades por plato (kcal, P/HC/G, fibra, Na, Fe, vit D, Ca) o una tabla de alimentos. Set corto para el nutricionista: kcal semanales, P/HC/G en g y % kcal, proteína g/kg, fibra, Na, Fe, Ca, vit D. Hecho por mí y no por opus: tenía prohibido despachar hijos.
+- Bloquea a Adrián: no (cambio de modelo de datos sería producto; decídelo tú si quieres seguir).

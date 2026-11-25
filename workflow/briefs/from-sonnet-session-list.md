@@ -1,0 +1,11 @@
+- Hecho: sí
+- Qué cambió (rutas):
+  - Nuevo `app/a/[id]/session-list.tsx` (client, `SessionList`): section → `h3`, match/note → `p`, protocol → fila (label, qty, info, botón Vídeo → `VideoEmbedModal` con url + blurb). Vacío: «Sin bloque asignado para este día.». Sin `<table>`.
+  - `app/a/[id]/home-client.tsx`: quitado `SessionTable` y el import de `VideoEmbedModal`; usa `SessionList`; `VENUE_SVG` en JSX inline, sin `dangerouslySetInnerHTML`.
+  - `app/globals.css`: quitadas `.content-table*`, `.video-link` y `.dash .content-table` (grep en `app/`: nadie más las usaba; solo quedan en `index.html`/`plan-visus.html`, fuera de alcance). Añadidas al final `.session-list`, `.session-section`, `.session-note`, `.session-item*`, `.session-video`.
+- Verificación: `npm run build` OK. Grep en `app/` de `<table`, `content-table`, `video-link`, `dangerouslySetInnerHTML`: 0 resultados.
+- Commit: `190a98e` en `dev` (`feat(ficha): sesión del día como lista React, sin tabla`). Los cambios de `workflow/` quedaron fuera.
+- No comprobado: aspecto visual en navegador y abrir el modal con clic real (el código del modal y su uso son iguales que antes).
+- Duda:
+- Recomendación:
+- Bloquea a Adrián: no

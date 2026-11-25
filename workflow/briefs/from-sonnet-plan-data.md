@@ -1,0 +1,23 @@
+- Hecho: sí
+- Qué cambió (rutas):
+  - Nuevo `lib/plan-data/protocols.json`, `lib/plan-data/calendar.ts`, `lib/plan-data/index.ts` (`planData` + tipo `ParsedPlan`). Volcado con script de un solo uso (borrado, no commiteado).
+  - `lib/plan.ts` (import del tipo), `lib/html-parse.ts` (reimporta el tipo, lógica intacta).
+  - `app/a/[id]/page.tsx` (crests desde `planData.crests`).
+  - `db/seed.ts`, `db/sync-videos.ts`, `db/update-anterior-blocks.ts`, `db/update-posterior-blocks.ts` (`planData`; mensajes "from plan-data").
+  - `db/sync-videos.ts`: `--dry-run`.
+  - `db/set-protocol-videos.ts`: escribe `lib/plan-data/protocols.json`; sin HTML ni `protocol-html-field`; `--dry-run` conservado.
+  - Borrado `db/protocol-html-field.ts`.
+  - Nuevo `scripts/plan-parity.ts` + `plan:parity` en `package.json`.
+  - `tsconfig.json`: `resolveJsonModule` ya estaba, sin cambios.
+- Verificación:
+  - `npm run plan:parity` → 235/235 iguales.
+  - `npm run db:sync-videos -- --dry-run` → 0 de 235 filas cambiarían (solo lectura en Neon, nada escrito).
+  - `npm run db:set-videos -- --dry-run` corre sin abrir HTML (el CSV por defecto existe; ejecutó en dry-run, protocols.json no se modificó).
+  - `npx tsc --noEmit` y `npm run build` OK.
+  - Grep `parseIndexHtml` / `index.html` en `app db lib scripts`: solo `lib/html-parse.ts` y `scripts/plan-parity.ts`.
+  - `index.html` / `plan-visus.html` sin cambios en el diff.
+- Commit: `1514c7c` en `dev` (`feat(plan): datos del plan en lib/plan-data (TS/JSON), HTML queda de backup`). Los cambios de `workflow/` quedaron fuera del commit.
+- No comprobado: ver escudos en el calendario en local (`/a/<visus>`) con navegador; el build compila y `crests` sale de los mismos datos (paridad OK).
+- Duda:
+- Recomendación:
+- Bloquea a Adrián: no

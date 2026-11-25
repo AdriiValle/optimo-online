@@ -1,0 +1,6 @@
+- Hecho: parcial (código endurecido; causa raíz en prod no reproducida)
+- Qué cambió: lib/auth.ts (validAthleteId UUID; jwt/session sanean athleteId), app/page.tsx, middleware.ts (homeFor nunca /a/null; sin bucle en /login), app/a/[id]/page.tsx (id no UUID -> notFound sin query). tsc OK. Commit en dev.
+- Role real en Neon: accounts.email='amanda' -> role = nutritionist (no hizo falta re-seed).
+- Duda: si en prod la sesión sigue sin role nutritionist, puede ser JWT/cookie vieja o deploy anterior; no pude probar login real.
+- Recomendación: desplegar dev a prod y que Amanda cierre sesión/borre cookie y reentre; si persiste, revisar AUTH_SECRET/versión desplegada.
+- Bloquea a Adrián: no (el deploy/merge a main sí lo decide él).

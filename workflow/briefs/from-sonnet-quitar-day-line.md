@@ -1,0 +1,5 @@
+- Hecho: sí
+- Qué cambió: app/nutricion/[athleteId]/nutricion-athlete-client.tsx (quitado div.day-line del calBlock); app/globals.css (quitada regla huérfana `.nut-ws-list-above .day-line`). Commit en dev. No ejecuté build/tsc.
+- Duda:
+- Recomendación:
+- Bloquea a Adrián: no

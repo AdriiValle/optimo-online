@@ -1,0 +1,9 @@
+- Hecho: sí
+- Qué cambió (rutas): `lib/plan-data/calendar.ts` (nuevo kind `isquio-sled`, 13 nov); `lib/plan.ts` (`pushProtocol` con `qtyOverride` opcional + rama `isquio-sled` en `buildOverridePlan`). Sin commit.
+- Sled qty: 05 nov = `3×5 m · 1 serie · 45–50 kg`; 13 nov = `3×5 m · 2 series · 45–50 kg`.
+- protocolId del 13: `activacion-basica-isquios-1`, `activacion-complementaria-isquios-2`, `aceleracion-sled-push` (secciones Activación + Aceleración; título "Isquios + trineo", 20 min).
+- Upsert (`npm run db:upsert-semana-paron`, exit 0): 8–15 nov todos `update` (13 incluido). Check ids 12 == 3: true. 14 amistoso y 15 MD+1 regenerados igual; 11 pendiente.
+- Localhost 12/13: no comprobado (solo generador + Neon). `tsc --noEmit` sin errores.
+- Duda:
+- RecomendaciónNota: el 12 y el resto del 8–15 se re-upsertaron con el mismo contenido.
+- Bloquea a Adrián: no

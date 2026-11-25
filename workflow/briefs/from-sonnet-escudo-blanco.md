@@ -1,0 +1,5 @@
+- Hecho: sí (no verificado visualmente en navegador)
+- Qué cambió: `public/escudos/blank.svg` (nuevo, escudo blanco con borde gris suave, sin texto); `lib/plan-data/calendar.ts` (`CRESTS["Amistoso"]`). Sin commit, MATCHES intacto.
+- Duda:
+- Recomendación:
+- Bloquea a Adrián: no

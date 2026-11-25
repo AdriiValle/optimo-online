@@ -1,0 +1,5 @@
+﻿- Hecho: si
+- Qué cambió: app/nutricion/[athleteId]/nutricion-athlete-client.tsx (selector Día/Semana/Mes en cal-nav, flechas avanzan por periodo, fetch de platos y WeekPanel según rango; mes = lista por día), app/globals.css (estilos .nut-view-*, .nut-month-*). Commit en dev. tsc limpio; no probado en navegador.
+- Duda: las métricas siguen "pendientes" (los platos no guardan gramos), solo cambian título/contador/unidad según la vista.
+- Recomendación: dejarlo así hasta que haya datos nutricionales.
+- Bloquea a Adrián: no

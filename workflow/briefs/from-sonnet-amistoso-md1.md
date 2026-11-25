@@ -1,0 +1,5 @@
+- Hecho: si (no verificado visualmente en localhost; tsc limpio, upsert OK)
+- Qué cambió: lib/plan-data/calendar.ts (14 = MD + venue casa; 15 = MD+1 recovery-club; campo opcional `venue`), lib/plan.ts (override amistoso rellena matchOpponent "Amistoso", casa, competición Amistoso). Upsert a Neon ejecutado (db:upsert-semana-paron, 8–15 nov). Commit en dev.
+- Duda: el escudo en blanco = no se renderiza img (crests["Amistoso"] no existe), la casilla queda gris (clase match) con icono casa. No se añade hueco extra. 16 no tocado (MATCHES intacto).
+- Recomendación: si quieres hueco visual de escudo vacío, revisar en localhost; no hizo falta tocar home-client.
+- Bloquea a Adrián: no

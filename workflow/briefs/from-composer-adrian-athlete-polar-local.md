@@ -1,0 +1,7 @@
+- Hecho: sí
+- Usuario deportista creado en Neon: login **AdriiValle** (distinto del admin `adriivalle`), nombre visible **Adrián Valle**, sport `football`, integración `whoop` disconnected. Pestaña **Registro** visible al entrar como atleta (no admin).
+- Polar local: `.env.local` → `POLAR_REDIRECT_URI=http://localhost:3001/api/integrations/polar/callback` (authorize + token exchange ya leen env vía `polarConfig()`; sin hardcode prod).
+- `AUTH_URL` en `.env.local` ya era `http://localhost:3001`.
+- Código (commit en `dev`): login respeta mayúsculas (`lib/auth.ts` sin forzar lower); `lookup_account_by_email` prioriza match exacto antes que lower (permite admin `adriivalle` + atleta `AdriiValle`).
+- Duda: registrar el redirect `http://localhost:3001/api/integrations/polar/callback` en la consola Polar si OAuth local falla por redirect no whitelisteado.
+- Bloquea a Adrián: no (reiniciar dev server si ya estaba levantado, para recoger `.env.local`).
