@@ -1,4 +1,5 @@
 # Plan: macros / micros / kcal del menú (día · semana · mes)
+estado: hecho (2026-11-25)
 
 Plan de ejecución, sin código. Base: `lib/menu-import/parse-word-menu.ts`, `format-meal.ts`, `app/api/nutrition/menu-import/route.ts`, `db/schema.sql` (`meal_slots`, `athletes.weight_kg`, `day_plans.md_tag`), `WeekPanel` en `app/nutricion/[athleteId]/nutricion-athlete-client.tsx`, `workflow/inbox/EJEMPLO DE MENU.md`, `analisis-menu-pablo-pdf.md`.
 

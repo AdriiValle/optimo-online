@@ -1,4 +1,5 @@
 # Plan — velocidad de carga con k6 (2 rondas) + dominio/móvil
+estado: hecho (2026-11-25)
 
 Repo: `Optimo\Entrenamientos online\Ricardo Visus` (git `AdriiValle/optimo-online`, proyecto Vercel `optimo-online`, Neon `noisy-meadow-03777185` en `aws-eu-central-1`). Es la app de Ricardo Visus: deportista (`/a/[id]`), admin (`/panel`, Adrián), nutricionista Amanda (`/nutricion`), trabajadores/staff. Rama de trabajo `dev`; producción = `main`. Adrián pidió expresamente: aplicar todas las mejoras que salgan del k6 y pasarlas a `main`.
 

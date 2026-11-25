@@ -1,4 +1,5 @@
 # Plan: look del menú de Amanda (idea Nutrigo, piel Óptimo + Apple)
+estado: hecho (2026-11-25)
 
 Plan sin código. Base leída: `app/nutricion/[athleteId]/nutricion-athlete-client.tsx` (`WeekGrid`, `MonthCalendar`, `NutModal`, `MealSlotForm`), `meal-items-editor.tsx` (O4), `app/api/meals/[id]/photo/route.ts`, `lib/queries.ts` (`nutritionTotals`), `lib/menu-import/format-meal.ts`, `lib/nutrition/parse-dish.ts`, `workflow/context/design-system.md`, `app/globals.css`, `workflow/inbox/EJEMPLO DE MENU.md`.
 

@@ -1,4 +1,5 @@
 # Plan: rol nutricionista + menú diario (v1 Amanda / Visus)
+estado: hecho (2026-11-25)
 
 Cajón: app Óptimo Online (`AdriiValle/optimo-online`, rama `dev`). Difícil: auth + enum Neon + RLS + rutas nuevas + UI nutricionista + extensión pestaña Nutrición del deportista. Neon **noisy-meadow-03777185** (aws-eu-central-1). Local `:3001`. Anclado contra `db/schema.sql`, `lib/auth.ts`, `lib/access.ts`, `middleware.ts`, `app/a/[id]/home-client.tsx`, `nutrition-pane.tsx`, `app/api/athletes/[id]/photo/route.ts`, `app/api/athletes/[id]/nutrition/route.ts`.
 

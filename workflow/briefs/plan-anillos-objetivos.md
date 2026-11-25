@@ -1,4 +1,5 @@
 # plan-anillos-objetivos
+estado: hecho (2026-11-25)
 
 Repo: `Optimo/Entrenamientos online/Ricardo Visus` (Next.js, rama `dev`). Lee antes `workflow/context/design-system.md` (look Óptimo + apple-design, paleta intacta, reduced-motion).
 

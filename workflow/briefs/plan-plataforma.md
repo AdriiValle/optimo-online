@@ -1,4 +1,5 @@
 # Plan: plataforma de deportistas
+estado: hecho (2026-11-25)
 
 Cajón: app. Difícil (arquitectura, auth, Neon, UI).
 

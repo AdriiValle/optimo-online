@@ -1,4 +1,5 @@
 # Plan: datos TS + look React (sin HTML en el camino)
+estado: hecho (2026-11-25)
 
 Cajón: app. Difícil (arquitectura, Neon, UI).
 

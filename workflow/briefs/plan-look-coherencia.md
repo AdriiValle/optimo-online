@@ -1,4 +1,5 @@
 # Plan: look Óptimo + Apple (coherencia)
+estado: hecho (2026-11-25)
 
 Cajón: app. Difícil (look de toda la app, decisión de marca ya tomada por Adrián).
 

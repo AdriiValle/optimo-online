@@ -1,4 +1,5 @@
 # Plan: Ajustes + sesión persistente (anclado por Opus, 2026-10-29)
+estado: hecho (2026-11-25)
 
 ## Objetivo
 

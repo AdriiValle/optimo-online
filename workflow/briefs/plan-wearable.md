@@ -1,4 +1,5 @@
 # Plan: wearable en Registro (Amazfit ahora, Whoop después)
+estado: hecho (2026-11-25)
 
 Cajón: app. Difícil (OAuth, Neon, salud). Anclado por opus 2026-11-04 contra `db/schema.sql`, `app/api/diaries/route.ts`, `app/a/[id]/home-client.tsx`, seed y alta de atleta.
 

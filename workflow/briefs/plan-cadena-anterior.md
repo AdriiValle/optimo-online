@@ -1,4 +1,5 @@
 # Plan — cadena-anterior (anclado al disco 2026-11-03)
+estado: aparcado (2026-11-25)
 
 ## Objetivo
 

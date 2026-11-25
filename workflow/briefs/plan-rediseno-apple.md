@@ -1,4 +1,5 @@
 # plan-rediseno-apple (macro plan, v2 revisado)
+estado: hecho (2026-11-25)
 
 Repo: `Optimo/Entrenamientos online/Ricardo Visus` (Next.js 15, rama `dev`). Slice difícil: rediseño gráfico de TODA la app. Revisado sobre el código de `5c76153` (ver `from-opus-revision-plan-rediseno.md`). Plantillas de brief: `plantillas-rediseno.md`.
 
